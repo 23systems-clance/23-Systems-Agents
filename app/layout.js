@@ -3,8 +3,8 @@ import '../theme.css';
 import { ThemeProvider, FeaturesProvider } from 'thepopebot/chat';
 
 export const metadata = {
-  title: 'ThePopeBot',
-  description: 'AI Agent',
+  title: '23 Systems',
+  description: '23 Systems AI Agent',
 };
 
 export const viewport = {
@@ -15,8 +15,8 @@ export const viewport = {
 };
 
 const features = {
-  codeWorkspace: !!process.env.CLAUDE_CODE_OAUTH_TOKEN,
-  clusterWorkspace: !!process.env.CLAUDE_CODE_OAUTH_TOKEN,
+  codeWorkspace: true,
+  clusterWorkspace: true,
 };
 
 export default function RootLayout({ children }) {

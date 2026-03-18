@@ -63,7 +63,7 @@ export function AppSidebar({ user }) {
         {/* Top row: brand name + toggle icon (open) or just toggle icon (collapsed) */}
         <div className={collapsed ? 'flex justify-center' : 'flex items-center justify-between'}>
           {!collapsed && (
-            <span className="px-2 font-semibold text-lg">ThePopeBot{version && <span className="text-[11px] font-normal text-muted-foreground"> v{version}</span>}</span>
+            <span className="px-2 font-semibold text-lg">23 Systems{version && <span className="text-[11px] font-normal text-muted-foreground"> v{version}</span>}</span>
           )}
           <button
             className="inline-flex shrink-0 items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-background hover:text-foreground"

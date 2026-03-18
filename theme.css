@@ -1,5 +1,155 @@
-/* Override any CSS variable to customize your theme.
-   Example:
-   :root { --primary: #2563eb; }
-   .dark { --primary: #60a5fa; }
-*/
+/* ═══════════════════════════════════════════════
+   23 Systems — Professional Theme
+   ═══════════════════════════════════════════════ */
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
+  --input: #f1f5f9;
+  --ring: #2563eb;
+  --destructive: #ef4444;
+}
+
+.dark {
+  --background: #0c0c0f;
+  --foreground: #f1f5f9;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --muted: #111114;
+  --muted-foreground: #94a3b8;
+  --border: #1e1e24;
+  --input: #131318;
+  --ring: #3b82f6;
+  --destructive: #ef4444;
+}
+
+
+/* ── Nav items ── */
+
+[data-sidebar] ul {
+  gap: 2px !important;
+}
+
+[data-sidebar] a[class*="rounded-md"],
+[data-sidebar] button[class*="rounded-md"] {
+  padding: 8px 10px !important;
+  border-radius: 8px !important;
+  font-size: 0.875rem !important;
+  color: var(--muted-foreground);
+}
+
+[data-sidebar] a[class*="rounded-md"]:hover,
+[data-sidebar] button[class*="rounded-md"]:hover {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+[data-sidebar] a[class*="rounded-md"] svg,
+[data-sidebar] button[class*="rounded-md"] svg {
+  opacity: 0.6;
+}
+[data-sidebar] a[class*="rounded-md"]:hover svg,
+[data-sidebar] button[class*="rounded-md"]:hover svg {
+  opacity: 1;
+}
+
+
+/* ── Brand ── */
+
+[data-sidebar] .font-semibold {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em;
+  color: var(--foreground) !important;
+  padding-left: 10px !important;
+}
+
+[data-sidebar] .font-semibold span {
+  opacity: 0.35;
+  font-size: 0.625rem !important;
+  font-weight: 400 !important;
+  letter-spacing: 0;
+}
+
+
+/* ── Toggle ── */
+
+[data-sidebar] button[aria-label="Toggle sidebar"] {
+  padding: 6px !important;
+  border-radius: 6px !important;
+  color: var(--muted-foreground) !important;
+}
+[data-sidebar] button[aria-label="Toggle sidebar"]:hover {
+  background: var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+
+/* ── "New chat" ── */
+
+[data-sidebar] .mb-2 a[class*="rounded-md"],
+[data-sidebar] .mb-2 button[class*="rounded-md"] {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  font-weight: 500 !important;
+  border: 1px solid var(--border) !important;
+}
+[data-sidebar] .mb-2 a[class*="rounded-md"]:hover,
+[data-sidebar] .mb-2 button[class*="rounded-md"]:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+
+/* ── Divider ── */
+
+[data-sidebar] .border-t.border-border {
+  margin: 8px 0 !important;
+  opacity: 0.5;
+}
+
+
+/* ── Avatar ── */
+
+[data-sidebar] .rounded-full.bg-primary {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+  font-weight: 600 !important;
+}
+
+
+/* ── Badges ── */
+
+[data-sidebar] .bg-destructive {
+  background: var(--primary) !important;
+  color: white !important;
+  font-size: 0.625rem !important;
+  font-weight: 600 !important;
+}
+
+
+/* ── Transitions ── */
+
+a, button, [role="button"], input, select, textarea {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+
+/* ── Dropdowns ── */
+
+[role="menu"] {
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+.dark [role="menu"] {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+[role="menuitem"] {
+  border-radius: 6px !important;
+  font-size: 0.8125rem !important;
+}
