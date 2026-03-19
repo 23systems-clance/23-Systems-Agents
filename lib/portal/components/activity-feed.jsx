@@ -9,8 +9,14 @@
 export function ActivityFeed({ logs }) {
   if (!logs || logs.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground text-center py-6">
-        No activity yet. Run a team to see results here.
+      <div className="rounded-xl border border-dashed border-border p-8 text-center">
+        <svg className="h-8 w-8 mx-auto mb-3 text-muted-foreground/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+        </svg>
+        <p className="text-sm font-medium mb-1">No activity yet</p>
+        <p className="text-xs text-muted-foreground">
+          Run the team to see a log of each step here.
+        </p>
       </div>
     );
   }

@@ -189,7 +189,8 @@ function mergeRoleStates(prevStates, roles, sseData) {
       if (latest.exitCode === 0) {
         return { ...state, status: 'done', label: 'Done', detail: null };
       }
-      return { ...state, status: 'failed', label: 'Failed', detail: null };
+      const errorDetail = translateExitCode(latest.exitCode);
+      return { ...state, status: 'failed', label: 'Failed', detail: errorDetail };
     }
 
     return state;
@@ -214,4 +215,20 @@ function markRoleActive(prevStates, roles, containerName) {
     }
     return state;
   });
+}
+
+/**
+ * Translate container exit codes to plain-English error messages.
+ */
+function translateExitCode(code) {
+  switch (code) {
+    case 1: return 'The task encountered an error';
+    case 124: return 'Timed out — the task took too long';
+    case 125: return 'Container failed to start';
+    case 126: return 'Permission denied';
+    case 127: return 'Command not found';
+    case 137: return 'Ran out of memory';
+    case 143: return 'Task was stopped';
+    default: return code ? `Exited with error (code ${code})` : null;
+  }
 }

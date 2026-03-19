@@ -12,6 +12,7 @@ export function TeamDashboard({ team, status, output, logs }) {
   const router = useRouter();
   const [taskInput, setTaskInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [runError, setRunError] = useState(null);
   const [showDelete, setShowDelete] = useState(false);
   const [activeTab, setActiveTab] = useState('output');
 
@@ -22,11 +23,17 @@ export function TeamDashboard({ team, status, output, logs }) {
     e.preventDefault();
     if (!taskInput.trim()) return;
     setLoading(true);
+    setRunError(null);
     try {
-      await runTeamTask(team.id, taskInput);
-      setTaskInput('');
-      router.refresh();
+      const result = await runTeamTask(team.id, taskInput);
+      if (result?.success === false) {
+        setRunError(result.error || 'Something went wrong. Please try again.');
+      } else {
+        setTaskInput('');
+        router.refresh();
+      }
     } catch (err) {
+      setRunError('Failed to start the task. Please try again.');
       console.error(err);
     }
     setLoading(false);
@@ -72,6 +79,24 @@ export function TeamDashboard({ team, status, output, logs }) {
         </div>
       </div>
 
+      {/* Paused Notice */}
+      {!isEnabled && (
+        <div className="mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-yellow-700">This team is paused</p>
+            <p className="text-xs text-yellow-600/80 mt-0.5">
+              Scheduled runs are disabled. Resume the team to start running tasks again.
+            </p>
+          </div>
+          <button
+            onClick={handlePause}
+            className="rounded-lg border border-yellow-500/30 px-3 py-1.5 text-xs font-medium text-yellow-700 hover:bg-yellow-500/10 transition-colors"
+          >
+            Resume
+          </button>
+        </div>
+      )}
+
       {/* Real-time Pipeline Status */}
       <div className="mb-8">
         <h2 className="text-sm font-medium mb-3">Pipeline</h2>
@@ -105,6 +130,14 @@ export function TeamDashboard({ team, status, output, logs }) {
                 {loading ? 'Starting...' : 'Go'}
               </button>
             </div>
+            {runError && (
+              <div className="mt-2 text-sm text-red-500 flex items-center gap-1.5">
+                <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                {runError}
+              </div>
+            )}
           </div>
         </form>
       </div>
@@ -160,8 +193,15 @@ export function TeamDashboard({ team, status, output, logs }) {
         )}
       </div>
 
-      {/* Advanced Link */}
-      <div className="text-center">
+      {/* Footer Links */}
+      <div className="flex items-center justify-center gap-4">
+        <Link
+          href={`/team/${team.id}/history`}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          View Run History
+        </Link>
+        <span className="text-xs text-muted-foreground">|</span>
         <Link
           href={`/dev/cluster/${team.id}`}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"

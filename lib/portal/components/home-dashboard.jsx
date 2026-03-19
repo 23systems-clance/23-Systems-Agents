@@ -60,12 +60,15 @@ export function HomeDashboard({ teams, templates }) {
               />
               <button
                 type="submit"
-                disabled={!quickTask.trim()}
+                disabled={!quickTask.trim() || routing}
                 className="rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
-                Go
+                {routing ? 'Finding...' : 'Go'}
               </button>
             </div>
+            {routeHint && (
+              <div className="mt-2 text-sm text-green-600">{routeHint}</div>
+            )}
           </div>
         </form>
       </div>
@@ -83,9 +86,15 @@ export function HomeDashboard({ teams, templates }) {
         </div>
 
         {teams.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-8 text-center">
-            <p className="text-muted-foreground mb-4">
-              No teams yet. Create your first team from a template.
+          <div className="rounded-xl border border-dashed border-border p-10 text-center">
+            <div className="text-muted-foreground/50 mb-3">
+              <svg className="h-10 w-10 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+            <h3 className="font-medium mb-1">No teams yet</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Create your first AI team from a template — it takes less than a minute.
             </p>
             <Link
               href="/templates"

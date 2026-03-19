@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { href: '/', label: 'Home', icon: HomeIcon },
   { href: '/teams', label: 'My Teams', icon: UsersIcon },
   { href: '/templates', label: 'Templates', icon: LayoutIcon },
-  { href: '/settings', label: 'Settings', icon: SettingsIcon },
+  { href: '/account', label: 'Settings', icon: SettingsIcon },
 ];
 
 export function PortalLayout({ children, session }) {
@@ -26,6 +26,8 @@ export function PortalLayout({ children, session }) {
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
               const isActive = href === '/'
                 ? pathname === '/'
+                : href === '/teams'
+                ? pathname.startsWith('/teams') || pathname.startsWith('/team/')
                 : pathname.startsWith(href);
               return (
                 <Link
