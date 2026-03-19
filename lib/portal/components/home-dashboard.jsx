@@ -3,22 +3,42 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { matchTemplate } from '../actions.js';
 
 export function HomeDashboard({ teams, templates }) {
   const router = useRouter();
   const [quickTask, setQuickTask] = useState('');
+  const [routing, setRouting] = useState(false);
+  const [routeHint, setRouteHint] = useState(null);
 
-  const handleQuickTask = (e) => {
+  const handleQuickTask = async (e) => {
     e.preventDefault();
-    if (!quickTask.trim()) return;
+    if (!quickTask.trim() || routing) return;
 
-    // If there are existing teams, route to the first one for now
-    // TODO: Phase 3 — LLM-based smart routing
-    if (teams.length > 0) {
-      router.push(`/team/${teams[0].id}?task=${encodeURIComponent(quickTask)}`);
-    } else {
+    setRouting(true);
+    setRouteHint(null);
+
+    try {
+      // Use LLM to match the task to a template
+      const match = await matchTemplate(quickTask);
+
+      if (match.templateId && match.confidence !== 'low') {
+        // Build URL with template + suggested inputs
+        const params = new URLSearchParams({ template: match.templateId });
+        for (const [key, value] of Object.entries(match.suggestedInputs || {})) {
+          if (value) params.set(`input_${key}`, value);
+        }
+        setRouteHint(`Matched: ${match.reason}`);
+        setTimeout(() => router.push(`/team/new?${params.toString()}`), 600);
+      } else {
+        // No match — go to template gallery with the description
+        router.push(`/team/new?describe=${encodeURIComponent(quickTask)}`);
+      }
+    } catch {
+      // Fallback: just go to template gallery
       router.push(`/team/new?describe=${encodeURIComponent(quickTask)}`);
     }
+    setRouting(false);
   };
 
   return (
