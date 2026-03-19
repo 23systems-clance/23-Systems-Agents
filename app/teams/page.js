@@ -20,7 +20,7 @@ export default async function TeamsPage() {
           </p>
         </div>
         <Link
-          href="/templates"
+          href="/team/new"
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           + New Team
@@ -34,7 +34,7 @@ export default async function TeamsPage() {
             Create your first agent team from a template.
           </p>
           <Link
-            href="/templates"
+            href="/team/new"
             className="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Browse Templates

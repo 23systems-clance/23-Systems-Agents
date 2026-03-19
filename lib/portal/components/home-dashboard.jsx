@@ -78,7 +78,7 @@ export function HomeDashboard({ teams, templates }) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Your Teams</h2>
           <Link
-            href="/templates"
+            href="/team/new"
             className="text-sm text-primary hover:text-primary/80 transition-colors"
           >
             + New Team
@@ -97,10 +97,10 @@ export function HomeDashboard({ teams, templates }) {
               Create your first AI team from a template — it takes less than a minute.
             </p>
             <Link
-              href="/templates"
+              href="/team/new"
               className="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              Browse Templates
+              Create a Team
             </Link>
           </div>
         ) : (
