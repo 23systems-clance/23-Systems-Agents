@@ -1,7 +1,21 @@
 import { auth } from 'thepopebot/auth';
-import { ChatPage } from 'thepopebot/chat';
+import { redirect } from 'next/navigation';
+import { PortalLayout } from '../lib/portal/components/portal-layout.jsx';
+import { HomeDashboard } from '../lib/portal/components/home-dashboard.jsx';
+import { getTeams, getTemplates } from '../lib/portal/actions.js';
 
 export default async function Home() {
   const session = await auth();
-  return <ChatPage session={session} needsSetup={false} />;
+  if (!session) redirect('/login');
+
+  const [teams, templates] = await Promise.all([
+    getTeams(),
+    getTemplates(),
+  ]);
+
+  return (
+    <PortalLayout session={session}>
+      <HomeDashboard teams={teams} templates={templates} />
+    </PortalLayout>
+  );
 }
