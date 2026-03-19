@@ -467,3 +467,198 @@ export async function getRunnersConfig() {
   return { crons, triggers };
 }
 
+// ── MCP Servers ──────────────────────────────────────────
+
+export async function getMCPServers() {
+  await requireAuth();
+  const { scanMCPServers } = await import('../ai/mcp-bridge.js');
+  const { mcpServersConfig } = await import('../paths.js');
+  const fs = await import('fs');
+
+  const available = scanMCPServers();
+  let activeConfig = { active_servers: [] };
+  try {
+    if (fs.existsSync(mcpServersConfig)) {
+      activeConfig = JSON.parse(fs.readFileSync(mcpServersConfig, 'utf8'));
+    }
+  } catch {}
+
+  return available.map((server) => {
+    const envKeys = server.manifest.env ? Object.keys(server.manifest.env) : [];
+    const envStatus = {};
+    for (const key of envKeys) {
+      const ref = server.manifest.env[key];
+      if (typeof ref === 'string' && ref.startsWith('${') && ref.endsWith('}')) {
+        const varName = ref.slice(2, -1);
+        envStatus[key] = !!process.env[varName];
+      } else {
+        envStatus[key] = true;
+      }
+    }
+    return {
+      name: server.name,
+      description: server.description,
+      transport: server.manifest.transport || 'stdio',
+      active: (activeConfig.active_servers || []).includes(server.name),
+      env: envKeys,
+      envStatus,
+    };
+  });
+}
+
+export async function toggleMCPServer(name, active) {
+  await requireAuth();
+  const { mcpServersConfig } = await import('../paths.js');
+  const fs = await import('fs');
+  const path = await import('path');
+
+  let config = { active_servers: [] };
+  try {
+    if (fs.existsSync(mcpServersConfig)) {
+      config = JSON.parse(fs.readFileSync(mcpServersConfig, 'utf8'));
+    }
+  } catch {}
+
+  const servers = new Set(config.active_servers || []);
+  if (active) {
+    servers.add(name);
+  } else {
+    servers.delete(name);
+  }
+
+  config.active_servers = [...servers];
+  fs.mkdirSync(path.dirname(mcpServersConfig), { recursive: true });
+  fs.writeFileSync(mcpServersConfig, JSON.stringify(config, null, 2) + '\n', 'utf8');
+
+  // Reset the chat agent so it picks up the new config
+  try {
+    const { resetAgent } = await import('../ai/agent.js');
+    resetAgent();
+  } catch {}
+
+  return { success: true };
+}
+
+export async function createMCPServer({ name, description, command, args, env }) {
+  await requireAuth();
+  const { mcpServersDir } = await import('../paths.js');
+  const fs = await import('fs');
+  const path = await import('path');
+
+  // Validate name (alphanumeric + hyphens only)
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
+    return { error: 'Name must be lowercase alphanumeric with hyphens (e.g. "my-server")' };
+  }
+
+  const serverDir = path.join(mcpServersDir, name);
+  if (fs.existsSync(serverDir)) {
+    return { error: `Server "${name}" already exists` };
+  }
+
+  // Build manifest
+  const manifest = {
+    name,
+    description: description || '',
+    transport: 'stdio',
+    command: command || 'node',
+    args: args || ['server.js'],
+  };
+  if (env && Object.keys(env).length > 0) {
+    manifest.env = env;
+  }
+
+  // Create directory + files
+  fs.mkdirSync(serverDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(serverDir, 'MCP_SERVER.json'),
+    JSON.stringify(manifest, null, 2) + '\n',
+    'utf8'
+  );
+
+  // Starter server.js template
+  const serverJs = `import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+
+const server = new Server(
+  { name: '${name}', version: '1.0.0' },
+  { capabilities: { tools: {} } }
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: [
+    {
+      name: '${name}_hello',
+      description: 'A sample tool — replace with your own',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          input: { type: 'string', description: 'Input value' },
+        },
+        required: ['input'],
+      },
+    },
+  ],
+}));
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name: toolName, arguments: args } = request.params;
+
+  if (toolName === '${name}_hello') {
+    return {
+      content: [{ type: 'text', text: \`Hello from ${name}! You said: \${args.input}\` }],
+    };
+  }
+
+  return { content: [{ type: 'text', text: \`Unknown tool: \${toolName}\` }], isError: true };
+});
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+`;
+
+  fs.writeFileSync(path.join(serverDir, 'server.js'), serverJs, 'utf8');
+
+  // package.json
+  const pkg = {
+    name: `mcp-server-${name}`,
+    version: '1.0.0',
+    type: 'module',
+    dependencies: {
+      '@modelcontextprotocol/sdk': '^1.0.0',
+    },
+  };
+  fs.writeFileSync(path.join(serverDir, 'package.json'), JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+
+  return { success: true };
+}
+
+export async function deleteMCPServer(name) {
+  await requireAuth();
+  const { mcpServersDir, mcpServersConfig } = await import('../paths.js');
+  const fs = await import('fs');
+  const path = await import('path');
+
+  // Remove from active config
+  try {
+    if (fs.existsSync(mcpServersConfig)) {
+      const config = JSON.parse(fs.readFileSync(mcpServersConfig, 'utf8'));
+      config.active_servers = (config.active_servers || []).filter((s) => s !== name);
+      fs.writeFileSync(mcpServersConfig, JSON.stringify(config, null, 2) + '\n', 'utf8');
+    }
+  } catch {}
+
+  // Remove directory
+  const serverDir = path.join(mcpServersDir, name);
+  if (fs.existsSync(serverDir)) {
+    fs.rmSync(serverDir, { recursive: true, force: true });
+  }
+
+  // Reset agent
+  try {
+    const { resetAgent } = await import('../ai/agent.js');
+    resetAgent();
+  } catch {}
+
+  return { success: true };
+}

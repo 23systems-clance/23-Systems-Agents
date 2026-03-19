@@ -25,6 +25,10 @@ export const skillGuidePath = path.join(PROJECT_ROOT, 'config', 'SKILL_BUILDING_
 // Skills directory
 export const skillsDir = path.join(PROJECT_ROOT, 'skills');
 
+// MCP servers directory
+export const mcpServersDir = path.join(PROJECT_ROOT, 'mcp-servers');
+export const mcpServersConfig = path.join(PROJECT_ROOT, 'config', 'MCP_SERVERS.json');
+
 // Working directories for command-type actions
 export const cronDir = path.join(PROJECT_ROOT, 'cron');
 export const triggersDir = path.join(PROJECT_ROOT, 'triggers');

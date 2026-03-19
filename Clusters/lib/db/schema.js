@@ -79,6 +79,7 @@ export const clusterRoles = sqliteTable('cluster_roles', {
   maxConcurrency: integer('max_concurrency').notNull().default(1),
   cleanupWorkerDir: integer('cleanup_worker_dir').notNull().default(0),
   folders: text('folders'),
+  mcpServers: text('mcp_servers'),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),

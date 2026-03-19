@@ -412,6 +412,7 @@ export function ClusterPage({ session, clusterId, roleId }) {
           status={roleStatus[activeRole.id]}
           onUpdate={handleUpdateRole}
           onDelete={handleDeleteRole}
+          availableMCPServers={cluster.availableMCPServers || []}
         />
       ) : null}
     </PageLayout>
@@ -443,7 +444,7 @@ function SortableTab({ role, isActive, onClick }) {
   );
 }
 
-function RoleTabContent({ role, clusterId, status, onUpdate, onDelete }) {
+function RoleTabContent({ role, clusterId, status, onUpdate, onDelete, availableMCPServers }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showPlaceholders, setShowPlaceholders] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -746,6 +747,39 @@ function RoleTabContent({ role, clusterId, status, onUpdate, onDelete }) {
           </span>
         </button>
       </div>
+
+      {/* MCP Servers */}
+      {availableMCPServers.length > 0 && (
+        <div className="mb-6">
+          <label className="text-sm font-medium block mb-1">MCP Servers</label>
+          <p className="text-xs text-muted-foreground mb-2">Select which MCP servers this role can use.</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            {availableMCPServers.map((server) => {
+              const selected = (role.mcpServers || []).includes(server.name);
+              return (
+                <button
+                  key={server.name}
+                  onClick={() => {
+                    const current = role.mcpServers || [];
+                    const next = selected
+                      ? current.filter((s) => s !== server.name)
+                      : [...current, server.name];
+                    onUpdate(role.id, { mcpServers: next.length ? next : null });
+                  }}
+                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium border transition-colors ${
+                    selected
+                      ? 'bg-foreground text-background border-foreground'
+                      : 'bg-background text-muted-foreground border-input hover:border-foreground/50'
+                  }`}
+                  title={server.description}
+                >
+                  {server.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="border-b border-border mb-6" />
 

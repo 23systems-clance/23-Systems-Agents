@@ -1,0 +1,12 @@
+{
+  "name": "builtwith-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for BuildWith technology profiling API",
+  "type": "module",
+  "main": "server.js",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.24.1",
+    "zod-to-json-schema": "^3.25.1"
+  }
+}

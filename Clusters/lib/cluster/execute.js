@@ -208,6 +208,18 @@ export async function runClusterRole(roleData, payload, trigger) {
     env.push(`TRIGGER_LOG=${JSON.stringify({ ...trigger, ...(payload ? { payload } : {}) }, null, 2)}`);
   }
 
+  // Inject MCP server config for container
+  if (roleData.mcpServers) {
+    const servers = typeof roleData.mcpServers === 'string' ? JSON.parse(roleData.mcpServers) : roleData.mcpServers;
+    if (servers.length) {
+      const { buildMCPConfigForContainer } = await import('../ai/mcp-bridge.js');
+      const mcpConfig = buildMCPConfigForContainer(servers);
+      if (Object.keys(mcpConfig).length) {
+        env.push(`MCP_CONFIG=${JSON.stringify(mcpConfig)}`);
+      }
+    }
+  }
+
   const hostDataDir = await resolveHostPath(dataDir);
   const binds = [`${hostDataDir}:/home/claude-code/workspace`];
 

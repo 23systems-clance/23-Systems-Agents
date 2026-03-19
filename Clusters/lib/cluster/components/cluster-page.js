@@ -394,7 +394,8 @@ function ClusterPage({ session, clusterId, roleId }) {
         clusterId,
         status: roleStatus[activeRole.id],
         onUpdate: handleUpdateRole,
-        onDelete: handleDeleteRole
+        onDelete: handleDeleteRole,
+        availableMCPServers: cluster.availableMCPServers || []
       }
     ) : null
   ] });
@@ -419,7 +420,7 @@ function SortableTab({ role, isActive, onClick }) {
     }
   );
 }
-function RoleTabContent({ role, clusterId, status, onUpdate, onDelete }) {
+function RoleTabContent({ role, clusterId, status, onUpdate, onDelete, availableMCPServers }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showPlaceholders, setShowPlaceholders] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -711,6 +712,27 @@ function RoleTabContent({ role, clusterId, status, onUpdate, onDelete }) {
           ]
         }
       )
+    ] }),
+    availableMCPServers.length > 0 && /* @__PURE__ */ jsxs("div", { className: "mb-6", children: [
+      /* @__PURE__ */ jsx("label", { className: "text-sm font-medium block mb-1", children: "MCP Servers" }),
+      /* @__PURE__ */ jsx("p", { className: "text-xs text-muted-foreground mb-2", children: "Select which MCP servers this role can use." }),
+      /* @__PURE__ */ jsx("div", { className: "flex items-center gap-2 flex-wrap", children: availableMCPServers.map((server) => {
+        const selected = (role.mcpServers || []).includes(server.name);
+        return /* @__PURE__ */ jsx(
+          "button",
+          {
+            onClick: () => {
+              const current = role.mcpServers || [];
+              const next = selected ? current.filter((s) => s !== server.name) : [...current, server.name];
+              onUpdate(role.id, { mcpServers: next.length ? next : null });
+            },
+            className: `inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium border transition-colors ${selected ? "bg-foreground text-background border-foreground" : "bg-background text-muted-foreground border-input hover:border-foreground/50"}`,
+            title: server.description,
+            children: server.name
+          },
+          server.name
+        );
+      }) })
     ] }),
     /* @__PURE__ */ jsx("div", { className: "border-b border-border mb-6" }),
     /* @__PURE__ */ jsxs("div", { className: "mb-6", children: [

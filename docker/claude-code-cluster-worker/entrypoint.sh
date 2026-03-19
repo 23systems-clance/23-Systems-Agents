@@ -20,13 +20,24 @@ export CLAUDE_CODE_OAUTH_TOKEN="${CLAUDE_CODE_OAUTH_TOKEN}"
 # Skip onboarding and trust dialogs
 WORKSPACE_DIR=$(pwd)
 mkdir -p ~/.claude
-cat > ~/.claude/settings.json << 'EOF'
+
+# Build settings with optional MCP server config
+if [ -n "$MCP_CONFIG" ]; then
+    jq -n --argjson mcp "$MCP_CONFIG" '{
+      theme: "dark",
+      hasTrustDialogAccepted: true,
+      skipDangerousModePermissionPrompt: true,
+      mcpServers: $mcp
+    }' > ~/.claude/settings.json
+else
+    cat > ~/.claude/settings.json << 'EOF'
 {
   "theme": "dark",
   "hasTrustDialogAccepted": true,
   "skipDangerousModePermissionPrompt": true
 }
 EOF
+fi
 
 cat > ~/.claude.json << ENDJSON
 {

@@ -19,3 +19,4 @@ export { ChatInput } from './chat-input.js';
 export { ChatHeader } from './chat-header.js';
 export { Greeting } from './greeting.js';
 export { ThemeProvider } from './theme-provider.js';
+export { MCPServersPage } from './settings-mcp-page.js';

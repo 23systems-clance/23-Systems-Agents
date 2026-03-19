@@ -132,6 +132,23 @@
 }
 
 
+/* ── Footer user nav ── */
+
+[data-sidebar] > div > div:last-child {
+  overflow: hidden !important;
+  min-width: 0 !important;
+}
+
+[data-sidebar] > div > div:last-child button[class*="rounded-md"] {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+[data-sidebar] > div > div:last-child .truncate {
+  max-width: 140px !important;
+}
+
+
 /* ── Transitions ── */
 
 a, button, [role="button"], input, select, textarea {

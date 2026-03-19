@@ -6,6 +6,7 @@ import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
 import { jobPlanningMd, codePlanningMd, thepopebotDb } from '../paths.js';
 import { render_md } from '../utils/render-md.js';
 import { createWebSearchTool, getProvider } from './web-search.js';
+import { loadMCPTools, closeMCPConnections } from './mcp-bridge.js';
 
 let _agent = null;
 
@@ -25,6 +26,16 @@ export async function getJobAgent() {
       console.log(`[agent] Web search enabled (provider: ${getProvider()})`);
     }
 
+    // Load MCP tools from active servers
+    try {
+      const mcpTools = await loadMCPTools();
+      if (mcpTools.length > 0) {
+        tools.push(...mcpTools);
+      }
+    } catch (err) {
+      console.warn('[agent] Failed to load MCP tools:', err.message);
+    }
+
     const checkpointer = SqliteSaver.fromConnString(thepopebotDb);
 
     _agent = createReactAgent({
@@ -42,6 +53,7 @@ export async function getJobAgent() {
  */
 export function resetAgent() {
   _agent = null;
+  closeMCPConnections().catch(() => {});
 }
 
 const _codeAgents = new Map();

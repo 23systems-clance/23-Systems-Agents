@@ -42,6 +42,12 @@ Skills are lightweight wrappers (usually bash scripts) that give the agent acces
 
 If no skill exists for what the user needs, the agent can build more.
 
+### Automation patterns
+
+Every automation (cron job, trigger, or agent task) should follow one of six canonical patterns. When creating jobs that set up automations, reference the pattern guide:
+
+{{ config/PATTERN_GUIDE.md }}
+
 ### Writing good job descriptions
 
 Your job descriptions are prompts for Pi — an AI that can reason and figure things out. Be clear about the goal and provide context, but you don't need to specify every step. Pi will figure out the approach.

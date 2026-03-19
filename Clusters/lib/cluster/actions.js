@@ -3,7 +3,7 @@
 import fs from 'fs';
 import path from 'path';
 import { auth } from '../auth/index.js';
-import { configDir } from '../paths.js';
+import { configDir, mcpServersDir } from '../paths.js';
 import {
   createCluster as dbCreateCluster,
   getClusterById,
@@ -52,11 +52,15 @@ export async function getCluster(clusterId) {
     ...r,
     triggerConfig: r.triggerConfig ? JSON.parse(r.triggerConfig) : null,
     folders: r.folders ? JSON.parse(r.folders) : null,
+    mcpServers: r.mcpServers ? JSON.parse(r.mcpServers) : null,
   }));
+  const { scanMCPServers } = await import('../ai/mcp-bridge.js');
+  const availableMCPServers = scanMCPServers().map(({ name, description }) => ({ name, description }));
   return {
     ...cluster,
     folders: cluster.folders ? JSON.parse(cluster.folders) : null,
     roles,
+    availableMCPServers,
   };
 }
 

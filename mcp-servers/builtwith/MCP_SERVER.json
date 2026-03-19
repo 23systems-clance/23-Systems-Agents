@@ -1,0 +1,10 @@
+{
+  "name": "builtwith",
+  "description": "Technology stack profiling via BuildWith API. Look up what technologies any website uses.",
+  "transport": "stdio",
+  "command": "node",
+  "args": ["server.js"],
+  "env": {
+    "BUILTWITH_API_KEY": "${BUILTWITH_API_KEY}"
+  }
+}

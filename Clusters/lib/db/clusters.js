@@ -142,6 +142,7 @@ export function updateClusterRole(id, updates) {
   if (updates.maxConcurrency !== undefined) set.maxConcurrency = updates.maxConcurrency;
   if (updates.cleanupWorkerDir !== undefined) set.cleanupWorkerDir = updates.cleanupWorkerDir;
   if (updates.folders !== undefined) set.folders = updates.folders ? JSON.stringify(updates.folders) : null;
+  if (updates.mcpServers !== undefined) set.mcpServers = updates.mcpServers && updates.mcpServers.length ? JSON.stringify(updates.mcpServers) : null;
   db.update(clusterRoles)
     .set(set)
     .where(eq(clusterRoles.id, id))
@@ -172,6 +173,7 @@ export function getRoleWithCluster(roleId) {
     ...role,
     triggerConfig: role.triggerConfig ? JSON.parse(role.triggerConfig) : null,
     folders: role.folders ? JSON.parse(role.folders) : null,
+    mcpServers: role.mcpServers ? JSON.parse(role.mcpServers) : null,
     cluster,
   };
 }
