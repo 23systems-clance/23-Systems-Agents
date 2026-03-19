@@ -2,6 +2,7 @@ import { auth } from 'thepopebot/auth';
 import { redirect } from 'next/navigation';
 import { PortalLayout } from '../../../lib/portal/components/portal-layout.jsx';
 import { TeamWizard } from '../../../lib/portal/components/team-wizard.jsx';
+import { CustomTeamWizard } from '../../../lib/portal/components/custom-team-wizard.jsx';
 import { getTemplateById, getTemplates } from '../../../lib/portal/actions.js';
 import { TemplateGallery } from '../../../lib/portal/components/template-gallery.jsx';
 
@@ -11,6 +12,17 @@ export default async function NewTeamPage({ searchParams }) {
 
   const params = await searchParams;
   const templateId = params?.template;
+  const isCustom = params?.custom === 'true';
+  const describe = params?.describe || '';
+
+  // Custom team wizard (no template)
+  if (isCustom) {
+    return (
+      <PortalLayout session={session}>
+        <CustomTeamWizard initialTask={describe} />
+      </PortalLayout>
+    );
+  }
 
   // If a template is specified, show the wizard
   if (templateId) {
@@ -39,7 +51,7 @@ export default async function NewTeamPage({ searchParams }) {
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Build a Team</h1>
         <p className="text-muted-foreground mt-1">
-          Choose a template to get started, or describe what you need.
+          Choose a template to get started, or build from scratch.
         </p>
       </div>
       <TemplateGallery templates={templates} />

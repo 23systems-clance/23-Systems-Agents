@@ -146,6 +146,33 @@ export function TemplateGallery({ templates }) {
 
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Build from Scratch card — always first */}
+        <Link
+          href="/team/new?custom=true"
+          className="group block rounded-xl border-2 border-dashed border-border p-5 transition-all hover:border-primary/50 hover:shadow-md"
+        >
+          <div className="flex items-start gap-3 mb-3">
+            <div className="rounded-lg bg-muted p-2.5 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+              <PlusIcon className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">
+                Build from Scratch
+              </h3>
+              <span className="text-xs text-muted-foreground">
+                custom
+              </span>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+            Define your own team — name it, describe the task, and add members manually.
+          </p>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span>You define the roles</span>
+            <span className="px-1.5 py-0.5 rounded bg-muted">flexible</span>
+          </div>
+        </Link>
+
         {filtered.map(template => (
           <TemplateCard key={template.id} template={template} />
         ))}
@@ -153,7 +180,7 @@ export function TemplateGallery({ templates }) {
 
       {filtered.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
-          No templates match your search.
+          No templates match your search. Try <Link href="/team/new?custom=true" className="text-primary hover:text-primary/80">building from scratch</Link> instead.
         </div>
       )}
     </div>
@@ -265,6 +292,14 @@ function BarChartIcon({ className }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" />
+    </svg>
+  );
+}
+
+function PlusIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   );
 }

@@ -31,12 +31,12 @@ export function HomeDashboard({ teams, templates }) {
         setRouteHint(`Matched: ${match.reason}`);
         setTimeout(() => router.push(`/team/new?${params.toString()}`), 600);
       } else {
-        // No match — go to template gallery with the description
-        router.push(`/team/new?describe=${encodeURIComponent(quickTask)}`);
+        // No match — go to custom team wizard with the description pre-filled
+        router.push(`/team/new?custom=true&describe=${encodeURIComponent(quickTask)}`);
       }
     } catch {
-      // Fallback: just go to template gallery
-      router.push(`/team/new?describe=${encodeURIComponent(quickTask)}`);
+      // Fallback: go to custom team wizard
+      router.push(`/team/new?custom=true&describe=${encodeURIComponent(quickTask)}`);
     }
     setRouting(false);
   };
