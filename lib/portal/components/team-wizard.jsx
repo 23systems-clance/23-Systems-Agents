@@ -12,13 +12,14 @@ import { SCHEDULE_PRESETS, DAYS_OF_WEEK, getNextRuns, humanToCron } from '../sch
  * Step 2: Customize — fill in template inputs
  * Step 3: Schedule & Launch
  */
-export function TeamWizard({ template }) {
+export function TeamWizard({ template, prefilled = {} }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [inputs, setInputs] = useState(() => {
     const defaults = {};
     for (const input of template.inputs) {
-      defaults[input.id] = input.default || '';
+      // Prefilled values from LLM matcher take priority over defaults
+      defaults[input.id] = prefilled[input.id] || input.default || '';
     }
     return defaults;
   });
@@ -250,6 +251,38 @@ export function TeamWizard({ template }) {
 }
 
 function InputField({ input, value, onChange }) {
+  if (input.type === 'file') {
+    return (
+      <div>
+        <label className="block text-sm font-medium mb-1.5">
+          {input.label}
+          {input.required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        <div className="relative">
+          <input
+            type="file"
+            accept={input.accept || '*'}
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) onChange(file.name);
+              // The actual file upload happens at team creation time
+              // Store the file reference for later
+              if (file) {
+                e.target._selectedFile = file;
+              }
+            }}
+            className="w-full rounded-lg border border-border bg-input px-3 py-2.5 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-primary hover:file:bg-primary/20"
+          />
+          {value && (
+            <span className="text-xs text-muted-foreground mt-1 block">
+              Selected: {value}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (input.type === 'select') {
     return (
       <div>

@@ -1,0 +1,71 @@
+{
+  "id": "customer-support",
+  "name": "Customer Support Team",
+  "description": "Triage incoming support requests, draft responses, and escalate complex issues.",
+  "icon": "headphones",
+  "category": "support",
+  "difficulty": "intermediate",
+  "estimatedTime": "2-5 minutes per request",
+  "inputs": [
+    {
+      "id": "request",
+      "label": "What is the customer asking?",
+      "type": "textarea",
+      "placeholder": "Paste the customer's message or describe their issue...",
+      "required": true
+    },
+    {
+      "id": "product",
+      "label": "What product or service is this about?",
+      "type": "text",
+      "placeholder": "e.g., Our SaaS platform, mobile app, consulting service",
+      "required": false
+    },
+    {
+      "id": "tone",
+      "label": "Response tone",
+      "type": "select",
+      "options": [
+        { "value": "professional", "label": "Professional & helpful" },
+        { "value": "friendly", "label": "Warm & friendly" },
+        { "value": "formal", "label": "Formal & detailed" },
+        { "value": "empathetic", "label": "Empathetic & understanding" }
+      ],
+      "default": "professional"
+    },
+    {
+      "id": "context",
+      "label": "Any additional context?",
+      "type": "text",
+      "placeholder": "e.g., Customer is on the Pro plan, has been with us 2 years",
+      "required": false
+    }
+  ],
+  "cluster": {
+    "systemPrompt": "You are a professional customer support team. Your shared workspace is at {{CLUSTER_SHARED_DIR}}. Always be respectful and solution-oriented. Never make up information — if unsure, flag for human review.",
+    "folders": ["triage", "drafts", "escalations"],
+    "roles": [
+      {
+        "roleName": "Classifier",
+        "role": "You are a support request classifier. Your job is to understand the customer's issue, categorize it, assess urgency, and determine if it can be handled with a standard response or needs escalation.",
+        "prompt": "Classify this customer support request:\n\n{{input.request}}\n\nProduct: {{input.product}}\nContext: {{input.context}}\n\nDetermine:\n1. Category (billing, technical, account, feature-request, bug-report, general)\n2. Urgency (critical, high, medium, low)\n3. Sentiment (frustrated, neutral, positive)\n4. Can auto-respond? (yes/no — no if it needs account access, refunds, or involves sensitive data)\n5. Key issue summary (1 sentence)\n\nSave to {{CLUSTER_SHARED_DIR}}triage/classification.md",
+        "maxConcurrency": 1,
+        "dependsOn": null
+      },
+      {
+        "roleName": "Responder",
+        "role": "You are a support response writer. Take the classified request and draft a helpful, accurate response. Match the requested tone. Include specific next steps the customer should take.",
+        "prompt": "Read classification from {{CLUSTER_SHARED_DIR}}triage/classification.md.\n\nOriginal request: {{input.request}}\nTone: {{input.tone}}\nProduct: {{input.product}}\n\nDraft a response that:\n1. Acknowledges their issue specifically (don't be generic)\n2. Provides a clear answer or solution\n3. Includes specific next steps\n4. Offers additional help\n5. Matches the {{input.tone}} tone\n\nIf the classification says 'cannot auto-respond', draft a response that acknowledges the issue and explains a team member will follow up personally.\n\nSave draft to {{CLUSTER_SHARED_DIR}}drafts/response-draft.md",
+        "maxConcurrency": 1,
+        "dependsOn": "Classifier"
+      },
+      {
+        "roleName": "Escalator",
+        "role": "You are a support quality checker and escalation handler. Review the draft response for accuracy and completeness. If the issue needs human attention, prepare an escalation brief.",
+        "prompt": "Read classification from {{CLUSTER_SHARED_DIR}}triage/classification.md\nRead draft response from {{CLUSTER_SHARED_DIR}}drafts/response-draft.md\n\nReview the draft:\n1. Does it accurately address the customer's issue?\n2. Is the tone appropriate?\n3. Are the next steps clear and actionable?\n4. Are there any promises we shouldn't make?\n\nIf the response is good, save it as final to {{CLUSTER_SHARED_DIR}}drafts/final-response.md\n\nIf escalation is needed, create:\n- {{CLUSTER_SHARED_DIR}}escalations/escalation-brief.md with:\n  - Customer issue summary\n  - Why it needs human attention\n  - Suggested action for the human agent\n  - Priority level",
+        "maxConcurrency": 1,
+        "dependsOn": "Responder"
+      }
+    ]
+  }
+}

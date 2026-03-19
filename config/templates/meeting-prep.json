@@ -1,0 +1,63 @@
+{
+  "id": "meeting-prep",
+  "name": "Meeting Prep",
+  "description": "Research a person, company, or topic before a meeting and get a concise briefing packet.",
+  "icon": "briefcase",
+  "category": "research",
+  "difficulty": "beginner",
+  "estimatedTime": "5-15 minutes",
+  "inputs": [
+    {
+      "id": "meeting_with",
+      "label": "Who is the meeting with?",
+      "type": "text",
+      "placeholder": "e.g., Sarah Chen, VP of Product at Stripe",
+      "required": true
+    },
+    {
+      "id": "purpose",
+      "label": "What is the meeting about?",
+      "type": "text",
+      "placeholder": "e.g., Partnership discussion, sales pitch, investor call",
+      "required": true
+    },
+    {
+      "id": "prep_depth",
+      "label": "How much prep do you need?",
+      "type": "select",
+      "options": [
+        { "value": "quick", "label": "Quick brief (5 min read)" },
+        { "value": "standard", "label": "Standard prep (10 min read)" },
+        { "value": "deep", "label": "Deep prep (full dossier)" }
+      ],
+      "default": "standard"
+    },
+    {
+      "id": "your_company",
+      "label": "What's your company/role? (for context)",
+      "type": "text",
+      "placeholder": "e.g., CEO of a design agency",
+      "required": false
+    }
+  ],
+  "cluster": {
+    "systemPrompt": "You are a meeting preparation team. Your shared workspace is at {{CLUSTER_SHARED_DIR}}. Be factual — only include verifiable information. Flag anything uncertain. Format for quick scanning (bullets, headers, bold key points).",
+    "folders": ["research", "brief"],
+    "roles": [
+      {
+        "roleName": "Researcher",
+        "role": "You are a background researcher. Find relevant information about the person, their company, recent news, and anything relevant to the meeting topic. Be thorough but factual — don't speculate.",
+        "prompt": "Research for an upcoming meeting:\n\nMeeting with: {{input.meeting_with}}\nPurpose: {{input.purpose}}\nOur context: {{input.your_company}}\nDepth: {{input.prep_depth}}\n\nResearch:\n1. Person background (role, career, LinkedIn highlights, recent talks/posts)\n2. Company overview (what they do, size, recent news, funding)\n3. Relevant context for the meeting topic\n4. Any shared connections or common ground\n5. Recent news or events that might come up\n\nFor quick: 1-2 bullet points per section\nFor standard: 3-5 bullet points per section\nFor deep: Full paragraphs with source links\n\nSave to {{CLUSTER_SHARED_DIR}}research/background.md",
+        "maxConcurrency": 1,
+        "dependsOn": null
+      },
+      {
+        "roleName": "Briefer",
+        "role": "You are a briefing writer. Take raw research and produce a scannable, actionable meeting prep document. Include talking points, questions to ask, and things to avoid.",
+        "prompt": "Read research from {{CLUSTER_SHARED_DIR}}research/background.md.\n\nMeeting with: {{input.meeting_with}}\nPurpose: {{input.purpose}}\nOur context: {{input.your_company}}\n\nCreate a meeting brief:\n\n1. **Quick Facts** — Name, title, company, 3 key things to know\n2. **Meeting Context** — Why we're meeting, what they likely want\n3. **Talking Points** — 3-5 topics to raise, with suggested framing\n4. **Questions to Ask** — 3-5 smart questions that show preparation\n5. **Watch Out For** — Topics to avoid, potential sensitivities\n6. **Desired Outcome** — What success looks like for this meeting\n\nFormat for scanning in 2 minutes before the meeting — bold key names, use bullets, keep it tight.\n\nSave to {{CLUSTER_SHARED_DIR}}brief/meeting-brief.md",
+        "maxConcurrency": 1,
+        "dependsOn": "Researcher"
+      }
+    ]
+  }
+}

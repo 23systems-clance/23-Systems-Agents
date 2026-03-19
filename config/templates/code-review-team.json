@@ -1,0 +1,65 @@
+{
+  "id": "code-review-team",
+  "name": "Code Review Team",
+  "description": "Scan a codebase or PR for bugs, security issues, and improvement opportunities.",
+  "icon": "code",
+  "category": "development",
+  "difficulty": "intermediate",
+  "estimatedTime": "10-20 minutes per review",
+  "inputs": [
+    {
+      "id": "target",
+      "label": "What should the team review?",
+      "type": "text",
+      "placeholder": "e.g., The authentication module, PR #42, or the /api endpoints",
+      "required": true
+    },
+    {
+      "id": "focus",
+      "label": "What should they focus on?",
+      "type": "select",
+      "options": [
+        { "value": "all", "label": "Full review (bugs, security, quality)" },
+        { "value": "security", "label": "Security audit" },
+        { "value": "performance", "label": "Performance review" },
+        { "value": "quality", "label": "Code quality & best practices" },
+        { "value": "bugs", "label": "Bug hunting" }
+      ],
+      "default": "all"
+    },
+    {
+      "id": "language",
+      "label": "Primary language/framework?",
+      "type": "text",
+      "placeholder": "e.g., TypeScript, React, Python, Go",
+      "required": false
+    }
+  ],
+  "cluster": {
+    "systemPrompt": "You are a professional code review team. Your shared workspace is at {{CLUSTER_SHARED_DIR}}. Be specific — reference file names, line numbers, and code snippets in your findings. Prioritize findings by severity (critical, high, medium, low).",
+    "folders": ["findings", "reports"],
+    "roles": [
+      {
+        "roleName": "Scanner",
+        "role": "You are a code scanner. Your job is to systematically read through the target code and identify potential issues. Look for bugs, anti-patterns, security vulnerabilities, and performance problems. Document each finding with file path, line number, code snippet, and issue description.",
+        "prompt": "Scan the following code target: {{input.target}}\nLanguage/framework: {{input.language}}\nFocus: {{input.focus}}\n\nFor each finding, document:\n- File and line number\n- Code snippet\n- Issue type (bug, security, performance, quality)\n- Severity (critical, high, medium, low)\n- Explanation\n\nSave raw findings to {{CLUSTER_SHARED_DIR}}findings/scan-results.md",
+        "maxConcurrency": 1,
+        "dependsOn": null
+      },
+      {
+        "roleName": "Reviewer",
+        "role": "You are a senior code reviewer. Take the scanner's findings, validate them (remove false positives), add context, and suggest specific fixes for each real issue. Group related findings together.",
+        "prompt": "Read scan results from {{CLUSTER_SHARED_DIR}}findings/scan-results.md.\n\nFor each finding:\n1. Validate — is this a real issue or false positive?\n2. Add context — why is this a problem?\n3. Suggest a specific fix with code example\n4. Rate confidence (certain, likely, possible)\n\nRemove false positives. Group related issues.\n\nSave validated findings to {{CLUSTER_SHARED_DIR}}findings/validated-findings.md",
+        "maxConcurrency": 1,
+        "dependsOn": "Scanner"
+      },
+      {
+        "roleName": "Reporter",
+        "role": "You are a technical writer specializing in code review reports. Take validated findings and produce a clear, actionable review report that a developer can immediately act on.",
+        "prompt": "Read validated findings from {{CLUSTER_SHARED_DIR}}findings/validated-findings.md.\n\nProduce a code review report:\n1. Executive summary (1-2 sentences)\n2. Statistics (total findings by severity and type)\n3. Critical & High findings (with fix suggestions)\n4. Medium & Low findings\n5. Positive observations (what's done well)\n6. Recommended next steps\n\nSave to {{CLUSTER_SHARED_DIR}}reports/code-review.md",
+        "maxConcurrency": 1,
+        "dependsOn": "Reviewer"
+      }
+    ]
+  }
+}

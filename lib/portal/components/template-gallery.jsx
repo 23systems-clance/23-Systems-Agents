@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { matchTemplate } from '../actions.js';
 
 const ICON_MAP = {
   search: SearchIcon,
@@ -25,8 +27,12 @@ const CATEGORY_LABELS = {
 };
 
 export function TemplateGallery({ templates }) {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+  const [describe, setDescribe] = useState('');
+  const [matching, setMatching] = useState(false);
+  const [matchResult, setMatchResult] = useState(null);
 
   const categories = ['all', ...new Set(templates.map(t => t.category).filter(Boolean))];
 
@@ -38,26 +44,90 @@ export function TemplateGallery({ templates }) {
     return matchesSearch && matchesCategory;
   });
 
+  const handleDescribe = async (e) => {
+    e.preventDefault();
+    if (!describe.trim() || matching) return;
+    setMatching(true);
+    setMatchResult(null);
+    try {
+      const result = await matchTemplate(describe);
+      if (result.templateId && result.confidence !== 'low') {
+        // Build query params with suggested inputs
+        const params = new URLSearchParams({ template: result.templateId });
+        for (const [key, value] of Object.entries(result.suggestedInputs || {})) {
+          if (value) params.set(`input_${key}`, value);
+        }
+        setMatchResult(result);
+        // Auto-navigate after a brief moment so user sees the match
+        setTimeout(() => router.push(`/team/new?${params.toString()}`), 800);
+      } else {
+        setMatchResult({ ...result, templateId: null });
+      }
+    } catch {
+      setMatchResult({ templateId: null, reason: 'Something went wrong. Try picking a template instead.' });
+    }
+    setMatching(false);
+  };
+
   return (
     <div>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight">Templates</h1>
         <p className="text-muted-foreground mt-1">
-          Pre-built agent teams ready to deploy. Pick one and customize it.
+          Pre-built agent teams ready to deploy. Pick one, or describe what you need.
         </p>
       </div>
+
+      {/* Describe what you need */}
+      <form onSubmit={handleDescribe} className="mb-8">
+        <div className="rounded-xl border border-border p-4 bg-muted/30">
+          <label className="block text-sm font-medium mb-2">
+            Or describe what you need in plain English
+          </label>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={describe}
+              onChange={e => setDescribe(e.target.value)}
+              placeholder="e.g., I need someone to research my competitors and write a report"
+              className="flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <button
+              type="submit"
+              disabled={!describe.trim() || matching}
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 whitespace-nowrap"
+            >
+              {matching ? 'Finding...' : 'Find a Match'}
+            </button>
+          </div>
+          {matchResult && (
+            <div className={`mt-3 text-sm ${matchResult.templateId ? 'text-green-600' : 'text-muted-foreground'}`}>
+              {matchResult.templateId ? (
+                <>
+                  Matched: <strong>{templates.find(t => t.id === matchResult.templateId)?.name}</strong>
+                  {' '}&mdash; {matchResult.reason}. Redirecting...
+                </>
+              ) : (
+                <>
+                  {matchResult.reason} Try picking a template below instead.
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </form>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <input
           type="text"
-          placeholder="Search templates..."
+          placeholder="Filter templates..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap">
           {categories.map(cat => (
             <button
               key={cat}
