@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Deep Dive — {{VIDEO_TITLE}}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --violet: #7c3aed;
+    --violet-light: #a78bfa;
+    --violet-bg: #f5f3ff;
+    --violet-border: #ede9fe;
+    --teal: #0d9488;
+    --teal-bg: #f0fdfa;
+    --teal-border: #ccfbf1;
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text-primary: #171717;
+    --text-secondary: #525252;
+    --text-tertiary: #a3a3a3;
+    --border: #e5e5e5;
+    --border-subtle: #f0f0f0;
+    --rose: #e11d48;
+    --rose-bg: #fff1f2;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background: #171717;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0;
+  }
+  .sidebar-header {
+    padding: 28px 22px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--violet-light);
+    margin-bottom: 8px;
+  }
+  .sidebar-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .sidebar-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 8px;
+  }
+  .sidebar-nav {
+    padding: 16px 0;
+  }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: #262626;
+    border-left-color: var(--violet);
+  }
+  .sidebar-nav a .num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-link {
+    padding: 16px 22px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-link a {
+    font-size: 12px;
+    color: var(--violet-light);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: 260px;
+    padding: 40px 48px 60px;
+    max-width: 960px;
+  }
+
+  /* ── SECTION HEADING ── */
+  .section-heading {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    margin: 40px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-heading:first-child { margin-top: 0; }
+  .section-heading::before {
+    content: '';
+    width: 4px;
+    height: 22px;
+    background: linear-gradient(180deg, var(--violet), var(--teal));
+    border-radius: 2px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  /* ── OVERVIEW STATS ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-box {
+    background: var(--violet-bg);
+    border: 1px solid var(--violet-border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-box .val {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-box .lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  /* ── TAKEAWAYS ── */
+  .takeaway {
+    display: flex;
+    gap: 16px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .takeaway:last-child { border-bottom: none; }
+  .takeaway-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .takeaway-body h3 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+  }
+  .takeaway-body p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .takeaway-body .evidence {
+    margin-top: 10px;
+    background: var(--teal-bg);
+    border-left: 3px solid var(--teal);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+  .takeaway-body .evidence .ts {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-style: normal;
+    margin-top: 6px;
+  }
+
+  /* ── TOPIC DEEP DIVE ── */
+  .topic-section {
+    margin-bottom: 24px;
+  }
+  .topic-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .topic-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .topic-header .time-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    background: var(--violet-bg);
+    border: 1px solid var(--violet-border);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .topic-header .time-badge a {
+    color: var(--violet);
+    text-decoration: none;
+  }
+  .topic-header .time-badge a:hover {
+    text-decoration: underline;
+  }
+  .topic-body {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+  }
+  .topic-body ul {
+    margin: 10px 0;
+    padding-left: 20px;
+  }
+  .topic-body li {
+    margin-bottom: 6px;
+  }
+  .topic-divider {
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    margin: 20px 0;
+  }
+
+  /* ── ACTION ITEMS ── */
+  .action-list {
+    list-style: none;
+  }
+  .action-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .action-list li:last-child { border-bottom: none; }
+  .action-check {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── SOURCE BAR ── */
+  .source-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 32px;
+  }
+  .source-bar .label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .source-bar a {
+    font-size: 13px;
+    color: var(--violet);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 32px 0 16px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 24px; }
+  }
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 24px 16px; }
+  }
+</style>
+<link rel="stylesheet" href="../SOP Templates/brand-config.css">
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <img src="../uploads/23 Systems Logo.png" alt="23 Systems" style="height:28px;width:auto;flex-shrink:0;border-radius:6px;">
+      <span style="font-size:13px;font-weight:700;color:#fff;letter-spacing:0.5px;">23 Systems</span>
+    </div>
+    <div class="sidebar-label">Deep Dive Summary</div>
+    <div class="sidebar-title">{{VIDEO_TITLE}}</div>
+    <div class="sidebar-meta">{{CHANNEL_NAME}} · {{DATE}}</div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="#overview"><span class="num">01</span> Overview</a>
+    <a href="#takeaways"><span class="num">02</span> Key Takeaways</a>
+    <a href="#topics"><span class="num">03</span> Topic Breakdown</a>
+    <a href="#actions"><span class="num">04</span> Action Items</a>
+    <a href="#source"><span class="num">05</span> Source</a>
+  </div>
+  <div class="sidebar-link">
+    <a href="{{VIDEO_URL}}">Watch Original Video →</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<div class="main">
+
+  <!-- ── OVERVIEW ── -->
+  <h2 class="section-heading" id="overview">Overview</h2>
+
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="val">{{DURATION}}</div>
+      <div class="lbl">Duration</div>
+    </div>
+    <div class="stat-box">
+      <div class="val">{{NUM_TOPICS}}</div>
+      <div class="lbl">Topics</div>
+    </div>
+    <div class="stat-box">
+      <div class="val">{{NUM_TAKEAWAYS}}</div>
+      <div class="lbl">Key Takeaways</div>
+    </div>
+    <div class="stat-box">
+      <div class="val">{{NUM_ACTIONS}}</div>
+      <div class="lbl">Action Items</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.75;">
+      {{EXECUTIVE_SUMMARY}}
+    </p>
+  </div>
+
+  <!-- ── KEY TAKEAWAYS ── -->
+  <h2 class="section-heading" id="takeaways">Key Takeaways</h2>
+
+  <div class="card">
+    <!-- Repeat takeaway block -->
+    <div class="takeaway">
+      <div class="takeaway-badge">1</div>
+      <div class="takeaway-body">
+        <h3>{{TAKEAWAY_TITLE}}</h3>
+        <p>{{TAKEAWAY_DESCRIPTION}}</p>
+        <div class="evidence">
+          "{{SUPPORTING_QUOTE}}"
+          <div class="ts"><a href="{{VIDEO_URL}}&t={{TIMESTAMP_SECONDS}}s" style="color:var(--teal); text-decoration:none;">{{TIMESTAMP}}</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">2</div>
+      <div class="takeaway-body">
+        <h3>{{TAKEAWAY_TITLE}}</h3>
+        <p>{{TAKEAWAY_DESCRIPTION}}</p>
+        <div class="evidence">
+          "{{SUPPORTING_QUOTE}}"
+          <div class="ts"><a href="{{VIDEO_URL}}&t={{TIMESTAMP_SECONDS}}s" style="color:var(--teal); text-decoration:none;">{{TIMESTAMP}}</a></div>
+        </div>
+      </div>
+    </div>
+    <!-- Add more as needed -->
+  </div>
+
+  <!-- ── TOPIC BREAKDOWN ── -->
+  <h2 class="section-heading" id="topics">Topic Breakdown</h2>
+
+  <!-- Repeat topic-section for each major topic -->
+  <div class="card">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>{{TOPIC_NAME}}</h3>
+        <span class="time-badge"><a href="{{VIDEO_URL}}&t={{START_SECONDS}}s">{{START_TIME}}</a> — <a href="{{VIDEO_URL}}&t={{END_SECONDS}}s">{{END_TIME}}</a></span>
+      </div>
+      <div class="topic-body">
+        <p>{{TOPIC_DETAILED_SUMMARY}}</p>
+        <ul>
+          <li>{{TOPIC_BULLET_POINT}}</li>
+          <li>{{TOPIC_BULLET_POINT}}</li>
+          <li>{{TOPIC_BULLET_POINT}}</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>{{TOPIC_NAME}}</h3>
+        <span class="time-badge"><a href="{{VIDEO_URL}}&t={{START_SECONDS}}s">{{START_TIME}}</a> — <a href="{{VIDEO_URL}}&t={{END_SECONDS}}s">{{END_TIME}}</a></span>
+      </div>
+      <div class="topic-body">
+        <p>{{TOPIC_DETAILED_SUMMARY}}</p>
+        <ul>
+          <li>{{TOPIC_BULLET_POINT}}</li>
+          <li>{{TOPIC_BULLET_POINT}}</li>
+        </ul>
+      </div>
+    </div>
+    <!-- Add more topics as needed -->
+  </div>
+
+  <!-- ── ACTION ITEMS ── -->
+  <h2 class="section-heading" id="actions">Action Items</h2>
+
+  <div class="card">
+    <ul class="action-list">
+      <li>
+        <div class="action-check"></div>
+        <span>{{ACTION_ITEM}}</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span>{{ACTION_ITEM}}</span>
+      </li>
+      <!-- Add more as needed -->
+    </ul>
+  </div>
+
+  <!-- ── SOURCE ── -->
+  <div class="source-bar" id="source">
+    <span class="label">Source Video</span>
+    <a href="{{VIDEO_URL}}">{{VIDEO_URL}}</a>
+  </div>
+
+  <div class="footer">Generated by 23 Systems Agent</div>
+
+</div>
+
+</body>
+</html>

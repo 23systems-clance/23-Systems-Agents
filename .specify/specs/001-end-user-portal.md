@@ -1,9 +1,10 @@
-# Spec 002: End User Portal — Simplified Agent Management
+# Spec 001: End User Portal — Simplified Agent Management
 
-**Status:** Draft
-**Priority:** P1 (High)
+**Status:** Approved — Phase 1 In Progress
+**Priority:** P0 (Critical)
 **Estimated Effort:** 80 hours
-**Dependencies:** Clusters feature (functional), Spec 001 (pattern templates)
+**Dependencies:** Spec 000 (Rebrand Phase 1), Clusters feature (functional), Pattern templates (see CONSTITUTION.md)
+**Sequence:** 2nd (after Rebrand Phase 1)
 
 ---
 

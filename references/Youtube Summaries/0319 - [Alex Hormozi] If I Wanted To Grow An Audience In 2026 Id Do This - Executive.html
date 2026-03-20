@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Summary — If I Wanted To Grow An Audience In 2026, I'd Do This</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --violet: #7c3aed;
+    --violet-light: #a78bfa;
+    --violet-bg: #f5f3ff;
+    --violet-border: #ede9fe;
+    --teal: #0d9488;
+    --teal-bg: #f0fdfa;
+    --teal-border: #ccfbf1;
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text-primary: #171717;
+    --text-secondary: #525252;
+    --text-tertiary: #a3a3a3;
+    --border: #e5e5e5;
+    --border-subtle: #f0f0f0;
+    --rose: #e11d48;
+    --rose-bg: #fff1f2;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-header {
+    background: linear-gradient(135deg, #171717 0%, #2d2d2d 100%);
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: '';
+    position: absolute;
+    top: -150px; right: -150px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%);
+  }
+  .page-header::after {
+    content: '';
+    position: absolute;
+    bottom: -150px; left: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(13,148,136,0.1) 0%, transparent 70%);
+  }
+  .header-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--violet-light);
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .header-title {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    background: linear-gradient(135deg, #fff, #e5e5e5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+    line-height: 1.2;
+    max-width: 700px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .meta-item {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .meta-item a {
+    color: var(--violet-light);
+    text-decoration: none;
+  }
+  .meta-item a:hover { text-decoration: underline; }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+
+  /* ── SUMMARY CARD ── */
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .summary-card h2 {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .summary-card h2::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(180deg, var(--violet), var(--teal));
+    border-radius: 2px;
+  }
+  .summary-text {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+  }
+
+  /* ── KEY TAKEAWAYS ── */
+  .takeaways {
+    list-style: none;
+    counter-reset: takeaway;
+  }
+  .takeaways li {
+    counter-increment: takeaway;
+    display: flex;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .takeaways li:last-child { border-bottom: none; }
+  .takeaway-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .takeaway-content h3 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .takeaway-content p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* ── TOPICS INDEX ── */
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+  }
+  .topic-card {
+    background: var(--violet-bg);
+    border: 1px solid var(--violet-border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .topic-card h4 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--violet);
+  }
+  .topic-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .topic-card .timestamp {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    margin-top: 8px;
+  }
+  .topic-card .timestamp a {
+    color: var(--violet);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .topic-card .timestamp a:hover {
+    text-decoration: underline;
+  }
+
+  /* ── QUOTES ── */
+  .quote-block {
+    background: var(--teal-bg);
+    border-left: 4px solid var(--teal);
+    border-radius: 0 10px 10px 0;
+    padding: 18px 22px;
+    margin: 12px 0;
+  }
+  .quote-block p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-style: italic;
+    line-height: 1.65;
+  }
+  .quote-block .attribution {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-style: normal;
+    margin-top: 8px;
+  }
+
+  /* ── SOURCE LINK ── */
+  .source-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 24px;
+  }
+  .source-bar .label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .source-bar a {
+    font-size: 13px;
+    color: var(--violet);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .source-bar a:hover { text-decoration: underline; }
+
+  .footer {
+    text-align: center;
+    padding: 32px 0 16px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  @media print {
+    .page-header { padding: 32px; }
+    .container { padding: 24px; }
+  }
+  @media (max-width: 768px) {
+    .page-header { padding: 32px 20px; }
+    .header-title { font-size: 24px; }
+    .header-meta { flex-direction: column; gap: 8px; }
+    .container { padding: 24px 16px; }
+    .topic-grid { grid-template-columns: 1fr; }
+  }
+</style>
+<link rel="stylesheet" href="../SOP Templates/brand-config.css">
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="page-header">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;position:relative;z-index:1;">
+    <img src="../uploads/23 Systems Logo.png" alt="23 Systems" style="height:28px;width:auto;border-radius:6px;">
+    <span style="font-size:13px;font-weight:700;color:#fff;letter-spacing:0.5px;">23 Systems</span>
+  </div>
+  <div class="header-label">Video Summary — Executive Brief</div>
+  <h1 class="header-title">If I Wanted To Grow An Audience In 2026, I'd Do This</h1>
+  <div class="header-meta">
+    <div class="meta-item">Channel: <strong style="color:rgba(255,255,255,0.7)">Alex Hormozi</strong></div>
+    <div class="meta-item">Summarized: <strong style="color:rgba(255,255,255,0.7)">March 19, 2026</strong></div>
+    <div class="meta-item"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U">Watch Video</a></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ═══ EXECUTIVE SUMMARY ═══ -->
+  <div class="summary-card">
+    <h2>Executive Summary</h2>
+    <div class="summary-text">
+      <p>Alex Hormozi delivers a two-part presentation on audience growth strategy. The first half defines branding as "a deliberate pairing of things through an outcome" and makes the business case for why brand drives premium pricing (12x), ad performance (6x CTR), and customer loyalty. The second half shares six tactical lessons from growing 7.8 million followers in 40 months, including the critical shift from edutainment to pure education content, narrowing topic focus, optimizing for revenue over views, and prioritizing long-form over short-form. The core thesis: entertainment audiences and education audiences are separate pools, not a funnel, and only education viewers convert into buyers.</p>
+    </div>
+  </div>
+
+  <!-- ═══ KEY TAKEAWAYS ═══ -->
+  <div class="summary-card">
+    <h2>Key Takeaways</h2>
+    <ol class="takeaways">
+      <li>
+        <div class="takeaway-num">1</div>
+        <div class="takeaway-content">
+          <h3>Brand Is a Deliberate Pairing Strategy</h3>
+          <p>Branding is not a logo or color scheme -- it is the systematic pairing of your product or identity with specific associations to produce a desired outcome. Smart brands curate good pairings, remove bad ones, and control the breadth of their associations like arranging a bouquet of flowers.</p>
+        </div>
+      </li>
+      <li>
+        <div class="takeaway-num">2</div>
+        <div class="takeaway-content">
+          <h3>Brand Directly Drives Revenue</h3>
+          <p>Strong brand enables 12x premium pricing, 6x higher click-through rates on ads, and deeper customer loyalty. Warren Buffett's "single most important decision in evaluating business is pricing power" underscores that brand is not a vanity metric but a financial lever.</p>
+        </div>
+      </li>
+      <li>
+        <div class="takeaway-num">3</div>
+        <div class="takeaway-content">
+          <h3>Entertainment and Education Audiences Are Separate Pools</h3>
+          <p>Hormozi's data showed that entertainment viewers do not convert into buyers. Education viewers buy books, join email lists, and apply to the portfolio. The two audiences are distinct pools, not stages in a funnel, so optimizing for entertainment virality undermines business results.</p>
+        </div>
+      </li>
+      <li>
+        <div class="takeaway-num">4</div>
+        <div class="takeaway-content">
+          <h3>Narrow Your Topic to Strengthen Brand Association</h3>
+          <p>Going wide on topics dilutes brand. Niching down on subject matter strengthens the mental association between your name and a specific domain, making you the default authority when someone needs help in that area.</p>
+        </div>
+      </li>
+      <li>
+        <div class="takeaway-num">5</div>
+        <div class="takeaway-content">
+          <h3>Optimize for Revenue, Not Views</h3>
+          <p>All views are not created equal. Long-form educational content generates more revenue per viewer than short-form entertainment clips, even with fewer total views. The shift from shorts to longs and from vanity metrics to business outcomes was a key inflection point for Hormozi's growth.</p>
+        </div>
+      </li>
+      <li>
+        <div class="takeaway-num">6</div>
+        <div class="takeaway-content">
+          <h3>Build for Your Ideal Customer, Not Your Team's Preferences</h3>
+          <p>Hormozi shifted from "for us" (what the team likes) to "for you" (what the ideal customer needs). This meant five tactical changes: clearer thumbnails, proof-based intros, different content structure, different visuals, and more rigorous pre-work -- all designed for the business owner doing $10M+ in revenue.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <!-- ═══ NOTABLE QUOTES ═══ -->
+  <div class="summary-card">
+    <h2>Notable Quotes</h2>
+    <div class="quote-block">
+      <p>"Branding is a deliberate pairing of things through an outcome."</p>
+      <div class="attribution">— Alex Hormozi, <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=338s" style="color:var(--teal); text-decoration:none; font-weight:600;">5:38</a></div>
+    </div>
+    <div class="quote-block">
+      <p>"The single most important decision in evaluating business is pricing power."</p>
+      <div class="attribution">— Warren Buffett (cited by Hormozi), <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=1110s" style="color:var(--teal); text-decoration:none; font-weight:600;">18:30</a></div>
+    </div>
+    <div class="quote-block">
+      <p>"It takes 20 years to build a reputation and five minutes to ruin it."</p>
+      <div class="attribution">— Warren Buffett (cited by Hormozi), <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=1247s" style="color:var(--teal); text-decoration:none; font-weight:600;">20:47</a></div>
+    </div>
+    <div class="quote-block">
+      <p>"All views are not created equal."</p>
+      <div class="attribution">— Alex Hormozi, <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2699s" style="color:var(--teal); text-decoration:none; font-weight:600;">44:59</a></div>
+    </div>
+    <div class="quote-block">
+      <p>"Don't let the five mean comments stop you from gaining the 500 new people who like the new thing."</p>
+      <div class="attribution">— Alex Hormozi, <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2076s" style="color:var(--teal); text-decoration:none; font-weight:600;">34:36</a></div>
+    </div>
+    <div class="quote-block">
+      <p>"Entertainment people want more entertainment content. Education people want more education content."</p>
+      <div class="attribution">— Alex Hormozi, <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2761s" style="color:var(--teal); text-decoration:none; font-weight:600;">46:01</a></div>
+    </div>
+  </div>
+
+  <!-- ═══ TOPICS COVERED ═══ -->
+  <div class="summary-card">
+    <h2>Topics Covered</h2>
+    <div class="topic-grid">
+      <div class="topic-card">
+        <h4>Credentials & Context</h4>
+        <p>Hormozi opens with his track record: 3B impressions, 4.5M new subscribers, fastest-selling non-fiction book ($105M in a weekend), $200M/yr portfolio, and $100M net worth by age 32.</p>
+        <div class="timestamp"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=0s">0:00</a> — <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=300s">5:00</a></div>
+      </div>
+      <div class="topic-card">
+        <h4>Defining Branding</h4>
+        <p>Brand defined as "a deliberate pairing of things through an outcome." Uses Coca-Cola, Bud Light/Dylan Mulvaney, and Nike/LeBron as case studies in good and bad pairing strategy.</p>
+        <div class="timestamp"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=300s">5:00</a> — <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=900s">15:00</a></div>
+      </div>
+      <div class="topic-card">
+        <h4>Brand Metrics & Measurement</h4>
+        <p>Three dimensions of brand: influence (likelihood to change behavior), direction (towards or away), and reach (how many people). Taylor Swift as an example of a large, strong, positive brand.</p>
+        <div class="timestamp"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=900s">15:00</a> — <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=1200s">20:00</a></div>
+      </div>
+      <div class="topic-card">
+        <h4>Why Brand Makes Money</h4>
+        <p>Premium pricing (12x), better ad performance (6x CTR), and customer loyalty. Warren Buffett quotes on pricing power and reputation. Kanye recovery example: overwhelm bad pairings with good ones.</p>
+        <div class="timestamp"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=1200s">20:00</a> — <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2326s">38:46</a></div>
+      </div>
+      <div class="topic-card">
+        <h4>Lesson 1: Edutainment to Education</h4>
+        <p>Entertainment viewers don't convert to buyers. Education viewers buy books, join email lists, and apply to portfolio. The two audiences are separate pools, not a funnel.</p>
+        <div class="timestamp"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2327s">38:47</a> — <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2760s">46:00</a></div>
+      </div>
+      <div class="topic-card">
+        <h4>Lesson 2: For Us to For You</h4>
+        <p>Shifted from what the team likes to what the ideal customer (business owner doing $10M+) needs. Five tactical changes: packaging, intros, meat, visuals, and pre-work.</p>
+        <div class="timestamp"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2760s">46:00</a> — <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2880s">48:00</a></div>
+      </div>
+      <div class="topic-card">
+        <h4>Lesson 3: Wide to Narrow</h4>
+        <p>Niche down on topic to strengthen brand association. Being known for one thing is more powerful than being known for many things.</p>
+        <div class="timestamp"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2880s">48:00</a> — <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2970s">49:30</a></div>
+      </div>
+      <div class="topic-card">
+        <h4>Lesson 4: Views to Revenue</h4>
+        <p>Optimize for business results, not vanity metrics. All views are not created equal -- a view from your ideal customer is worth far more than a view from someone who will never buy.</p>
+        <div class="timestamp"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2970s">49:30</a> — <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=3060s">51:00</a></div>
+      </div>
+      <div class="topic-card">
+        <h4>Lesson 5: Shorts to Longs</h4>
+        <p>Long-form content drives more revenue than short-form. Shorts may generate views but longs build trust, depth, and conversions.</p>
+        <div class="timestamp"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=3060s">51:00</a> — <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=3120s">52:00</a></div>
+      </div>
+      <div class="topic-card">
+        <h4>Lesson 6: Assume More to Assume Nothing</h4>
+        <p>Don't assume your audience has prior knowledge. Explain fundamentals clearly to make content accessible and increase its reach and impact.</p>
+        <div class="timestamp"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=3120s">52:00</a> — <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=3180s">53:00</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SOURCE ═══ -->
+  <div class="source-bar">
+    <span class="label">Source Video</span>
+    <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U">https://www.youtube.com/watch?v=Jmkq5RLjm0U</a>
+  </div>
+
+  <div class="footer">Generated by 23 Systems Agent</div>
+
+</div>
+
+</body>
+</html>

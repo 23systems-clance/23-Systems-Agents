@@ -184,7 +184,7 @@ export async function reorderClusterRolesAction(clusterId, orderedRoleIds) {
   return { success: true };
 }
 
-export async function triggerRoleManually(roleId) {
+export async function triggerRoleManually(roleId, payload) {
   const user = await requireAuth();
   const roleData = getRoleWithCluster(roleId);
   if (!roleData || !roleData.cluster || roleData.cluster.userId !== user.id) {
@@ -197,7 +197,7 @@ export async function triggerRoleManually(roleId) {
     if (check.reason === 'concurrency') return { error: 'Max concurrency reached' };
     return { error: check.reason };
   }
-  const result = await runClusterRole(check.roleData, null, { type: 'manual' });
+  const result = await runClusterRole(check.roleData, payload || null, { type: 'manual' });
   if (result.error) return { error: result.error };
   return { ok: true, containerName: result.containerName };
 }
@@ -247,12 +247,23 @@ export async function getClusterStatus(clusterId) {
   if (!cluster || cluster.userId !== user.id) return {};
 
   const roles = getClusterRolesByCluster(clusterId);
-  const { countRunningForRole } = await import('./execute.js');
+  const { listContainers } = await import('../tools/docker.js');
+  const cid = cluster.id.replace(/-/g, '').slice(0, 8);
 
   const status = {};
   for (const role of roles) {
-    const running = await countRunningForRole(cluster, role);
-    status[role.id] = { running, max: role.maxConcurrency };
+    const rid = role.id.replace(/-/g, '').slice(0, 8);
+    const prefix = `cluster-${cid}-role-${rid}-`;
+    const containers = await listContainers(prefix);
+    const running = containers.filter(c => c.state === 'running').length;
+    const exited = containers.filter(c => c.state === 'exited');
+    const lastExited = exited.length > 0 ? exited[0] : null;
+    status[role.id] = {
+      running,
+      max: role.maxConcurrency,
+      lastExitCode: lastExited?.exitCode ?? null,
+      hasCompleted: lastExited?.exitCode === 0,
+    };
   }
   return status;
 }

@@ -30,7 +30,11 @@ export function TeamDashboard({ team, status, output, logs }) {
         setRunError(result.error || 'Something went wrong. Please try again.');
       } else {
         setTaskInput('');
-        router.refresh();
+        // Don't router.refresh() immediately — the SSE stream will pick up
+        // the new container and update the pipeline status in real-time.
+        // A delayed refresh ensures server data catches up without resetting
+        // the pipeline status component's SSE-driven state.
+        setTimeout(() => router.refresh(), 5000);
       }
     } catch (err) {
       setRunError('Failed to start the task. Please try again.');
@@ -164,6 +168,7 @@ export function TeamDashboard({ team, status, output, logs }) {
           <OutputViewer
             teamId={team.id}
             files={output?.files || []}
+            sessions={output?.sessions || []}
             summary={output?.summary}
           />
         )}

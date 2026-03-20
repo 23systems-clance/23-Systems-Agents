@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Dialer SOP - Dev Labs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy: #1a1a2e;
+    --navy-light: #252542;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-bg: #eef0ff;
+    --accent-border: #c7ceff;
+    --white: #ffffff;
+    --light-bg: #f3f4f8;
+    --dark-text: #1e1e32;
+    --mid-text: #50506e;
+    --light-text: #8889a0;
+    --border: #c8cde0;
+    --success: #22c55e;
+    --success-bg: #ecfdf5;
+    --warn: #eab308;
+    --warn-bg: #fefce8;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--dark-text);
+    background: var(--light-bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--navy);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0;
+  }
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-header .doc-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .sidebar-header h1 {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+  .sidebar-header .version {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .sidebar-nav {
+    padding: 16px 0;
+  }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.04);
+  }
+  .sidebar-nav a.active {
+    color: var(--white);
+    background: rgba(67,97,238,0.12);
+    border-left-color: var(--accent);
+  }
+  .sidebar-nav a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent-light);
+    background: rgba(67,97,238,0.15);
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .sidebar-nav .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 12px 24px;
+  }
+  .sidebar-nav .section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.25);
+    padding: 8px 24px 4px;
+    font-weight: 600;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 280px;
+    min-height: 100vh;
+  }
+
+  /* Top bar */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(12px);
+  }
+  .topbar-left {
+    font-size: 13px;
+    color: var(--mid-text);
+  }
+  .topbar-left span { color: var(--dark-text); font-weight: 600; }
+  .topbar-right {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .topbar-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Content area */
+  .content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  /* ── COVER SECTION ── */
+  .cover {
+    background: var(--navy);
+    padding: 80px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 400px; height: 400px;
+    background: var(--accent);
+    opacity: 0.08;
+    border-radius: 50%;
+    transform: translate(30%, -30%);
+  }
+  .cover-content {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .cover .doc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-light);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .cover h1 {
+    font-size: 56px;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 16px;
+  }
+  .cover .subtitle {
+    font-size: 18px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 400;
+    margin-bottom: 48px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 48px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 24px;
+  }
+  .cover-meta dt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+  .cover-meta dd {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 48px 0 24px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--navy);
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    background: var(--accent);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--navy);
+    letter-spacing: -0.5px;
+  }
+
+  /* Sub-headers */
+  .sub-header {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 28px 0 12px;
+    padding: 8px 16px;
+    background: var(--accent-bg);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* Body text */
+  .body-text {
+    font-size: 14px;
+    color: var(--dark-text);
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+
+  /* Bullets */
+  .bullet-list {
+    list-style: none;
+    margin: 8px 0 16px;
+  }
+  .bullet-list li {
+    position: relative;
+    padding: 5px 0 5px 20px;
+    font-size: 13.5px;
+    color: var(--dark-text);
+    line-height: 1.6;
+  }
+  .bullet-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12px;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* Numbered steps */
+  .steps {
+    list-style: none;
+    margin: 12px 0 16px;
+    counter-reset: step;
+  }
+  .steps li {
+    position: relative;
+    padding: 8px 0 8px 44px;
+    font-size: 13.5px;
+    color: var(--dark-text);
+    line-height: 1.6;
+    counter-increment: step;
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    color: var(--white);
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Tables */
+  .sop-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    font-size: 13px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .sop-table thead th {
+    background: var(--navy);
+    color: var(--white);
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .sop-table tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .sop-table tbody tr:nth-child(even) { background: var(--light-bg); }
+  .sop-table tbody tr:hover { background: var(--accent-bg); }
+
+  /* Info boxes */
+  .info-box {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 16px 0;
+    border-left: 4px solid;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .info-box .info-label {
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .info-box.info {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+  }
+  .info-box.info .info-label { color: var(--accent); }
+  .info-box.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .info-box.success .info-label { color: var(--success); }
+  .info-box.warning {
+    background: var(--warn-bg);
+    border-color: var(--warn);
+  }
+  .info-box.warning .info-label { color: var(--warn); }
+  .info-box.danger {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+  }
+  .info-box.danger .info-label { color: var(--danger); }
+
+  /* Code blocks */
+  .code-block {
+    background: var(--light-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--dark-text);
+    margin: 12px 0 16px;
+    overflow-x: auto;
+  }
+
+  /* Print styles */
+  @media print {
+    .sidebar { display: none; }
+    .topbar { display: none; }
+    .main { margin-left: 0; }
+    .content { padding: 20px; }
+    .cover { padding: 40px 20px; }
+    .section { page-break-inside: avoid; }
+    body { background: white; }
+  }
+
+  /* Mobile */
+  @media (max-width: 960px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover h1 { font-size: 36px; }
+    .content { padding: 24px 20px; }
+    .cover-meta { flex-wrap: wrap; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <img src="../uploads/23 Systems Logo.png" alt="23 Systems" style="height:32px;width:auto;flex-shrink:0;border-radius:6px;">
+      <span style="font-size:14px;font-weight:700;color:#fff;letter-spacing:0.5px;">23 Systems</span>
+    </div>
+    <div class="doc-type">Standard Operating Procedure</div>
+    <h1>Power Dialer</h1>
+    <div class="version">SOP-PD-2026 &middot; v1.0</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="section-label">BDR Operations</div>
+    <a href="#overview"><span class="num">01</span> System Overview</a>
+    <a href="#getting-started"><span class="num">02</span> Getting Started</a>
+    <a href="#dialing-workflow"><span class="num">03</span> Power Dialing Workflow</a>
+    <a href="#voicemail"><span class="num">04</span> Voicemail & Auto-Skip</a>
+    <a href="#dispositions"><span class="num">05</span> Call Dispositions</a>
+    <a href="#queue"><span class="num">06</span> Queue Management</a>
+    <a href="#callbacks"><span class="num">07</span> Callbacks & Follow-Ups</a>
+    <a href="#recording"><span class="num">08</span> Recording & Transcription</a>
+    <a href="#compliance"><span class="num">09</span> Compliance & Safety</a>
+    <div class="divider"></div>
+    <div class="section-label">Management</div>
+    <a href="#salesfloor"><span class="num">10</span> Salesfloor Dashboard</a>
+    <a href="#coach-barge"><span class="num">11</span> Coach & Barge</a>
+    <a href="#recordings-library"><span class="num">12</span> Recording Library</a>
+    <a href="#analytics"><span class="num">13</span> Analytics Dashboard</a>
+    <div class="divider"></div>
+    <div class="section-label">Reference</div>
+    <a href="#troubleshooting"><span class="num">14</span> Troubleshooting</a>
+    <a href="#quick-ref"><span class="num">15</span> Quick Reference Card</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span>Dev Labs</span> &middot; Business Development Operations
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-badge">INTERNAL</span>
+      <span class="topbar-badge">v1.0 &middot; March 2026</span>
+    </div>
+  </div>
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-content">
+      <div class="doc-label">Standard Operating Procedure</div>
+      <h1>Power<br>Dialer</h1>
+      <p class="subtitle">Complete Operations Guide for BDR Teams & Management</p>
+      <dl class="cover-meta">
+        <div><dt>Document ID</dt><dd>SOP-PD-2026</dd></div>
+        <div><dt>Version</dt><dd>1.0</dd></div>
+        <div><dt>Effective Date</dt><dd>March 2026</dd></div>
+        <div><dt>Classification</dt><dd>Internal</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ════════════════════════ SECTION 01 ════════════════════════ -->
+    <div class="section" id="overview">
+      <div class="section-header">
+        <div class="section-num">01</div>
+        <h2 class="section-title">System Overview</h2>
+      </div>
+
+      <p class="body-text">The Power Dialer is a browser-based, professional-grade calling system integrated into your Admin Dashboard. It automates sequential dialing, detects voicemails instantly, records and transcribes calls, and syncs every interaction to HubSpot CRM automatically. No desk phone or software download is required.</p>
+
+      <h3 class="sub-header">Key Capabilities</h3>
+      <ul class="bullet-list">
+        <li>Automated sequential dialing: 40+ dials per hour (vs. ~15 manual)</li>
+        <li>Voicemail detection with 2-second auto-skip (90%+ accuracy)</li>
+        <li>Browser-based WebRTC calling &mdash; no phone hardware needed</li>
+        <li>Local presence dialing &mdash; caller ID matches the prospect's area code for 2-3x higher pickup rates</li>
+        <li>Automatic call recording and AI-powered transcription (Deepgram Nova-2)</li>
+        <li>One-click HubSpot CRM sync with call notes, disposition, recording, and transcript</li>
+        <li>Manager coach mode (listen-only) and barge-in capability on live calls</li>
+        <li>TCPA-compliant time-of-day enforcement and two-party consent disclosures</li>
+        <li>Real-time analytics: rep performance, list performance, when-to-call heatmaps</li>
+        <li>Callback scheduling with automatic reminder notifications</li>
+      </ul>
+
+      <h3 class="sub-header">How It Fits Your Workflow</h3>
+      <p class="body-text">The Power Dialer is designed for outbound BDR campaigns. After your list has been enriched through the Slack bot (using BuiltWith + Apollo), contacts with phone numbers are loaded into campaign queues. BDRs open the dialer in their browser, start a session, and the system handles the rest &mdash; dialing, detecting voicemails, recording conversations, and logging everything to HubSpot.</p>
+
+      <div class="info-box info">
+        <div class="info-label">Important</div>
+        Only ONE active session is allowed per BDR at a time. The system runs exclusively on AWS &mdash; never run it locally.
+      </div>
+    </div>
+
+    <!-- ════════════════════════ SECTION 02 ════════════════════════ -->
+    <div class="section" id="getting-started">
+      <div class="section-header">
+        <div class="section-num">02</div>
+        <h2 class="section-title">Getting Started</h2>
+      </div>
+
+      <h3 class="sub-header">Prerequisites</h3>
+      <table class="sop-table">
+        <thead><tr><th>Requirement</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr><td>Browser</td><td>Google Chrome (recommended) or Firefox. Safari is NOT supported for WebRTC.</td></tr>
+          <tr><td>Microphone</td><td>USB headset or built-in mic. Bluetooth headsets may have latency issues.</td></tr>
+          <tr><td>Internet</td><td>Stable broadband connection. Minimum 5 Mbps up/down recommended.</td></tr>
+          <tr><td>Permissions</td><td>Browser must allow microphone access for the Admin Dashboard domain.</td></tr>
+          <tr><td>Account</td><td>Active BDR account with dialer permissions in the Admin Dashboard.</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-header">Launching the Dialer</h3>
+      <ol class="steps">
+        <li>Log into the Admin Dashboard at your organization's URL.</li>
+        <li>Navigate to <strong>BDR &gt; Dialer</strong> from the sidebar menu.</li>
+        <li>The Pre-Call Check screen will appear automatically.</li>
+      </ol>
+
+      <h3 class="sub-header">Pre-Call Check (Runs Every Session)</h3>
+      <p class="body-text">Before any session starts, the system verifies your audio setup and network connectivity.</p>
+      <ol class="steps">
+        <li><strong>Microphone Check:</strong> Select your input device from the dropdown. Click &lsquo;Test Mic&rsquo; to see the volume meter respond.</li>
+        <li><strong>Speaker Check:</strong> Select your output device. A test tone will play to confirm audio output.</li>
+        <li><strong>Network Check:</strong> The system tests WebRTC connectivity to Twilio's servers. A green checkmark confirms readiness.</li>
+        <li>Click <strong>&lsquo;Start Session&rsquo;</strong> when all three checks pass (green indicators).</li>
+      </ol>
+
+      <div class="info-box success">
+        <div class="info-label">Tip</div>
+        Your mic/speaker selection is saved between sessions. You only need to re-select if you change devices.
+      </div>
+
+      <div class="info-box warning">
+        <div class="info-label">Warning</div>
+        If the network check fails, check your internet connection and ensure your firewall/VPN allows WebRTC traffic. Contact IT if the issue persists.
+      </div>
+    </div>
+
+    <!-- ════════════════════════ SECTION 03 ════════════════════════ -->
+    <div class="section" id="dialing-workflow">
+      <div class="section-header">
+        <div class="section-num">03</div>
+        <h2 class="section-title">Power Dialing Workflow</h2>
+      </div>
+
+      <h3 class="sub-header">Starting Your Dial Session</h3>
+      <ol class="steps">
+        <li>After pre-call check, your contact queue loads automatically from the assigned campaign.</li>
+        <li>The queue sidebar shows all callable contacts in priority order. Callbacks appear at the top.</li>
+        <li>Click the <strong>&lsquo;Dial&rsquo;</strong> button (or the system auto-dials if auto-advance is enabled).</li>
+        <li>The system selects a local presence caller ID matching the contact's area code.</li>
+        <li>You'll hear ringing through your headset while the contact's phone rings.</li>
+      </ol>
+
+      <h3 class="sub-header">When a Human Answers</h3>
+      <ol class="steps">
+        <li>The voicemail detector confirms a human answered (takes ~2 seconds).</li>
+        <li>A <strong>connected-call timer</strong> starts (default: 45 seconds). This confirms it's a real conversation, not a brief voicemail greeting.</li>
+        <li>Once the timer threshold is met, <strong>recording starts automatically</strong>. You'll see a red &lsquo;REC&rsquo; indicator.</li>
+        <li>Conduct your call. Use the <strong>Mute</strong> and <strong>Hold</strong> buttons as needed.</li>
+        <li>When the call ends (either party hangs up), the <strong>Disposition Modal</strong> appears.</li>
+      </ol>
+
+      <h3 class="sub-header">Call Controls</h3>
+      <table class="sop-table">
+        <thead><tr><th>Button</th><th>Function</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Dial</td><td>Initiates call to next contact in queue</td><td>Disabled during active calls</td></tr>
+          <tr><td>Hangup</td><td>Ends the current call</td><td>Opens disposition modal</td></tr>
+          <tr><td>Mute</td><td>Toggles your microphone on/off</td><td>Contact cannot hear you while muted</td></tr>
+          <tr><td>Hold</td><td>Places the contact on hold</td><td>Contact hears hold music</td></tr>
+          <tr><td>Pause</td><td>Pauses auto-advance between calls</td><td>Queue position is preserved</td></tr>
+          <tr><td>Resume</td><td>Resumes auto-dialing</td><td>Picks up next contact in queue</td></tr>
+          <tr><td>End Session</td><td>Ends your dialing session</td><td>Shows session summary stats</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-header">Session Auto-End</h3>
+      <p class="body-text">Sessions automatically end after 30 minutes of inactivity (no calls made). A warning notification appears at the 25-minute mark with a 5-minute countdown. If you're still active, simply make a call or click &lsquo;Stay Active&rsquo; to reset the timer.</p>
+    </div>
+
+    <!-- ════════════════════════ SECTION 04 ════════════════════════ -->
+    <div class="section" id="voicemail">
+      <div class="section-header">
+        <div class="section-num">04</div>
+        <h2 class="section-title">Voicemail Detection & Auto-Skip</h2>
+      </div>
+
+      <p class="body-text">The Power Dialer uses Twilio's Answering Machine Detection (AMD) to automatically identify voicemail greetings and skip them within 2 seconds. This is the primary productivity driver &mdash; eliminating the time BDRs spend listening to voicemail recordings.</p>
+
+      <h3 class="sub-header">How It Works</h3>
+      <ol class="steps">
+        <li>When a call is placed, AMD runs in the background analyzing audio patterns.</li>
+        <li>AMD classifies the answer within 2-4 seconds as one of: <strong>Human, Machine, Fax, or Unknown</strong>.</li>
+        <li>If <strong>Machine or Fax</strong>: the call auto-terminates, logs as &lsquo;Voicemail - Auto Skipped&rsquo;, and the system advances to the next contact.</li>
+        <li>If <strong>Human</strong>: the call continues to you normally.</li>
+        <li>If <strong>Unknown</strong>: the system defaults to Human (you hear the audio and decide).</li>
+      </ol>
+
+      <h3 class="sub-header">What You'll See</h3>
+      <ul class="bullet-list">
+        <li>When voicemail is detected, a brief &lsquo;Voicemail Detected&rsquo; indicator flashes on screen.</li>
+        <li>The system automatically moves to the next contact within 3 seconds.</li>
+        <li>No action is required from you &mdash; the skip is fully automatic.</li>
+        <li>Auto-skipped calls are logged in HubSpot as &lsquo;No Answer&rsquo; (no recording attached).</li>
+      </ul>
+
+      <div class="info-box info">
+        <div class="info-label">Accuracy</div>
+        AMD achieves ~94% accuracy for human detection and ~80-85% for machine detection. If AMD is uncertain, it defaults to treating the call as human-answered so you never miss a live prospect.
+      </div>
+
+      <h3 class="sub-header">AMD Classification Reference</h3>
+      <table class="sop-table">
+        <thead><tr><th>AMD Result</th><th>Action Taken</th><th>Disposition Logged</th></tr></thead>
+        <tbody>
+          <tr><td>Human</td><td>Call continues to BDR</td><td>Based on call outcome</td></tr>
+          <tr><td>Machine Start</td><td>Auto-terminate in 2 sec</td><td>Voicemail - Auto Skipped</td></tr>
+          <tr><td>Machine End Beep</td><td>Auto-terminate in 2 sec</td><td>Voicemail - Auto Skipped</td></tr>
+          <tr><td>Fax</td><td>Auto-terminate immediately</td><td>Invalid Number</td></tr>
+          <tr><td>Unknown</td><td>Defaults to Human &mdash; BDR hears audio</td><td>Based on call outcome</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ════════════════════════ SECTION 05 ════════════════════════ -->
+    <div class="section" id="dispositions">
+      <div class="section-header">
+        <div class="section-num">05</div>
+        <h2 class="section-title">Call Dispositions</h2>
+      </div>
+
+      <p class="body-text">After every call (except auto-skipped voicemails), a Disposition Modal appears. You <strong>MUST</strong> select a disposition before the system advances to the next contact. Accurate dispositions are critical for campaign reporting and CRM data quality.</p>
+
+      <h3 class="sub-header">Disposition Types</h3>
+      <table class="sop-table">
+        <thead><tr><th>Disposition</th><th>When to Use</th><th>CRM Outcome</th></tr></thead>
+        <tbody>
+          <tr><td>Connected - Interested</td><td>Prospect expressed interest; wants to learn more or book a meeting</td><td>Connected</td></tr>
+          <tr><td>Connected - Not Interested</td><td>Had a conversation but prospect is not interested</td><td>Connected</td></tr>
+          <tr><td>Connected - Callback Requested</td><td>Prospect asked you to call back at a specific time</td><td>Connected</td></tr>
+          <tr><td>Voicemail - Left Message</td><td>You reached voicemail and left a message manually</td><td>No Answer</td></tr>
+          <tr><td>Wrong Number</td><td>Number does not belong to the intended contact</td><td>Wrong Number</td></tr>
+          <tr><td>Do Not Call</td><td>Prospect explicitly asked to not be called again</td><td>No Answer</td></tr>
+          <tr><td>Invalid Number</td><td>Number is disconnected, out of service, or not a real number</td><td>No Answer</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-header">Disposition Workflow</h3>
+      <ol class="steps">
+        <li>Call ends &mdash; Disposition Modal appears automatically.</li>
+        <li>Select the appropriate disposition from the options above.</li>
+        <li>Add notes in the free-text field (describe the conversation, next steps, objections, etc.).</li>
+        <li>If &lsquo;Callback Requested&rsquo;: a date/time picker appears to schedule the callback.</li>
+        <li>Click <strong>&lsquo;Submit&rsquo;</strong> &mdash; the system syncs to HubSpot and advances to the next contact.</li>
+      </ol>
+
+      <div class="info-box danger">
+        <div class="info-label">Critical</div>
+        Selecting &lsquo;Do Not Call&rsquo; adds the phone number to the global opt-out list <strong>permanently</strong>. This blocks the number across ALL campaigns for ALL BDRs. Only select this when the prospect explicitly requests it.
+      </div>
+
+      <div class="info-box info">
+        <div class="info-label">Note</div>
+        &lsquo;Connected - Interested&rsquo; with meeting notes in the disposition counts as a &lsquo;Meeting&rsquo; in analytics. Be sure to include meeting details when applicable.
+      </div>
+    </div>
+
+    <!-- ════════════════════════ SECTION 06 ════════════════════════ -->
+    <div class="section" id="queue">
+      <div class="section-header">
+        <div class="section-num">06</div>
+        <h2 class="section-title">Queue Management</h2>
+      </div>
+
+      <h3 class="sub-header">Queue Structure</h3>
+      <p class="body-text">Your contact queue has two sections visible in the sidebar:</p>
+      <ul class="bullet-list">
+        <li><strong>Callable Section:</strong> Contacts eligible for dialing, shown in priority order. Scheduled callbacks appear at the top.</li>
+        <li><strong>Uncallable Section (collapsed by default):</strong> Contacts blocked from dialing with a reason badge.</li>
+      </ul>
+
+      <h3 class="sub-header">Uncallable Reasons</h3>
+      <table class="sop-table">
+        <thead><tr><th>Reason</th><th>Description</th><th>Can BDR Re-Add?</th></tr></thead>
+        <tbody>
+          <tr><td>DNC (Do Not Call)</td><td>Contact opted out of calls &mdash; permanent block</td><td>No (admin only)</td></tr>
+          <tr><td>Removed Prospect</td><td>BDR removed from queue &mdash; temporary</td><td>Yes (with confirmation)</td></tr>
+          <tr><td>Invalid Number</td><td>Auto-detected by Twilio error on previous dial</td><td>No</td></tr>
+          <tr><td>No Phone</td><td>HubSpot refresh found no valid phone number</td><td>No</td></tr>
+          <tr><td>TCPA Blocked</td><td>Outside legal calling window (8 AM - 9 PM in contact's timezone)</td><td>Auto-resolves</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-header">Queue Actions</h3>
+      <ul class="bullet-list">
+        <li><strong>Skip Contact:</strong> Moves the current contact to the end of your queue.</li>
+        <li><strong>Re-add Prospect:</strong> For &lsquo;Removed&rsquo; contacts only. Click the &lsquo;Re-add&rsquo; button next to their name in the Uncallable section.</li>
+        <li><strong>Refresh from HubSpot:</strong> Click the refresh icon in the queue header to re-sync contact data (phone numbers, job titles) from HubSpot.</li>
+      </ul>
+
+      <h3 class="sub-header">Queue Persistence</h3>
+      <p class="body-text">Your queue state is saved on the server. If your browser refreshes, your internet drops, or you pause and resume your session later, the queue picks up exactly where you left off. No contacts are lost.</p>
+    </div>
+
+    <!-- ════════════════════════ SECTION 07 ════════════════════════ -->
+    <div class="section" id="callbacks">
+      <div class="section-header">
+        <div class="section-num">07</div>
+        <h2 class="section-title">Callbacks & Follow-Ups</h2>
+      </div>
+
+      <h3 class="sub-header">Scheduling a Callback</h3>
+      <ol class="steps">
+        <li>During disposition, select <strong>&lsquo;Connected - Callback Requested&rsquo;</strong>.</li>
+        <li>A date/time picker appears. Select the date and time the prospect requested.</li>
+        <li>Add any notes (e.g., &ldquo;Call after 2pm, ask about Q3 budget&rdquo;).</li>
+        <li>Submit the disposition. The callback is now scheduled.</li>
+      </ol>
+
+      <h3 class="sub-header">Callback Reminders</h3>
+      <p class="body-text">When a callback is due:</p>
+      <ul class="bullet-list">
+        <li>A toast notification appears: <strong>&ldquo;Callback due: [Contact Name] - [Company]&rdquo;</strong></li>
+        <li>Click <strong>&lsquo;Call back now&rsquo;</strong> to immediately dial the contact (jumps to top of queue).</li>
+        <li>If you're on another call, the callback contact is inserted at position 2 (next after your current call).</li>
+      </ul>
+
+      <h3 class="sub-header">Missed Callbacks</h3>
+      <ul class="bullet-list">
+        <li>If a callback is not completed within 30 minutes of the scheduled time, it is marked as &lsquo;Missed&rsquo;.</li>
+        <li>Missed callbacks remain in your queue with a &lsquo;Missed Callback&rsquo; badge.</li>
+        <li>When you start a new session, all due/overdue callbacks are loaded at the top of your queue.</li>
+      </ul>
+
+      <h3 class="sub-header">Callback Priority Rules</h3>
+      <ul class="bullet-list">
+        <li>Callbacks <strong>ALWAYS</strong> take priority over regular queue contacts.</li>
+        <li>If a contact is in both the callback queue and regular queue, the callback supersedes &mdash; the regular queue item is skipped.</li>
+        <li>Callback-to-connect rates are tracked separately from cold dial metrics in analytics.</li>
+      </ul>
+
+      <div class="info-box success">
+        <div class="info-label">Best Practice</div>
+        Always honor callback times. A prospect who requested a callback is warm &mdash; missing the window significantly reduces your conversion rate.
+      </div>
+    </div>
+
+    <!-- ════════════════════════ SECTION 08 ════════════════════════ -->
+    <div class="section" id="recording">
+      <div class="section-header">
+        <div class="section-num">08</div>
+        <h2 class="section-title">Call Recording & Transcription</h2>
+      </div>
+
+      <h3 class="sub-header">When Recording Starts</h3>
+      <p class="body-text">Recording does NOT start the moment a call connects. It begins only after the connected-call timer threshold is met (default: 45 seconds). This prevents recording brief voicemail greetings that AMD classified as human.</p>
+      <ul class="bullet-list">
+        <li>A red &lsquo;REC&rsquo; indicator appears on screen when recording is active.</li>
+        <li>Both your voice and the contact's voice are recorded.</li>
+        <li>Recordings are stored securely on AWS S3 (not on your computer).</li>
+      </ul>
+
+      <h3 class="sub-header">Transcription</h3>
+      <p class="body-text">All recorded calls are automatically transcribed using Deepgram Nova-2 AI. Transcripts are typically available within 5 minutes of call completion.</p>
+      <ul class="bullet-list">
+        <li>Transcripts include speaker labels (BDR vs. Contact) and timestamps.</li>
+        <li>Transcripts are synced to HubSpot as part of the call engagement.</li>
+        <li>Managers can review transcripts in the Recording Library.</li>
+      </ul>
+
+      <h3 class="sub-header">Transcript Format Example</h3>
+      <div class="code-block">
+[0:15] BDR (Sarah): Hello, this is Sarah from Dev Labs. Am I speaking with John?<br>
+[0:23] Contact (John): Hi Sarah, yes this is John. How can I help?<br>
+[0:30] BDR (Sarah): Great! I'm calling because we noticed your company...
+      </div>
+
+      <h3 class="sub-header">HubSpot CRM Sync</h3>
+      <ul class="bullet-list">
+        <li>Dispositioned calls are synced to HubSpot within 60 seconds.</li>
+        <li>A recording link is embedded in the HubSpot call engagement &mdash; CRM users can play it inline.</li>
+        <li>The transcript is attached to the call body field, with speaker labels and timestamps.</li>
+        <li>If the transcript isn't ready when the engagement is first created, it is backfilled automatically once available.</li>
+      </ul>
+    </div>
+
+    <!-- ════════════════════════ SECTION 09 ════════════════════════ -->
+    <div class="section" id="compliance">
+      <div class="section-header">
+        <div class="section-num">09</div>
+        <h2 class="section-title">Compliance & Safety</h2>
+      </div>
+
+      <div class="info-box danger">
+        <div class="info-label">Legal Requirement</div>
+        All compliance rules are enforced automatically by the system. However, BDRs must understand these rules to ensure proper conduct and respond appropriately to prospect requests.
+      </div>
+
+      <h3 class="sub-header">TCPA Time-of-Day Enforcement</h3>
+      <p class="body-text">Federal TCPA regulations prohibit outbound calls before 8:00 AM or after 9:00 PM in the contact's local timezone. The system automatically enforces this.</p>
+      <ul class="bullet-list">
+        <li>Contacts outside the calling window are moved to the Uncallable section with reason &lsquo;TCPA Blocked&rsquo;.</li>
+        <li>These contacts automatically return to the Callable section when their time window opens.</li>
+        <li>The system uses area code-to-timezone mapping to determine local time.</li>
+      </ul>
+
+      <h3 class="sub-header">Two-Party Consent States</h3>
+      <p class="body-text">In certain states, both parties must be informed that the call is being recorded. The system handles this automatically.</p>
+      <ul class="bullet-list">
+        <li><strong>States requiring consent:</strong> CA, CT, FL, IL, MD, MA, MI, MT, NH, PA, WA</li>
+        <li>When calling a number in these states, an automated disclosure plays before you're connected:</li>
+      </ul>
+      <div class="code-block" style="font-style: italic;">"This call is being recorded for quality assurance purposes."</div>
+
+      <h3 class="sub-header">Do Not Call (DNC) Management</h3>
+      <ul class="bullet-list">
+        <li>When a prospect says &ldquo;Do not call me again,&rdquo; you <strong>MUST</strong> select the &lsquo;Do Not Call&rsquo; disposition.</li>
+        <li>This adds their phone number to the global opt-out list permanently.</li>
+        <li>DNC applies across ALL campaigns and ALL BDRs &mdash; the number is blocked company-wide.</li>
+        <li>Only administrators can remove a DNC entry (BDRs cannot).</li>
+        <li>DNC is keyed by phone number. If multiple contacts share a number, all are blocked.</li>
+      </ul>
+
+      <h3 class="sub-header">24-Hour Cooldown Warning</h3>
+      <p class="body-text">If a contact was called within the last 24 hours (by any BDR, in any campaign), the system displays a warning. You can override this and proceed, but use good judgment to avoid harassing prospects.</p>
+    </div>
+
+    <!-- ════════════════════════ SECTION 10 ════════════════════════ -->
+    <div class="section" id="salesfloor">
+      <div class="section-header">
+        <div class="section-num">10</div>
+        <h2 class="section-title">Manager: Salesfloor Dashboard</h2>
+      </div>
+
+      <p class="body-text">The Salesfloor Dashboard provides real-time visibility into your entire BDR team's dialing activity. It auto-refreshes every 5 seconds and is accessible from the sidebar under <strong>Management &gt; Salesfloor</strong>.</p>
+
+      <h3 class="sub-header">Team Pulse Bar (Fixed at Top)</h3>
+      <table class="sop-table">
+        <thead><tr><th>Metric</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>Total Active BDRs</td><td>Number of BDRs currently in an active dialing session</td></tr>
+          <tr><td>Total Dials Today</td><td>Sum of all dials across all BDRs today</td></tr>
+          <tr><td>Total Connects Today</td><td>Sum of all connected calls today</td></tr>
+          <tr><td>Avg Dial-to-Connect %</td><td>Team-wide average connect rate</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-header">BDR Status Cards</h3>
+      <p class="body-text">Each BDR appears as a card showing:</p>
+      <ul class="bullet-list">
+        <li>Name and current status badge (On Call, Ringing, Dispositioning, Idle, Paused, Offline)</li>
+        <li>Current contact info (name, company, phone) if on a call</li>
+        <li>Live call duration counter (updates every second)</li>
+        <li>Session stats: Dials Today, Connects Today, Queue Remaining</li>
+        <li>Listen and Barge buttons for active calls (see Section 11)</li>
+      </ul>
+
+      <h3 class="sub-header">Status Definitions</h3>
+      <table class="sop-table">
+        <thead><tr><th>Status</th><th>Meaning</th><th>Card Color</th></tr></thead>
+        <tbody>
+          <tr><td>On Call</td><td>BDR is in an active conversation</td><td>Green</td></tr>
+          <tr><td>Ringing</td><td>System is dialing, waiting for answer</td><td>Blue</td></tr>
+          <tr><td>Dispositioning</td><td>BDR is filling out the disposition form</td><td>Yellow</td></tr>
+          <tr><td>Idle</td><td>Session active but no call in progress</td><td>Gray</td></tr>
+          <tr><td>Paused</td><td>BDR manually paused auto-dialing</td><td>Orange</td></tr>
+          <tr><td>Offline</td><td>No active session</td><td>Dark Gray</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box warning">
+        <div class="info-label">Idle Alert</div>
+        If a BDR is idle for more than 5 minutes (not Paused), their card is highlighted with a warning indicator. This helps managers identify BDRs who may need assistance or motivation.
+      </div>
+    </div>
+
+    <!-- ════════════════════════ SECTION 11 ════════════════════════ -->
+    <div class="section" id="coach-barge">
+      <div class="section-header">
+        <div class="section-num">11</div>
+        <h2 class="section-title">Manager: Coach & Barge</h2>
+      </div>
+
+      <p class="body-text">Managers can silently monitor live BDR calls (Coach Mode) and optionally join the conversation (Barge Mode). This feature is available from both the Salesfloor Dashboard and the Active Calls page.</p>
+
+      <h3 class="sub-header">Coach Mode (Listen Only)</h3>
+      <ol class="steps">
+        <li>Navigate to Salesfloor or <strong>Management &gt; Active Calls</strong>.</li>
+        <li>Find the BDR's active call card and click <strong>&lsquo;Listen&rsquo;</strong>.</li>
+        <li>Your browser connects to the call via WebRTC (you'll need microphone permission).</li>
+        <li>You can hear <strong>BOTH</strong> the BDR and the contact speaking.</li>
+        <li>Neither the BDR nor the contact can hear you. You are completely silent.</li>
+        <li>When the call ends, your connection terminates automatically.</li>
+      </ol>
+
+      <h3 class="sub-header">Barge-In Mode</h3>
+      <ol class="steps">
+        <li>While in Coach Mode, click the <strong>&lsquo;Barge In&rsquo;</strong> button.</li>
+        <li>Your microphone is unmuted &mdash; both the BDR AND the contact can now hear you.</li>
+        <li>Use this to assist with difficult conversations, objection handling, or to close deals.</li>
+        <li>You can return to Coach Mode by clicking &lsquo;Mute&rsquo; (listen-only again).</li>
+      </ol>
+
+      <div class="info-box success">
+        <div class="info-label">Best Practice</div>
+        Use Coach Mode regularly for training purposes. Save Barge-In for situations where the BDR clearly needs help or a deal is at risk. Frequent barging can undermine BDR confidence.
+      </div>
+    </div>
+
+    <!-- ════════════════════════ SECTION 12 ════════════════════════ -->
+    <div class="section" id="recordings-library">
+      <div class="section-header">
+        <div class="section-num">12</div>
+        <h2 class="section-title">Manager: Recording Library</h2>
+      </div>
+
+      <p class="body-text">The Recording Library allows managers to review past calls, provide coaching feedback, and curate exemplary recordings for training. Access it from <strong>Management &gt; Recordings</strong>.</p>
+
+      <h3 class="sub-header">Searching & Filtering</h3>
+      <table class="sop-table">
+        <thead><tr><th>Filter</th><th>Options</th></tr></thead>
+        <tbody>
+          <tr><td>BDR</td><td>Select one or more BDRs (managers see their assigned team)</td></tr>
+          <tr><td>Campaign / List</td><td>Filter by specific campaign or enrichment list</td></tr>
+          <tr><td>Date Range</td><td>Custom date range picker</td></tr>
+          <tr><td>Disposition</td><td>Filter by call outcome (Connected, Voicemail, etc.)</td></tr>
+          <tr><td>Call Duration</td><td>Minimum and maximum duration sliders</td></tr>
+          <tr><td>Review Status</td><td>None / Flagged for Review / Reviewed</td></tr>
+          <tr><td>Favorites Only</td><td>Toggle to show only starred recordings</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-header">Recording Detail Page</h3>
+      <p class="body-text">Click any recording to open the detail view:</p>
+      <ul class="bullet-list">
+        <li>Audio player with seek bar, playback speed controls (0.5x, 1x, 1.5x, 2x)</li>
+        <li>Full transcript with speaker labels and timestamps &mdash; click any line to jump to that point in the audio</li>
+        <li>Call metadata: BDR, contact info, disposition, duration, date/time</li>
+        <li>Coaching notes panel (see below)</li>
+      </ul>
+
+      <h3 class="sub-header">Manager Actions</h3>
+      <ul class="bullet-list">
+        <li><strong>Star/Favorite:</strong> Adds the recording to your &lsquo;Favorites&rsquo; tab. Use this for exemplary calls to share during training and onboarding.</li>
+        <li><strong>Flag for Review:</strong> Marks the recording with a &lsquo;Manager Review&rsquo; badge visible to the BDR. Use for calls that need discussion in 1:1s.</li>
+        <li><strong>Add Coaching Note:</strong> Timestamped notes attached to specific moments in the recording. Example: &ldquo;Great objection handling at 2:15&rdquo; or &ldquo;Could have asked more discovery questions at 1:40&rdquo;.</li>
+      </ul>
+
+      <h3 class="sub-header">Role-Based Access</h3>
+      <table class="sop-table">
+        <thead><tr><th>Role</th><th>Can See</th></tr></thead>
+        <tbody>
+          <tr><td>BDR</td><td>Own recordings only</td></tr>
+          <tr><td>Manager</td><td>Assigned BDRs' recordings</td></tr>
+          <tr><td>Admin</td><td>All recordings across all teams</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ════════════════════════ SECTION 13 ════════════════════════ -->
+    <div class="section" id="analytics">
+      <div class="section-header">
+        <div class="section-num">13</div>
+        <h2 class="section-title">Manager: Analytics Dashboard</h2>
+      </div>
+
+      <p class="body-text">The Dialer Analytics Dashboard provides comprehensive performance metrics across five tabs. Access it from <strong>Management &gt; Dialer Analytics</strong>.</p>
+
+      <h3 class="sub-header">KPI Cards (Visible Across All Tabs)</h3>
+      <table class="sop-table">
+        <thead><tr><th>KPI</th><th>Definition</th></tr></thead>
+        <tbody>
+          <tr><td>Dials</td><td>Total outbound call attempts</td></tr>
+          <tr><td>Callbacks</td><td>Scheduled callback attempts</td></tr>
+          <tr><td>Connects</td><td>Calls where a human answered</td></tr>
+          <tr><td>Conversations</td><td>Connects excluding Wrong Number, Invalid Number, Dropped Call</td></tr>
+          <tr><td>Meetings</td><td>Connected - Interested calls with meeting notes</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-header">Tab 1: Rep Performance</h3>
+      <p class="body-text">Per-BDR metrics table with columns: Dials, Dial-to-Connect %, Connects, Connect-to-Conversation %, Conversations, Conversation-to-Meeting %, Meetings, Callbacks, Callback-to-Connect %, Dial Time, Talk Time, Pause Time, Session Time.</p>
+
+      <h3 class="sub-header">Tab 2: List Performance</h3>
+      <p class="body-text">Same metrics broken down by campaign/list, with expandable disposition breakdown per list.</p>
+
+      <h3 class="sub-header">Tab 3: Account Performance</h3>
+      <p class="body-text">Metrics grouped by company: dial attempts, connect rate, conversation outcomes, meetings, last dialed.</p>
+
+      <h3 class="sub-header">Tab 4: Objections (Future)</h3>
+      <p class="body-text">Placeholder for NLP-based objection extraction from transcripts. Coming in a future release.</p>
+
+      <h3 class="sub-header">Tab 5: When to Call</h3>
+      <p class="body-text">A 7&times;24 heatmap (day-of-week &times; hour-of-day) colored by connect rate. Use this to identify optimal calling windows for your team and adjust session scheduling accordingly.</p>
+
+      <h3 class="sub-header">Filters & Saved Views</h3>
+      <ul class="bullet-list">
+        <li>All tabs share filters: Date Range, Team, Rep, List, Account, Call Type</li>
+        <li>Click &lsquo;Save View&rsquo; to capture your current tab + filter configuration</li>
+        <li>Saved views appear in a dropdown for quick access (views are per-user)</li>
+      </ul>
+    </div>
+
+    <!-- ════════════════════════ SECTION 14 ════════════════════════ -->
+    <div class="section" id="troubleshooting">
+      <div class="section-header">
+        <div class="section-num">14</div>
+        <h2 class="section-title">Troubleshooting</h2>
+      </div>
+
+      <table class="sop-table">
+        <thead><tr><th style="width:22%">Issue</th><th style="width:30%">Likely Cause</th><th>Solution</th></tr></thead>
+        <tbody>
+          <tr><td>Can't hear contact</td><td>Speaker not selected or volume muted</td><td>Check Audio Device Picker, verify speaker selection, check system volume</td></tr>
+          <tr><td>Contact can't hear me</td><td>Microphone not selected or browser permission denied</td><td>Check Audio Device Picker, verify mic selection, check browser permissions</td></tr>
+          <tr><td>Pre-call check fails (network)</td><td>Firewall/VPN blocking WebRTC</td><td>Disable VPN, whitelist Twilio WebRTC domains, contact IT</td></tr>
+          <tr><td>Calls dropping mid-conversation</td><td>Unstable internet connection</td><td>Switch to wired connection, close bandwidth-heavy apps</td></tr>
+          <tr><td>Voicemail not being detected</td><td>Contact's VM greeting is unusual</td><td>Expected for ~15% of voicemails. Disposition manually as &lsquo;Voicemail&rsquo;</td></tr>
+          <tr><td>Queue shows 0 contacts</td><td>Campaign has no contacts with phone numbers</td><td>Verify campaign has enriched contacts with valid phones in HubSpot</td></tr>
+          <tr><td>Session auto-ended unexpectedly</td><td>30-minute inactivity timeout</td><td>Start a new session. Your queue picks up where you left off</td></tr>
+          <tr><td>Disposition not syncing to HubSpot</td><td>HubSpot API rate limit or connection issue</td><td>Wait 5 minutes, then check HubSpot. System retries automatically (3x)</td></tr>
+          <tr><td>Recording not available</td><td>Transcription still processing</td><td>Allow up to 5 minutes. Refresh the recording library page</td></tr>
+          <tr><td>Yellow quality indicator</td><td>Network jitter or packet loss</td><td>Expected on WiFi. Switch to wired if persistent</td></tr>
+          <tr><td>Red quality indicator</td><td>Severe network degradation</td><td>End session, check internet, restart on stable network</td></tr>
+          <tr><td>Cannot re-add contact</td><td>Contact is marked DNC</td><td>DNC contacts can only be re-added by an administrator</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box info">
+        <div class="info-label">Still Stuck?</div>
+        If an issue persists after trying the solutions above, contact your team lead or administrator. Include the date/time, contact name, and a description of what happened.
+      </div>
+    </div>
+
+    <!-- ════════════════════════ SECTION 15 ════════════════════════ -->
+    <div class="section" id="quick-ref">
+      <div class="section-header">
+        <div class="section-num">15</div>
+        <h2 class="section-title">Quick Reference Card</h2>
+      </div>
+
+      <h3 class="sub-header">BDR Daily Checklist</h3>
+      <ol class="steps">
+        <li>Open Admin Dashboard and navigate to BDR &gt; Dialer</li>
+        <li>Complete pre-call check (mic, speaker, network)</li>
+        <li>Start session &mdash; queue loads automatically</li>
+        <li>Dial through your queue &mdash; system handles voicemail detection</li>
+        <li>Disposition every call accurately with notes</li>
+        <li>Honor all scheduled callbacks when reminders appear</li>
+        <li>End session when done &mdash; review your session summary stats</li>
+      </ol>
+
+      <h3 class="sub-header">Disposition Quick Guide</h3>
+      <table class="sop-table">
+        <thead><tr><th>If the prospect...</th><th>Select...</th></tr></thead>
+        <tbody>
+          <tr><td>Wants to learn more / book a meeting</td><td>Connected - Interested</td></tr>
+          <tr><td>Not interested / timing is wrong</td><td>Connected - Not Interested</td></tr>
+          <tr><td>Asks you to call back later</td><td>Connected - Callback Requested</td></tr>
+          <tr><td>You got voicemail and left a message</td><td>Voicemail - Left Message</td></tr>
+          <tr><td>Not the right person / wrong number</td><td>Wrong Number</td></tr>
+          <tr><td>Says &ldquo;Don't call me again&rdquo;</td><td>Do Not Call</td></tr>
+          <tr><td>Number disconnected or not real</td><td>Invalid Number</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-header">Key Metrics to Track (BDRs)</h3>
+      <table class="sop-table">
+        <thead><tr><th>Metric</th><th>Target</th><th>How to Improve</th></tr></thead>
+        <tbody>
+          <tr><td>Dials per Hour</td><td>40+</td><td>Minimize pause time, keep dispositions brief</td></tr>
+          <tr><td>Connect Rate</td><td>8-15%</td><td>Call during optimal hours (check When to Call heatmap)</td></tr>
+          <tr><td>Conversation Rate</td><td>60%+ of connects</td><td>Strong opening, quick value prop, ask questions</td></tr>
+          <tr><td>Meeting Rate</td><td>15-25% of conversations</td><td>Clear next steps, confirm calendar availability</td></tr>
+          <tr><td>Callback Completion</td><td>90%+</td><td>Always honor the scheduled time</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-header">Key Metrics to Track (Managers)</h3>
+      <table class="sop-table">
+        <thead><tr><th>Metric</th><th>What It Tells You</th></tr></thead>
+        <tbody>
+          <tr><td>Dial-to-Connect %</td><td>List quality and calling time optimization</td></tr>
+          <tr><td>Connect-to-Conversation %</td><td>BDR opening effectiveness and objection handling</td></tr>
+          <tr><td>Conversation-to-Meeting %</td><td>BDR closing ability and value proposition clarity</td></tr>
+          <tr><td>Avg Talk Time</td><td>Conversation quality (too short = weak discovery, too long = not closing)</td></tr>
+          <tr><td>Pause Time %</td><td>BDR efficiency and potential coaching opportunities</td></tr>
+          <tr><td>Callback-to-Connect %</td><td>Follow-up discipline and warm lead conversion</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top: 2px solid var(--navy); margin-top: 48px; padding-top: 24px; text-align: center;">
+      <p style="font-size: 12px; color: var(--light-text); line-height: 1.8;">
+        <strong style="color: var(--navy);">Power Dialer SOP</strong> &middot; SOP-PD-2026 &middot; Version 1.0 &middot; March 2026<br>
+        Dev Labs &middot; Business Development Operations &middot; Confidential &mdash; Internal Use Only
+      </p>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Active nav highlighting -->
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.sidebar-nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        const active = document.querySelector(`.sidebar-nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(section => observer.observe(section));
+</script>
+
+</body>
+</html>

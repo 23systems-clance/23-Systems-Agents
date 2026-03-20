@@ -24,6 +24,7 @@ export function TeamWizard({ template, prefilled = {} }) {
     return defaults;
   });
   const [schedule, setSchedule] = useState({ preset: 'now' });
+  const [requiresApproval, setRequiresApproval] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -35,7 +36,7 @@ export function TeamWizard({ template, prefilled = {} }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await createTeamFromTemplate(template.id, inputs, schedule);
+      const result = await createTeamFromTemplate(template.id, inputs, schedule, { requiresApproval });
       if (result.success) {
         router.push(`/team/${result.teamId}`);
       } else {
@@ -191,6 +192,25 @@ export function TeamWizard({ template, prefilled = {} }) {
                 })()}
               </div>
             )}
+          </div>
+
+          {/* Human Review Toggle */}
+          <div className="mb-8">
+            <label className="flex items-start gap-3 rounded-lg border border-border p-4 cursor-pointer hover:border-primary/30 transition-colors">
+              <input
+                type="checkbox"
+                checked={requiresApproval}
+                onChange={e => setRequiresApproval(e.target.checked)}
+                className="accent-primary mt-0.5"
+              />
+              <div>
+                <span className="text-sm font-medium">Review between steps</span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Pause the pipeline after each member finishes so you can review their output
+                  and provide feedback before the next member starts.
+                </p>
+              </div>
+            </label>
           </div>
 
           {/* Summary */}

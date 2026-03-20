@@ -95,7 +95,13 @@ export function buildMCPClientConfig(serverNames) {
     }
 
     const manifest = server.manifest;
-    if (manifest.transport === 'stdio' || !manifest.transport) {
+    if (manifest.transport === 'sse') {
+      mcpServers[name] = {
+        transport: 'sse',
+        url: manifest.url,
+        headers: manifest.headers || {},
+      };
+    } else if (manifest.transport === 'stdio' || !manifest.transport) {
       mcpServers[name] = {
         transport: 'stdio',
         command: manifest.command || 'node',

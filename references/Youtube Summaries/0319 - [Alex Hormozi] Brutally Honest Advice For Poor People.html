@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Deep Dive — Brutally Honest Advice For Poor People</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --violet: #7c3aed;
+    --violet-light: #a78bfa;
+    --violet-bg: #f5f3ff;
+    --violet-border: #ede9fe;
+    --teal: #0d9488;
+    --teal-bg: #f0fdfa;
+    --teal-border: #ccfbf1;
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text-primary: #171717;
+    --text-secondary: #525252;
+    --text-tertiary: #a3a3a3;
+    --border: #e5e5e5;
+    --border-subtle: #f0f0f0;
+    --rose: #e11d48;
+    --rose-bg: #fff1f2;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background: #171717;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0;
+  }
+  .sidebar-header {
+    padding: 28px 22px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--violet-light);
+    margin-bottom: 8px;
+  }
+  .sidebar-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .sidebar-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 8px;
+  }
+  .sidebar-nav {
+    padding: 16px 0;
+  }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: #262626;
+    border-left-color: var(--violet);
+  }
+  .sidebar-nav a .num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-link {
+    padding: 16px 22px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-link a {
+    font-size: 12px;
+    color: var(--violet-light);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: 260px;
+    padding: 40px 48px 60px;
+    max-width: 960px;
+  }
+
+  /* ── SECTION HEADING ── */
+  .section-heading {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    margin: 40px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-heading:first-child { margin-top: 0; }
+  .section-heading::before {
+    content: '';
+    width: 4px;
+    height: 22px;
+    background: linear-gradient(180deg, var(--violet), var(--teal));
+    border-radius: 2px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  /* ── OVERVIEW STATS ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-box {
+    background: var(--violet-bg);
+    border: 1px solid var(--violet-border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-box .val {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-box .lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  /* ── TAKEAWAYS ── */
+  .takeaway {
+    display: flex;
+    gap: 16px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .takeaway:last-child { border-bottom: none; }
+  .takeaway-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .takeaway-body h3 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+  }
+  .takeaway-body p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .takeaway-body .evidence {
+    margin-top: 10px;
+    background: var(--teal-bg);
+    border-left: 3px solid var(--teal);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+  .takeaway-body .evidence .ts {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-style: normal;
+    margin-top: 6px;
+  }
+
+  /* ── TOPIC DEEP DIVE ── */
+  .topic-section {
+    margin-bottom: 24px;
+  }
+  .topic-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .topic-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .topic-header .time-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    background: var(--violet-bg);
+    border: 1px solid var(--violet-border);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .topic-header .time-badge a {
+    color: var(--violet);
+    text-decoration: none;
+  }
+  .topic-header .time-badge a:hover {
+    text-decoration: underline;
+  }
+  .topic-body {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+  }
+  .topic-body ul {
+    margin: 10px 0;
+    padding-left: 20px;
+  }
+  .topic-body li {
+    margin-bottom: 6px;
+  }
+  .topic-divider {
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    margin: 20px 0;
+  }
+
+  /* ── ACTION ITEMS ── */
+  .action-list {
+    list-style: none;
+  }
+  .action-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .action-list li:last-child { border-bottom: none; }
+  .action-check {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── SOURCE BAR ── */
+  .source-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 32px;
+  }
+  .source-bar .label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .source-bar a {
+    font-size: 13px;
+    color: var(--violet);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 32px 0 16px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 24px; }
+  }
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 24px 16px; }
+  }
+</style>
+<link rel="stylesheet" href="../SOP Templates/brand-config.css">
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <img src="../uploads/23 Systems Logo.png" alt="23 Systems" style="height:28px;width:auto;flex-shrink:0;border-radius:6px;">
+      <span style="font-size:13px;font-weight:700;color:#fff;letter-spacing:0.5px;">23 Systems</span>
+    </div>
+    <div class="sidebar-label">Deep Dive Summary</div>
+    <div class="sidebar-title">Brutally Honest Advice For Poor People</div>
+    <div class="sidebar-meta">Alex Hormozi · March 19, 2026</div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="#overview"><span class="num">01</span> Overview</a>
+    <a href="#takeaways"><span class="num">02</span> Key Takeaways</a>
+    <a href="#topics"><span class="num">03</span> Topic Breakdown</a>
+    <a href="#actions"><span class="num">04</span> Action Items</a>
+    <a href="#source"><span class="num">05</span> Source</a>
+  </div>
+  <div class="sidebar-link">
+    <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M">Watch Original Video →</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<div class="main">
+
+  <!-- ── OVERVIEW ── -->
+  <h2 class="section-heading" id="overview">Overview</h2>
+
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="val">2h 14m</div>
+      <div class="lbl">Duration</div>
+    </div>
+    <div class="stat-box">
+      <div class="val">10</div>
+      <div class="lbl">Topics</div>
+    </div>
+    <div class="stat-box">
+      <div class="val">7</div>
+      <div class="lbl">Key Takeaways</div>
+    </div>
+    <div class="stat-box">
+      <div class="val">8</div>
+      <div class="lbl">Action Items</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.75;">
+      Alex Hormozi delivers a comprehensive, no-holds-barred guide for people who are broke or poor and want to change their financial trajectory. Drawing from his own journey — starting a gym at 23 with no knowledge, scaling to six locations by 26, building a $4.4M/month licensing business, and crossing $100M net worth by 31 — he lays out the foundational mindset shifts and tactical steps required to escape poverty. The core thesis: take radical ownership ("it's my fault"), use whatever emotional fuel you have (anger, shame, pain), invest aggressively in skills over savings, cut out people who decrease your likelihood of success, and persist through the lonely middle chapter where you're too different for old friends but haven't yet earned new ones.
+    </p>
+  </div>
+
+  <!-- ── KEY TAKEAWAYS ── -->
+  <h2 class="section-heading" id="takeaways">Key Takeaways</h2>
+
+  <div class="card">
+    <div class="takeaway">
+      <div class="takeaway-badge">1</div>
+      <div class="takeaway-body">
+        <h3>Radical Ownership Is the Foundation</h3>
+        <p>The first and most critical step to escaping poverty is saying "it's my fault." Wherever you cast blame, you also cast power. If you blame your parents, the economy, or politics for your situation, those things now control you. Taking full responsibility is the only way to reclaim the power to change your circumstances.</p>
+        <div class="evidence">
+          "Whatever you cast blame to is where you also cast power to. And so if I say I can't succeed because my mom didn't love me, guess who controls me? My mom."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=870s" style="color:var(--teal); text-decoration:none;">14:30</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">2</div>
+      <div class="takeaway-body">
+        <h3>Use What You Have, Not What You Wish You Had</h3>
+        <p>Stop waiting for the right passion, purpose, capital, or connections. Use whatever emotional fuel is available — anger, shame, pain, spite. Hormozi's entire early career was fueled by anger and the refusal to go back to Baltimore as a failure. Resourcefulness matters more than resources.</p>
+        <div class="evidence">
+          "Follow your passion — my passion is to not be poor and to not be here in Baltimore. That's my passion."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=2241s" style="color:var(--teal); text-decoration:none;">37:21</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">3</div>
+      <div class="takeaway-body">
+        <h3>Skills Are the Currency of Wealth</h3>
+        <p>The wealthiest people think only about skills — what can they learn and what can that skill get them. In the beginning you buy all the skills yourself through time and repetition. Once you generate excess income, you can start buying other people's skills (hiring). Skills compound and transfer across domains.</p>
+        <div class="evidence">
+          "The wealthiest people I know only think about skills. They think about what can I learn and then what can this skill get me?"
+          <div class="ts"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=1762s" style="color:var(--teal); text-decoration:none;">29:22</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">4</div>
+      <div class="takeaway-body">
+        <h3>Volume + Feedback Loops = Rapid Skill Development</h3>
+        <p>Skill development is the product of repetition volume multiplied by the improvement between repetitions. Don't just grind mindlessly — review your top and bottom performers, identify what works, and iterate. This is how Hormozi went from letting customers walk away without a credit card to becoming known for sales.</p>
+        <div class="evidence">
+          "Skill development happens through volume and feedback loops. So it's the number of repetitions you have times the amount of improvement between repetitions."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=3396s" style="color:var(--teal); text-decoration:none;">56:36</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">5</div>
+      <div class="takeaway-body">
+        <h3>Your Friends May Be Your Biggest Obstacle</h3>
+        <p>A true friend deliberately decreases the possibility of failure. If a person in your life increases the likelihood you don't hit your goals, they are functionally your enemy. The "lonely chapter" — too different for old friends, not yet successful enough for new ones — is a necessary passage that every successful person navigates.</p>
+        <div class="evidence">
+          "There are no social obligations, only social consequences. And the people who want to deliver those consequences often do it by talking to you less and avoiding you more."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=2656s" style="color:var(--teal); text-decoration:none;">44:16</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">6</div>
+      <div class="takeaway-body">
+        <h3>Be Patient With Outputs, Impatient With Inputs</h3>
+        <p>Patience means figuring out what to do in the meantime. Impatience means doing that thing urgently. Track leading metrics (calls made, reps completed) not lagging metrics (revenue, followers). Use action as your coping mechanism for anxiety about results. "Action alleviates anxiety."</p>
+        <div class="evidence">
+          "Whenever you have that feeling that things should be happening faster, use action as your coping mechanism."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=3962s" style="color:var(--teal); text-decoration:none;">66:02</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">7</div>
+      <div class="takeaway-body">
+        <h3>Build Evidence, Not Confidence</h3>
+        <p>Confidence is simply a prediction — the likelihood that what you think will happen actually happens. The only way to increase it is through evidence from experience. Don't waste time psyching yourself up in the mirror; spend that time reviewing the script, making the calls, doing the reps. Evidence-based certainty is unshakeable.</p>
+        <div class="evidence">
+          "Confidence without evidence is a delusion. It's you beating your chest, looking at yourself in the mirror, trying to pretend you're something you're not."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=7236s" style="color:var(--teal); text-decoration:none;">120:36</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOPIC BREAKDOWN ── -->
+  <h2 class="section-heading" id="topics">Topic Breakdown</h2>
+
+  <div class="card">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>The Origin Story: From Consulting to Gym Floors</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=0s">0:00</a> — <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=480s">8:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Hormozi opens with visceral honesty about his early days — remembering the goal of making $10K/month from 13 years ago, the pain of leaving a white-collar consulting job, and starting a gym at 23 knowing absolutely nothing about running a business.</p>
+        <ul>
+          <li>Left a successful consulting career, took a massive pay cut to start a brick-and-mortar gym</li>
+          <li>Did everything himself — cleaning, billing, sales, training, equipment repair — because he didn't know you could hire employees</li>
+          <li>Clients would patronizingly ask if he went to college; he had to swallow pride to close the sale</li>
+          <li>Moved cross-country to Huntington Beach from Baltimore, knowing no one — isolation became an asset for focused work</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>The Glass Rope: Pulling Tomorrow's Pain Into Today</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=300s">5:00</a> — <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=720s">12:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Hormozi introduces his metaphor of life as a timeline you pull toward you — it's glass at first (painful), then gradually gets smoother and sweeter. The key is willingness to endure the glass period by working a double life: your normal job plus building the future.</p>
+        <ul>
+          <li>When broke, your only resource is time — you must live two lives simultaneously (survive today, build tomorrow)</li>
+          <li>On a long enough timeline, everyone would eventually succeed — most people just "die too early" (give up)</li>
+          <li>The first $100K is the hardest — took him 5 years — and you save it $1 at a time</li>
+          <li>People delay pain instead of delaying gratification, then are surprised when yesterday's "tomorrow" arrives with a bill</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>Foundation Layer: "It's My Fault"</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=840s">14:00</a> — <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=1320s">22:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>The deepest foundational lesson: everything starts with radical ownership. Hormozi explains why blame is fundamentally self-defeating, using the Zig Ziglar frame ("you can be right or you can be rich") and Dr. Kashey's "99% right, 100% wrong" concept.</p>
+        <ul>
+          <li>Blame transfers power to the thing you blame — your mom, the economy, politics now control your destiny</li>
+          <li>Victim framing is self-fulfilling: you get more evidence, more confirmation, and your life gets worse — confirming you were "right"</li>
+          <li>The 99%/100% principle: people who say "it won't work" are right most of the time, but wrong on the only time that matters</li>
+          <li>The essay at age 19 about his mother's depression shifted his perspective — understanding someone else's hardship broke the blame cycle</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>How Money Is Actually Made</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=1560s">26:00</a> — <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=2160s">36:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Hormozi breaks down the mechanics of making money: it comes from providing value to someone who voluntarily gives you money in exchange. He outlines the progression from selling other people's stuff (affiliate/referral) to selling your own skills and outcomes.</p>
+        <ul>
+          <li>Spend less than you make, then reinvest ALL excess into making more — not into savings alone</li>
+          <li>Failed experiments aren't losses — they're experience points; with enough XP, you level up</li>
+          <li>First money from a stranger: a woman at the gym paid him $200 for a nutrition consultation at a pizza place</li>
+          <li>His entire career path: get good at something → people ask for help → build business around that help → repeat at higher levels</li>
+          <li>The first thing you sell is not the last thing you'll sell — just start with affiliate/referral programs to learn the skill of selling</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>Friends, Loneliness, and the Transition Chapter</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=2520s">42:00</a> — <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=3000s">50:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Hormozi addresses one of the hardest parts of the journey: the people around you. He provides a clear framework for evaluating friendships and explains why the lonely middle chapter is both inevitable and valuable.</p>
+        <ul>
+          <li>A friend who supports you deliberately decreases the possibility of failure — if they increase it, they're functionally an enemy</li>
+          <li>"There are no social obligations, only social consequences" — and often the punishment (being excluded) is exactly what you wanted</li>
+          <li>The lonely chapter: too different for old friends, not successful enough for new tier — but loneliness = time, and time is what you need</li>
+          <li>Most friendships are convenience-based (same dorm, same class) — they naturally fade when conditions change</li>
+          <li>If you don't like their life, don't listen to their advice</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>The Tactical Broke Playbook</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=3000s">50:00</a> — <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=3300s">55:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Concrete, tactical advice for people with less than $100K in savings who want to change their financial situation immediately.</p>
+        <ul>
+          <li><strong>Stop eating out</strong> — discount groceries only</li>
+          <li><strong>Stop buying new clothes</strong> — Goodwill only</li>
+          <li><strong>Only attend free friend events</strong> — if they don't support your goals, they're not friends</li>
+          <li><strong>Use remaining time to:</strong> (A) apply to higher-paying jobs, (B) pick up side hustle work, (C) learn skills that trade for a higher hourly rate</li>
+          <li><strong>Find the hardest worker</strong> in any new environment and double their input level</li>
+          <li><strong>Wait 36 months</strong> — patient with outputs, impatient with inputs</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>Sales: From Zero to Mastery Through Volume</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=3360s">56:00</a> — <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=3840s">64:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Hormozi shares his sales origin story and the mechanics of how he went from embarrassingly bad (letting a prospect "go get her credit card") to closing at extremely high rates through sheer volume and deliberate practice.</p>
+        <ul>
+          <li>Every wealthy person he knows started in a high-volume sales environment — door-knocking, cold calling, or in-person selling for 3-5 years</li>
+          <li>Used a mini trampoline between sales appointments to maintain high energy — "try to be in a bad mood on a trampoline, you can't do it"</li>
+          <li>Key phone opening technique: say their name with a question mark, pause, then "from Facebook" — keeps tone light and energetic</li>
+          <li>The banana story: there's a difference between being dumb and being inexperienced — you just don't have reps yet</li>
+          <li>Developed a feedback-driven iteration system: review top 10% of calls/ads/content, identify common traits, do more of those</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>Getting In Shape and Avoiding Stupidity</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=4488s">74:48</a> — <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=4740s">79:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>The second pillar of Hormozi's framework for young men: physical fitness. He argues it costs time (not money), and time only gets more expensive with age. Combined with Charlie Munger's inversion principle — avoid stupidity rather than seeking intelligence.</p>
+        <ul>
+          <li>In-shape men outperform out-of-shape men at virtually every task — energy, focus, sales close rates, content performance</li>
+          <li>Getting in shape costs time, not money — and right now you have time and not money</li>
+          <li>Set alarms to go to sleep, not to wake up — going to bed on time eliminates most self-destructive behaviors</li>
+          <li>Drinking costs you two days: the day you drink and the day you recover, plus potential weeks from consequences</li>
+          <li>Muhammad Ali quote: the central part of training is "dodging the nightclubs and the parties and the girls"</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>You Don't Have Demons — You Have Skill Deficiencies</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=6180s">103:00</a> — <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=7020s">117:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Hormozi dismantles the "I have demons" / "I'm traumatized" narrative with behavioral definitions and the Logic-Evidence-Utility framework from Dr. Kashey. Trauma is simply a permanent behavior change from an aversive stimulus — and it can be good or bad depending on whether the resulting behavior is conducive to your goals.</p>
+        <ul>
+          <li>"I have demons" translates to: under certain conditions, I behave in ways that aren't ideal — that's a skill deficiency, not a spiritual curse</li>
+          <li>Logic-Evidence-Utility framework: (1) Define in behavioral terms, (2) What evidence do you have?, (3) Who cares / does it matter for your goals?</li>
+          <li>Trauma can be good: touching a hot stove permanently changes behavior to avoid burns — parenting hopes to "traumatize" children into better behaviors</li>
+          <li>Losers talk about what happened to them; winners talk about what they made happen despite it</li>
+          <li>Hardship is your origin story — the bigger the monster, the more epic the hero</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>The Infinite Game: Never Stop, Never Lose</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=7020s">117:00</a> — <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M&t=7999s">133:19</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Hormozi closes with the infinite game frame: marriage, health, and business are all games where you don't win — you just keep playing. Redefine winning as closing the gap between how hard you tried and how hard you could have tried. Track inputs, not outputs. Remove quitting from your menu of options.</p>
+        <ul>
+          <li>Finite games have winners and losers; infinite games (business, health, marriage) are about staying in the game</li>
+          <li>If you don't give up, you win by default — entrepreneurship is last man standing, not best man wins</li>
+          <li>Kobe didn't love winning or fear losing — he loved playing to the best of his ability</li>
+          <li>To be a top 1% podcaster, you only need 21 episodes — 90% don't get past one</li>
+          <li>His podcast got only 2-3K downloads/month after 4.5 years of twice-weekly episodes — it took selling a company for $46M for it to take off</li>
+          <li>"The world belongs to those who can keep doing without seeing the result of their doing"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACTION ITEMS ── -->
+  <h2 class="section-heading" id="actions">Action Items</h2>
+
+  <div class="card">
+    <ul class="action-list">
+      <li>
+        <div class="action-check"></div>
+        <span><strong>Say "it's my fault" out loud.</strong> Write down every area of your life where you've been blaming something external — and take ownership of each one today.</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span><strong>Audit your friends.</strong> For each person you spend significant time with, answer: does this person increase or decrease the likelihood I hit my goals? Act accordingly.</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span><strong>Cut lifestyle expenses ruthlessly.</strong> Stop eating out, buy clothes at Goodwill, only attend free events. Build a stockpile so you can think long-term instead of surviving.</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span><strong>Identify one high-value skill to learn.</strong> Pick something that trades for a higher hourly rate than your current work — sales, marketing, coding, copywriting — and dedicate your free time to it.</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span><strong>Double the hardest worker's input.</strong> In your current job or side hustle, find whoever is doing the most and do twice their volume. If they make 100 calls, you make 200.</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span><strong>Set a sleep alarm.</strong> Set an alarm for when to go to bed, not when to wake up. Eliminate the behaviors (drinking, late nights, scrolling) that cost you two days each.</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span><strong>Build a feedback loop.</strong> Review your top 10% and bottom 10% of outputs each month (sales calls, content, pitches). Identify what the top have that the bottom don't. Do more of that.</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span><strong>Commit to 36 months.</strong> Set a 3-year timeline. Be patient with outputs, impatient with inputs. Your life path changed the moment you decided — the fruit just takes time to grow above the surface.</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ── SOURCE ── -->
+  <div class="source-bar" id="source">
+    <span class="label">Source Video</span>
+    <a href="https://www.youtube.com/watch?v=vhOV_Od0A3M">https://www.youtube.com/watch?v=vhOV_Od0A3M</a>
+  </div>
+
+  <div class="footer">Generated by 23 Systems Agent</div>
+
+</div>
+
+</body>
+</html>

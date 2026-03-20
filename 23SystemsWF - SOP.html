@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>23 Systems Workforce SOP — Complete Operating Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy: #1a1a2e;
+    --navy-light: #252542;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-bg: #eef0ff;
+    --accent-border: #c7ceff;
+    --white: #ffffff;
+    --light-bg: #f3f4f8;
+    --dark-text: #1e1e32;
+    --mid-text: #50506e;
+    --light-text: #8889a0;
+    --border: #c8cde0;
+    --success: #22c55e;
+    --success-bg: #ecfdf5;
+    --warn: #eab308;
+    --warn-bg: #fefce8;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--dark-text);
+    background: var(--light-bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--navy);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0;
+  }
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-header .doc-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .sidebar-header .doc-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .sidebar-nav {
+    padding: 16px 0;
+  }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: var(--navy-light);
+    border-left-color: var(--accent);
+  }
+  .sidebar-nav a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .sidebar-nav .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 10px 24px;
+  }
+  .sidebar-nav .group-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 12px 24px 4px;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 280px;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(243,244,248,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--light-text);
+  }
+  .topbar .meta {
+    display: flex;
+    gap: 24px;
+  }
+  .topbar .meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--navy);
+    padding: 64px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  }
+  .cover .doc-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+  .cover h1 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .cover .subtitle {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 400;
+    max-width: 600px;
+  }
+
+  /* ── SECTIONS ── */
+  .content {
+    padding: 40px 48px 80px;
+    max-width: 960px;
+  }
+
+  .section {
+    margin-bottom: 48px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--accent-bg);
+  }
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .sub-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 28px 0 12px;
+    padding-left: 14px;
+    border-left: 3px solid var(--accent);
+  }
+
+  p {
+    color: var(--mid-text);
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── LISTS ── */
+  ul {
+    list-style: none;
+    margin: 12px 0 20px;
+    padding: 0;
+  }
+  ul li {
+    position: relative;
+    padding: 6px 0 6px 24px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 13px;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 16px 0 20px;
+    padding: 0;
+  }
+  ol.steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 8px 0 8px 44px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 4px;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  thead th {
+    background: var(--navy);
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #eef0f4;
+    color: var(--mid-text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #f8f9fc; }
+  tbody tr:hover { background: var(--accent-bg); }
+
+  /* ── INFO BOXES ── */
+  .info-box {
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+  .info-box.info {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .info-box.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+    color: #166534;
+  }
+  .info-box.warning {
+    background: var(--warn-bg);
+    border-color: var(--warn);
+    color: #854d0e;
+  }
+  .info-box.danger {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+    color: #991b1b;
+  }
+
+  /* ── CODE ── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--navy);
+    color: #e0e0e0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 12px 0 20px;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+
+  /* ── STRONG / BOLD ── */
+  strong { color: var(--dark-text); font-weight: 600; }
+
+  /* ── PRINT ── */
+  @media print {
+    .sidebar, .topbar { display: none; }
+    .main { margin-left: 0; }
+    .cover { padding: 32px; }
+    .content { padding: 24px; }
+    .section { page-break-inside: avoid; }
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover { padding: 32px 20px; }
+    .cover h1 { font-size: 26px; }
+    .content { padding: 24px 20px; }
+    .topbar { padding: 10px 20px; }
+  }
+</style>
+<link rel="stylesheet" href="brand-config.css">
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <img src="references/uploads/23 Systems Logo.png" alt="23 Systems" style="height:32px;width:auto;flex-shrink:0;border-radius:6px;">
+      <span style="font-size:14px;font-weight:700;color:#fff;letter-spacing:0.5px;">23 Systems</span>
+    </div>
+    <div class="doc-type">Standard Operating Procedure</div>
+    <div class="doc-title">23 Systems Workforce Complete Operating Guide</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="group-label">Getting Started</div>
+    <a href="#s1"><span class="num">1</span> System Overview</a>
+    <a href="#s2"><span class="num">2</span> Architecture</a>
+    <a href="#s3"><span class="num">3</span> First-Time Setup</a>
+    <a href="#s4"><span class="num">4</span> Web Interface</a>
+    <div class="divider"></div>
+    <div class="group-label">Core Operations</div>
+    <a href="#s5"><span class="num">5</span> Creating Jobs</a>
+    <a href="#s6"><span class="num">6</span> Cron Jobs</a>
+    <a href="#s7"><span class="num">7</span> Webhook Triggers</a>
+    <a href="#s8"><span class="num">8</span> API Access</a>
+    <div class="divider"></div>
+    <div class="group-label">Skills</div>
+    <a href="#s9"><span class="num">9</span> Skills Overview</a>
+    <a href="#s10"><span class="num">10</span> Brave Search</a>
+    <a href="#s11"><span class="num">11</span> Browser Tools</a>
+    <a href="#s12"><span class="num">12</span> NotebookLM</a>
+    <a href="#s13"><span class="num">13</span> Google Drive &amp; Docs</a>
+    <a href="#s14"><span class="num">14</span> YouTube Transcript</a>
+    <a href="#s15"><span class="num">15</span> KIE AI</a>
+    <a href="#s16"><span class="num">16</span> SOP Generator</a>
+    <div class="divider"></div>
+    <div class="group-label">Administration</div>
+    <a href="#s17"><span class="num">17</span> Configuration</a>
+    <a href="#s18"><span class="num">18</span> Secrets &amp; Credentials</a>
+    <a href="#s19"><span class="num">19</span> Troubleshooting</a>
+    <a href="#s20"><span class="num">20</span> Quick Reference</a>
+    <div class="divider"></div>
+    <div class="group-label">Documentation</div>
+    <a href="#s21"><span class="num">21</span> Technical Docs System</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="meta">
+      <span>v1.0</span>
+      <span>Updated March 2026</span>
+      <span>Owner: 23 Systems</span>
+    </div>
+  </div>
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="doc-badge">Standard Operating Procedure</div>
+    <h1>23 Systems Workforce Complete Operating Guide</h1>
+    <div class="subtitle">Everything you need to deploy, operate, and extend your autonomous AI agent. Covers architecture, job lifecycle, all skills, and administration.</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ═══ SECTION 1: SYSTEM OVERVIEW ═══ -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>System Overview</h2>
+      </div>
+      <p>23 Systems Workforce is an autonomous AI agent powered by the <code>thepopebot</code> npm package. It accepts tasks through a web chat UI, Telegram, cron schedules, webhooks, or direct API calls, and executes them using LLM-driven Docker containers that commit results as pull requests.</p>
+
+      <div class="sub-header">What 23 Systems Workforce Can Do</div>
+      <ul>
+        <li>Execute autonomous coding and research tasks via AI agents (Pi or Claude Code)</li>
+        <li>Search the web, scrape pages, and extract content</li>
+        <li>Interact with Google NotebookLM to create podcasts, reports, quizzes, and more</li>
+        <li>Automate browser interactions via Chrome DevTools Protocol</li>
+        <li>Generate images and videos via KIE AI</li>
+        <li>Manage Google Drive files and create Google Docs</li>
+        <li>Run scheduled tasks on cron and respond to webhook events</li>
+        <li>Generate branded SOP documents from templates</li>
+      </ul>
+
+      <div class="sub-header">Key Interfaces</div>
+      <table>
+        <thead>
+          <tr><th>Interface</th><th>Description</th><th>Best For</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Web Chat</strong></td><td>Browser UI at your <code>APP_URL</code></td><td>Interactive conversations, ad-hoc tasks</td></tr>
+          <tr><td><strong>Slack</strong></td><td>Bot DMs and @mentions via Events API</td><td>Team chat, channel-based workflows</td></tr>
+          <tr><td><strong>Telegram</strong></td><td>Bot integration with notifications</td><td>Mobile access, quick tasks on the go</td></tr>
+          <tr><td><strong>Cron Jobs</strong></td><td>Scheduled actions in <code>CRONS.json</code></td><td>Recurring automated tasks</td></tr>
+          <tr><td><strong>Webhooks</strong></td><td>HTTP triggers in <code>TRIGGERS.json</code></td><td>Event-driven automation</td></tr>
+          <tr><td><strong>API</strong></td><td><code>POST /api/create-job</code></td><td>Programmatic integration</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ SECTION 2: ARCHITECTURE ═══ -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>Architecture</h2>
+      </div>
+      <p>23 Systems Workforce uses a <strong>two-layer architecture</strong> separating orchestration from execution.</p>
+
+      <div class="sub-header">Layer 1: Event Handler</div>
+      <p>A Next.js 15 server that handles all incoming requests and orchestrates job creation.</p>
+      <ul>
+        <li>Web UI for chat, job management, notifications, and settings</li>
+        <li>Telegram bot integration for mobile access</li>
+        <li>Cron scheduler (node-cron) for timed tasks</li>
+        <li>Webhook receiver for event-driven triggers</li>
+        <li>SQLite database (Drizzle ORM) for users, chats, messages, and settings</li>
+        <li>NextAuth v5 for session management (email/password, JWT cookies)</li>
+      </ul>
+
+      <div class="sub-header">Layer 2: Docker Agent</div>
+      <p>An ephemeral container spun up by GitHub Actions for each job.</p>
+      <ul>
+        <li>Runs the Pi coding agent or Claude Code as the LLM backend</li>
+        <li>Clones the job branch, reads the task prompt, executes autonomously</li>
+        <li>Commits results and opens a pull request</li>
+        <li>Container is destroyed after job completes</li>
+      </ul>
+
+      <div class="sub-header">Job Lifecycle</div>
+      <ol class="steps">
+        <li><strong>Job created</strong> — Event handler receives a task via chat, cron, trigger, or API and calls <code>createJob()</code></li>
+        <li><strong>Branch pushed</strong> — A <code>job/&lt;uuid&gt;</code> branch is created on GitHub with <code>logs/&lt;uuid&gt;/job.md</code> containing the task prompt</li>
+        <li><strong>Workflow triggers</strong> — GitHub Actions <code>run-job.yml</code> fires on the new branch</li>
+        <li><strong>Container runs</strong> — Docker agent clones the branch, loads personality from <code>config/SOUL.md</code>, executes the task with all active skills available</li>
+        <li><strong>PR created</strong> — Agent commits results and opens a pull request</li>
+        <li><strong>Auto-merge</strong> — <code>auto-merge.yml</code> squash-merges the PR if all changed files fall within <code>ALLOWED_PATHS</code> (default: <code>/logs</code>)</li>
+        <li><strong>Notification</strong> — Results are sent back to the web UI and Telegram</li>
+      </ol>
+
+      <div class="info-box info"><strong>Note:</strong> Each job gets its own isolated branch and container. Jobs cannot interfere with each other or with the main branch unless auto-merge conditions are met.</div>
+    </div>
+
+    <!-- ═══ SECTION 3: FIRST-TIME SETUP ═══ -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>First-Time Setup</h2>
+      </div>
+
+      <div class="sub-header">Prerequisites</div>
+      <ul>
+        <li>Node.js 22+</li>
+        <li>A GitHub repository with Actions enabled</li>
+        <li>A GitHub Personal Access Token (PAT) with repo permissions</li>
+        <li>An Anthropic API key (or OpenAI/Google API key)</li>
+        <li>Docker (for local development with docker-compose)</li>
+      </ul>
+
+      <div class="sub-header">Installation Steps</div>
+      <ol class="steps">
+        <li>Clone your 23 Systems Workforce repository and run <code>npm install</code></li>
+        <li>Run <code>npx thepopebot init</code> to scaffold the project structure</li>
+        <li>Copy <code>.env.example</code> to <code>.env</code> and fill in required values:
+          <pre>APP_URL=https://your-domain.com
+AUTH_SECRET=&lt;auto-generated&gt;
+GH_TOKEN=ghp_...
+GH_OWNER=your-github-username
+GH_REPO=your-repo-name
+ANTHROPIC_API_KEY=sk-ant-...</pre>
+        </li>
+        <li>Start the event handler: <code>npm run dev</code> (local) or <code>docker compose up -d</code> (production)</li>
+        <li>Visit your <code>APP_URL</code> and create your admin account on first login</li>
+        <li>Generate an API key in <strong>Settings &gt; Secrets</strong> for programmatic access</li>
+      </ol>
+
+      <div class="sub-header">Optional: Telegram Setup</div>
+      <ol class="steps">
+        <li>Create a bot with @BotFather on Telegram and get the bot token</li>
+        <li>Add <code>TELEGRAM_BOT_TOKEN</code> and <code>TELEGRAM_CHAT_ID</code> to <code>.env</code></li>
+        <li>Register the webhook: <code>POST /api/telegram/register</code> with your API key</li>
+      </ol>
+
+      <div class="info-box success"><strong>Tip:</strong> The first user to visit the login page becomes the admin. Set up your account immediately after deployment.</div>
+    </div>
+
+    <!-- ═══ SECTION 4: WEB INTERFACE ═══ -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <h2>Web Interface</h2>
+      </div>
+      <p>The web interface is accessible at your <code>APP_URL</code> after logging in.</p>
+
+      <table>
+        <thead>
+          <tr><th>Route</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/</code></td><td>Chat interface — start new conversations and create jobs</td></tr>
+          <tr><td><code>/chats</code></td><td>Chat history — browse and resume past conversations</td></tr>
+          <tr><td><code>/chat/[id]</code></td><td>Resume a specific chat conversation</td></tr>
+          <tr><td><code>/runners</code></td><td>Job monitor — view running, queued, and completed jobs</td></tr>
+          <tr><td><code>/notifications</code></td><td>Job completion and failure notifications</td></tr>
+          <tr><td><code>/settings/crons</code></td><td>Manage scheduled cron jobs</td></tr>
+          <tr><td><code>/settings/triggers</code></td><td>Manage webhook triggers</td></tr>
+          <tr><td><code>/settings/secrets</code></td><td>API key management</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ SECTION 5: CREATING JOBS ═══ -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <h2>Creating Jobs</h2>
+      </div>
+      <p>Jobs are the core unit of work in 23 Systems Workforce. Every job runs in an isolated Docker container with its own Git branch.</p>
+
+      <div class="sub-header">Three Action Types</div>
+      <table>
+        <thead>
+          <tr><th>Type</th><th>Uses LLM</th><th>Runtime</th><th>Cost</th><th>Use Case</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Agent</strong></td><td>Yes</td><td>Minutes to hours</td><td>LLM API + Actions</td><td>Tasks requiring thinking, reasoning, coding</td></tr>
+          <tr><td><strong>Command</strong></td><td>No</td><td>Milliseconds</td><td>Free</td><td>Shell scripts, file operations</td></tr>
+          <tr><td><strong>Webhook</strong></td><td>No</td><td>Milliseconds</td><td>Free</td><td>External API calls, forwarding</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Via Web Chat</div>
+      <p>Simply type your task in the chat interface. The event handler's LLM will determine if it should create an agent job or respond conversationally. Be specific about what you want the agent to do.</p>
+      <div class="info-box info"><strong>Example prompt:</strong> "Search the web for the latest AI regulation news, create a NotebookLM notebook with the top 5 articles, and generate a briefing document."</div>
+
+      <div class="sub-header">Via API</div>
+      <pre>curl -X POST https://your-domain.com/api/create-job \
+  -H "x-api-key: tpb_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{"job": "Analyze the logs and write a summary report"}'</pre>
+
+      <div class="sub-header">Writing Good Job Prompts</div>
+      <ul>
+        <li>Be specific about the desired output — "generate a podcast" vs "create something"</li>
+        <li>Reference skills by name when needed — "Use the brave-search skill to find..."</li>
+        <li>Include install steps for skills that need them — "Run <code>skills/notebooklm/install.sh</code> first"</li>
+        <li>Specify where to save outputs — "Save the report to <code>logs/</code>"</li>
+        <li>Break large tasks into sequential steps in your prompt</li>
+      </ul>
+    </div>
+
+    <!-- ═══ SECTION 6: CRON JOBS ═══ -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <h2>Cron Jobs</h2>
+      </div>
+      <p>Scheduled tasks defined in <code>config/CRONS.json</code>. Loaded at server startup by node-cron.</p>
+
+      <div class="sub-header">Configuration Format</div>
+      <pre>{
+  "name": "Daily Research Digest",
+  "schedule": "0 9 * * *",
+  "type": "agent",
+  "job": "Use brave-search to find today's top AI news...",
+  "enabled": true
+}</pre>
+
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Required</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>name</code></td><td>Yes</td><td>Display name for the job</td></tr>
+          <tr><td><code>schedule</code></td><td>Yes</td><td>Cron expression (e.g., <code>0 9 * * *</code> = daily 9am)</td></tr>
+          <tr><td><code>type</code></td><td>No</td><td><code>agent</code> (default), <code>command</code>, or <code>webhook</code></td></tr>
+          <tr><td><code>job</code></td><td>For agent</td><td>Task prompt sent to the LLM</td></tr>
+          <tr><td><code>command</code></td><td>For command</td><td>Shell command (runs in <code>cron/</code> directory)</td></tr>
+          <tr><td><code>url</code></td><td>For webhook</td><td>Target URL for HTTP request</td></tr>
+          <tr><td><code>enabled</code></td><td>No</td><td>Set <code>false</code> to disable (default: <code>true</code>)</td></tr>
+          <tr><td><code>llm_provider</code></td><td>No</td><td>Override LLM provider for this cron only</td></tr>
+          <tr><td><code>llm_model</code></td><td>No</td><td>Override LLM model for this cron only</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Common Cron Expressions</div>
+      <table>
+        <thead>
+          <tr><th>Expression</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>*/5 * * * *</code></td><td>Every 5 minutes</td></tr>
+          <tr><td><code>0 * * * *</code></td><td>Every hour</td></tr>
+          <tr><td><code>0 9 * * *</code></td><td>Daily at 9:00 AM</td></tr>
+          <tr><td><code>0 9 * * 1-5</code></td><td>Weekdays at 9:00 AM</td></tr>
+          <tr><td><code>0 9 * * 1</code></td><td>Every Monday at 9:00 AM</td></tr>
+          <tr><td><code>0 0 1 * *</code></td><td>First of each month at midnight</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ SECTION 7: WEBHOOK TRIGGERS ═══ -->
+    <div class="section" id="s7">
+      <div class="section-header">
+        <div class="section-number">7</div>
+        <h2>Webhook Triggers</h2>
+      </div>
+      <p>Event-driven actions defined in <code>config/TRIGGERS.json</code>. Triggers fire on POST requests to watched paths.</p>
+
+      <div class="sub-header">Configuration Format</div>
+      <pre>{
+  "name": "GitHub Push Review",
+  "watch_path": "/webhook/github-push",
+  "enabled": true,
+  "actions": [
+    {
+      "type": "agent",
+      "job": "Review the push to {{body.ref}}: {{body.head_commit.message}}"
+    }
+  ]
+}</pre>
+
+      <div class="sub-header">Template Tokens</div>
+      <p>Use these placeholders in <code>job</code> and <code>command</code> strings — they resolve to incoming request data:</p>
+      <table>
+        <thead>
+          <tr><th>Token</th><th>Resolves To</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>{{body}}</code></td><td>Entire request body as JSON</td></tr>
+          <tr><td><code>{{body.field}}</code></td><td>Nested field from request body</td></tr>
+          <tr><td><code>{{query}}</code></td><td>All query parameters as JSON</td></tr>
+          <tr><td><code>{{query.field}}</code></td><td>Specific query parameter</td></tr>
+          <tr><td><code>{{headers}}</code></td><td>All request headers as JSON</td></tr>
+          <tr><td><code>{{headers.field}}</code></td><td>Specific request header</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ SECTION 8: API ACCESS ═══ -->
+    <div class="section" id="s8">
+      <div class="section-header">
+        <div class="section-number">8</div>
+        <h2>API Access</h2>
+      </div>
+      <p>All API routes use <code>x-api-key</code> header authentication unless noted.</p>
+
+      <table>
+        <thead>
+          <tr><th>Endpoint</th><th>Method</th><th>Auth</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/api/create-job</code></td><td>POST</td><td>API key</td><td>Create a new agent job</td></tr>
+          <tr><td><code>/api/jobs/status</code></td><td>GET</td><td>API key</td><td>Check running/queued jobs</td></tr>
+          <tr><td><code>/api/telegram/webhook</code></td><td>POST</td><td>Webhook secret</td><td>Telegram bot messages</td></tr>
+          <tr><td><code>/api/telegram/register</code></td><td>POST</td><td>API key</td><td>Register Telegram webhook</td></tr>
+          <tr><td><code>/api/slack/webhook</code></td><td>POST</td><td>Signing secret</td><td>Slack Events API (DMs and @mentions)</td></tr>
+          <tr><td><code>/api/github/webhook</code></td><td>POST</td><td>Webhook secret</td><td>GitHub Actions notifications</td></tr>
+          <tr><td><code>/api/ping</code></td><td>GET</td><td>None</td><td>Health check</td></tr>
+        </tbody>
+      </table>
+
+      <p>API keys are generated in <strong>Settings &gt; Secrets</strong> in the web UI. Format: <code>tpb_</code> prefix + 64 hex characters. Keys are SHA-256 hashed in the database and verified with timing-safe comparison.</p>
+    </div>
+
+    <!-- ═══ SECTION 9: SKILLS OVERVIEW ═══ -->
+    <div class="section" id="s9">
+      <div class="section-header">
+        <div class="section-number">9</div>
+        <h2>Skills Overview</h2>
+      </div>
+      <p>Skills are lightweight wrappers that extend agent capabilities. They live in <code>skills/&lt;skill-name&gt;/</code> and are activated by symlinking into <code>skills/active/</code>.</p>
+
+      <div class="sub-header">Active Skills</div>
+      <table>
+        <thead>
+          <tr><th>Skill</th><th>Description</th><th>Requires</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>brave-search</strong></td><td>Web search and content extraction via Brave Search API</td><td><code>BRAVE_API_KEY</code></td></tr>
+          <tr><td><strong>browser-tools</strong></td><td>Chrome DevTools Protocol automation</td><td>Chrome on :9222</td></tr>
+          <tr><td><strong>llm-secrets</strong></td><td>List available LLM-accessible credentials</td><td>—</td></tr>
+          <tr><td><strong>modify-self</strong></td><td>Modify agent's own code, config, personality</td><td>—</td></tr>
+          <tr><td><strong>notebooklm</strong></td><td>Google NotebookLM integration</td><td><code>NOTEBOOKLM_AUTH_JSON</code></td></tr>
+          <tr><td><strong>sop-generator</strong></td><td>Generate branded HTML SOP documents</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Available (Inactive) Skills</div>
+      <table>
+        <thead>
+          <tr><th>Skill</th><th>Description</th><th>Requires</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>google-docs</strong></td><td>Create/manage Google Docs via service account</td><td><code>GOOGLE_SERVICE_ACCOUNT_JSON</code>, <code>GOOGLE_SHARED_DRIVE_ID</code></td></tr>
+          <tr><td><strong>google-drive</strong></td><td>Google Drive file operations via service account</td><td><code>GOOGLE_SERVICE_ACCOUNT_JSON</code>, <code>GOOGLE_SHARED_DRIVE_ID</code></td></tr>
+          <tr><td><strong>youtube-transcript</strong></td><td>Fetch YouTube video transcripts</td><td>—</td></tr>
+          <tr><td><strong>kie-ai</strong></td><td>AI image and video generation</td><td><code>KIE_AI_API_KEY</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Activating a Skill</div>
+      <pre>ln -s ../skill-name skills/active/skill-name</pre>
+
+      <div class="sub-header">Creating a New Skill</div>
+      <ol class="steps">
+        <li>Create directory: <code>skills/my-skill/</code></li>
+        <li>Write <code>SKILL.md</code> with YAML frontmatter (<code>name</code>, <code>description</code>) and usage docs</li>
+        <li>Write implementation (bash script preferred, or Node.js with <code>package.json</code> if dependencies needed)</li>
+        <li>Activate: <code>ln -s ../my-skill skills/active/my-skill</code></li>
+        <li>Test with a real job before committing</li>
+      </ol>
+    </div>
+
+    <!-- ═══ SECTION 10: BRAVE SEARCH ═══ -->
+    <div class="section" id="s10">
+      <div class="section-header">
+        <div class="section-number">10</div>
+        <h2>Skill: Brave Search</h2>
+      </div>
+      <p>Web search and content extraction using the official Brave Search API. No browser required — lightweight and fast.</p>
+
+      <div class="sub-header">Setup</div>
+      <ol class="steps">
+        <li>Create an account at <strong>api-dashboard.search.brave.com</strong></li>
+        <li>Create a "Free AI" subscription (credit card required, not charged)</li>
+        <li>Create an API key for the subscription</li>
+        <li>Store the key: <code>npx thepopebot set-agent-llm-secret BRAVE_API_KEY "your-key"</code></li>
+        <li>Install dependencies: <code>cd skills/brave-search && npm install</code></li>
+      </ol>
+
+      <div class="sub-header">Usage</div>
+      <pre># Basic search (5 results)
+skills/brave-search/search.js "query"
+
+# More results with page content
+skills/brave-search/search.js "query" -n 10 --content
+
+# Filter by freshness
+skills/brave-search/search.js "query" --freshness pw    # past week
+skills/brave-search/search.js "query" --freshness pm    # past month
+
+# Filter by country
+skills/brave-search/search.js "query" --country DE
+
+# Extract content from a specific URL
+skills/brave-search/content.js https://example.com/article</pre>
+
+      <table>
+        <thead>
+          <tr><th>Option</th><th>Description</th><th>Default</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>-n &lt;num&gt;</code></td><td>Number of results</td><td>5 (max 20)</td></tr>
+          <tr><td><code>--content</code></td><td>Include page content as markdown</td><td>Off</td></tr>
+          <tr><td><code>--country &lt;code&gt;</code></td><td>Two-letter country code</td><td>US</td></tr>
+          <tr><td><code>--freshness &lt;period&gt;</code></td><td>Time filter: pd, pw, pm, py, or date range</td><td>All time</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ SECTION 11: BROWSER TOOLS ═══ -->
+    <div class="section" id="s11">
+      <div class="section-header">
+        <div class="section-number">11</div>
+        <h2>Skill: Browser Tools</h2>
+      </div>
+      <p>Chrome DevTools Protocol automation for interacting with web pages, testing frontends, and scraping dynamic content.</p>
+
+      <div class="sub-header">Setup</div>
+      <pre>cd skills/browser-tools && npm install</pre>
+
+      <div class="sub-header">Commands</div>
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>browser-start.js</code></td><td>Launch Chrome with remote debugging on :9222</td></tr>
+          <tr><td><code>browser-start.js --profile</code></td><td>Launch with user's profile (cookies, logins)</td></tr>
+          <tr><td><code>browser-nav.js &lt;url&gt;</code></td><td>Navigate to a URL</td></tr>
+          <tr><td><code>browser-nav.js &lt;url&gt; --new</code></td><td>Open URL in a new tab</td></tr>
+          <tr><td><code>browser-eval.js '&lt;js&gt;'</code></td><td>Execute JavaScript in the active tab</td></tr>
+          <tr><td><code>browser-screenshot.js</code></td><td>Capture viewport screenshot</td></tr>
+          <tr><td><code>browser-pick.js "&lt;instruction&gt;"</code></td><td>Interactive element picker (user selects DOM elements)</td></tr>
+          <tr><td><code>browser-cookies.js</code></td><td>Display all cookies for current tab</td></tr>
+          <tr><td><code>browser-content.js &lt;url&gt;</code></td><td>Extract readable content as markdown</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box success"><strong>Best Practice:</strong> Parse the DOM directly with <code>browser-eval.js</code> instead of taking screenshots. It's faster and gives you structured data.</div>
+    </div>
+
+    <!-- ═══ SECTION 12: NOTEBOOKLM ═══ -->
+    <div class="section" id="s12">
+      <div class="section-header">
+        <div class="section-number">12</div>
+        <h2>Skill: NotebookLM</h2>
+      </div>
+      <p>Full programmatic access to Google NotebookLM — create notebooks, add sources, chat with them, and generate artifacts like audio podcasts, videos, reports, quizzes, slide decks, infographics, and more.</p>
+
+      <div class="sub-header">Setup</div>
+      <ol class="steps">
+        <li>Install locally: <code>pipx install notebooklm-py</code></li>
+        <li>Install Playwright for browser login: <code>pipx inject notebooklm-py playwright</code></li>
+        <li>Install Chromium: find the Playwright binary in the pipx venv and run <code>playwright install chromium</code></li>
+        <li>Authenticate: <code>notebooklm login</code> (opens browser for Google sign-in)</li>
+        <li>Verify: <code>notebooklm auth check --test</code></li>
+        <li>Store credential for Docker agent: <code>npx thepopebot set-agent-llm-secret NOTEBOOKLM_AUTH_JSON &lt; ~/.notebooklm/storage_state.json</code></li>
+      </ol>
+
+      <div class="info-box warning"><strong>Important:</strong> Always start job prompts with <code>skills/notebooklm/install.sh</code> — this installs Python and the CLI in the Docker container.</div>
+
+      <div class="sub-header">Core Workflows</div>
+
+      <p><strong>Create a notebook and add sources:</strong></p>
+      <pre>notebooklm create "Research Topic"
+notebooklm use &lt;notebook_id&gt;
+notebooklm source add "https://example.com/article"
+notebooklm source add "https://youtube.com/watch?v=xyz"
+notebooklm source add ./document.pdf</pre>
+
+      <p><strong>Ask questions (source-grounded Q&A):</strong></p>
+      <pre>notebooklm ask "What are the key themes?"
+notebooklm ask "Compare viewpoints" -s &lt;src1&gt; -s &lt;src2&gt;
+notebooklm ask "Explain X" --save-as-note</pre>
+
+      <p><strong>Generate audio podcast:</strong></p>
+      <pre>notebooklm generate audio --format deep-dive --wait
+notebooklm download audio ./podcast.mp3</pre>
+
+      <p><strong>Generate other artifacts:</strong></p>
+      <pre># Report
+notebooklm generate report --format briefing-doc --wait
+notebooklm download report ./report.md
+
+# Slide deck
+notebooklm generate slide-deck --wait
+notebooklm download slide-deck ./slides.pptx --format pptx
+
+# Quiz
+notebooklm generate quiz --difficulty hard --wait
+notebooklm download quiz ./quiz.md --format markdown
+
+# Video
+notebooklm generate video --format explainer --style whiteboard --wait
+notebooklm download video ./explainer.mp4
+
+# Infographic
+notebooklm generate infographic --orientation landscape --wait
+notebooklm download infographic ./info.png
+
+# Mind map / Data table
+notebooklm generate mind-map
+notebooklm download mind-map ./map.json
+notebooklm generate data-table "compare concepts" --wait
+notebooklm download data-table ./data.csv</pre>
+
+      <div class="sub-header">Audio Formats</div>
+      <table>
+        <thead>
+          <tr><th>Format</th><th>Description</th><th>Length Options</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>deep-dive</code></td><td>In-depth podcast exploration</td><td>short, default, long</td></tr>
+          <tr><td><code>brief</code></td><td>Quick summary podcast</td><td>short, default, long</td></tr>
+          <tr><td><code>critique</code></td><td>Critical analysis</td><td>short, default, long</td></tr>
+          <tr><td><code>debate</code></td><td>Two-sided debate format</td><td>short, default, long</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Management Commands</div>
+      <pre>notebooklm list                    # List notebooks
+notebooklm source list             # List sources
+notebooklm artifact list           # List artifacts
+notebooklm summary                 # AI summary of notebook
+notebooklm source fulltext &lt;id&gt;    # Full indexed content
+notebooklm auth check --test       # Verify credentials</pre>
+
+      <div class="sub-header">Research Agent</div>
+      <pre># Web research — auto-imports findings as sources
+notebooklm source add-research "topic" --mode deep --import-all
+
+# Google Drive research
+notebooklm source add-research "topic" --from drive --import-all</pre>
+
+      <div class="info-box danger"><strong>Auth Expiry:</strong> Google session cookies expire periodically. If jobs fail with auth errors, re-run <code>notebooklm login</code> locally and update the GitHub secret.</div>
+    </div>
+
+    <!-- ═══ SECTION 13: GOOGLE DRIVE & DOCS ═══ -->
+    <div class="section" id="s13">
+      <div class="section-header">
+        <div class="section-number">13</div>
+        <h2>Skill: Google Drive &amp; Docs</h2>
+      </div>
+      <p>Interact with Google Drive shared drives and create Google Docs using a service account. Both skills share the same credentials.</p>
+
+      <div class="sub-header">Setup</div>
+      <ol class="steps">
+        <li>Create a Google Cloud service account with Drive API enabled</li>
+        <li>Download the JSON credentials file</li>
+        <li>Share your Google Drive folder with the service account email</li>
+        <li>Store credentials:
+          <pre>npx thepopebot set-agent-llm-secret GOOGLE_SERVICE_ACCOUNT_JSON &lt; credentials.json
+npx thepopebot set-agent-llm-secret GOOGLE_SHARED_DRIVE_ID "your-drive-id"</pre>
+        </li>
+        <li>Activate: <code>ln -s ../google-drive skills/active/google-drive</code> and <code>ln -s ../google-docs skills/active/google-docs</code></li>
+      </ol>
+
+      <div class="sub-header">Google Drive Commands</div>
+      <pre># List files in a folder
+skills/google-drive/list.sh &lt;folder_id&gt;
+
+# Upload a file
+skills/google-drive/upload.sh &lt;local_file&gt; &lt;parent_folder_id&gt; &lt;filename&gt;
+
+# Download a file
+skills/google-drive/download.sh &lt;file_id&gt; &lt;local_path&gt;
+
+# Delete a file
+skills/google-drive/delete.sh &lt;file_id&gt;</pre>
+
+      <div class="sub-header">Google Docs Commands</div>
+      <pre># Create a Google Doc
+skills/google-docs/create.sh &lt;title&gt; &lt;content&gt; &lt;parent_folder_id&gt;</pre>
+    </div>
+
+    <!-- ═══ SECTION 14: YOUTUBE TRANSCRIPT ═══ -->
+    <div class="section" id="s14">
+      <div class="section-header">
+        <div class="section-number">14</div>
+        <h2>Skill: YouTube Transcript</h2>
+      </div>
+      <p>Fetch transcripts from YouTube videos for summarization, analysis, or feeding into NotebookLM.</p>
+
+      <div class="sub-header">Setup</div>
+      <pre>cd skills/youtube-transcript && npm install
+ln -s ../youtube-transcript skills/active/youtube-transcript</pre>
+
+      <div class="sub-header">Usage</div>
+      <pre># By video ID
+skills/youtube-transcript/transcript.js EBw7gsDPAYQ
+
+# By full URL
+skills/youtube-transcript/transcript.js "https://www.youtube.com/watch?v=EBw7gsDPAYQ"
+
+# By short URL
+skills/youtube-transcript/transcript.js "https://youtu.be/EBw7gsDPAYQ"</pre>
+
+      <div class="sub-header">Output Format</div>
+      <pre>[0:00] All right. So, I got this UniFi Theta
+[0:15] I took the camera out, painted it
+[1:23] And here's the final result</pre>
+
+      <div class="info-box info"><strong>Note:</strong> Requires the video to have captions/transcripts available. Works with both auto-generated and manual transcripts.</div>
+    </div>
+
+    <!-- ═══ SECTION 15: KIE AI ═══ -->
+    <div class="section" id="s15">
+      <div class="section-header">
+        <div class="section-number">15</div>
+        <h2>Skill: KIE AI</h2>
+      </div>
+      <p>Generate AI images and videos using the kie.ai API.</p>
+
+      <div class="sub-header">Setup</div>
+      <ol class="steps">
+        <li>Get an API key from kie.ai</li>
+        <li>Store it: <code>npx thepopebot set-agent-llm-secret KIE_AI_API_KEY "your-key"</code></li>
+        <li>Activate: <code>ln -s ../kie-ai skills/active/kie-ai</code></li>
+      </ol>
+
+      <div class="sub-header">Generate an Image</div>
+      <pre>skills/kie-ai/generate-image.sh "A futuristic cityscape" 16:9 2K png</pre>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Options</th><th>Default</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>prompt</td><td>Any text description</td><td>Required</td></tr>
+          <tr><td>aspect_ratio</td><td>auto, 1:1, 16:9, 9:16, 4:3, 3:2, etc.</td><td>auto</td></tr>
+          <tr><td>resolution</td><td>1K, 2K, 4K</td><td>1K</td></tr>
+          <tr><td>output_format</td><td>jpg, png</td><td>jpg</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Generate a Video</div>
+      <pre>skills/kie-ai/generate-video.sh "A drone flying over mountains" 16:9</pre>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Options</th><th>Default</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>prompt</td><td>Any text description</td><td>Required</td></tr>
+          <tr><td>aspect_ratio</td><td>16:9, 9:16, Auto</td><td>16:9</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ SECTION 16: SOP GENERATOR ═══ -->
+    <div class="section" id="s16">
+      <div class="section-header">
+        <div class="section-number">16</div>
+        <h2>Skill: SOP Generator</h2>
+      </div>
+      <p>Generate professional, branded HTML SOP documents using the Dev Labs Playbook template — the same template used to create this document.</p>
+
+      <div class="sub-header">How to Use</div>
+      <ol class="steps">
+        <li>Read the template: <code>cat skills/sop-generator/sop-template.html</code></li>
+        <li>Copy and customize, replacing placeholders: <code>{{SOP_TITLE}}</code>, <code>{{DOC_TYPE}}</code>, <code>{{VERSION}}</code>, <code>{{LAST_UPDATED}}</code>, <code>{{OWNER}}</code></li>
+        <li>Add sections with the template's HTML patterns (sidebar nav, section headers, sub-headers, tables, info boxes, code blocks)</li>
+        <li>Apply branding with <code>data-brand="preset"</code> on the <code>&lt;html&gt;</code> tag</li>
+        <li>Save to <code>references/</code> directory</li>
+      </ol>
+
+      <div class="sub-header">Available Brand Presets</div>
+      <table>
+        <thead>
+          <tr><th>Preset</th><th>Primary</th><th>Secondary</th><th>Vibe</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>devlabs</code></td><td>Violet</td><td>Teal</td><td>Default, modern</td></tr>
+          <tr><td><code>midnight</code></td><td>Blue</td><td>Purple</td><td>Professional</td></tr>
+          <tr><td><code>ember</code></td><td>Orange</td><td>Red</td><td>Bold, energetic</td></tr>
+          <tr><td><code>forest</code></td><td>Green</td><td>Teal</td><td>Natural, calm</td></tr>
+          <tr><td><code>slate</code></td><td>Indigo</td><td>Indigo</td><td>Corporate</td></tr>
+          <tr><td><code>sunrise</code></td><td>Rose</td><td>Amber</td><td>Warm, inviting</td></tr>
+          <tr><td><code>arctic</code></td><td>Cyan</td><td>Sky</td><td>Cool, clean</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Component Reference</div>
+      <pre>&lt;!-- Section header with numbered badge --&gt;
+&lt;div class="section-header"&gt;
+  &lt;div class="section-number"&gt;1&lt;/div&gt;
+  &lt;h2&gt;Section Title&lt;/h2&gt;
+&lt;/div&gt;
+
+&lt;!-- Sub-header with accent border --&gt;
+&lt;div class="sub-header"&gt;Sub-Section Title&lt;/div&gt;
+
+&lt;!-- Numbered steps --&gt;
+&lt;ol class="steps"&gt;
+  &lt;li&gt;Step one&lt;/li&gt;
+  &lt;li&gt;Step two&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;!-- Callout boxes --&gt;
+&lt;div class="info-box info"&gt;Info&lt;/div&gt;
+&lt;div class="info-box success"&gt;Success&lt;/div&gt;
+&lt;div class="info-box warning"&gt;Warning&lt;/div&gt;
+&lt;div class="info-box danger"&gt;Danger&lt;/div&gt;</pre>
+    </div>
+
+    <!-- ═══ SECTION 17: CONFIGURATION ═══ -->
+    <div class="section" id="s17">
+      <div class="section-header">
+        <div class="section-number">17</div>
+        <h2>Configuration</h2>
+      </div>
+      <p>User-editable configuration files live in the <code>config/</code> directory.</p>
+
+      <table>
+        <thead>
+          <tr><th>File</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>config/SOUL.md</code></td><td>Agent personality, identity, and values</td></tr>
+          <tr><td><code>config/JOB_PLANNING.md</code></td><td>System prompt for the chat LLM (event handler)</td></tr>
+          <tr><td><code>config/JOB_AGENT.md</code></td><td>Runtime environment docs loaded into Docker agent</td></tr>
+          <tr><td><code>config/JOB_SUMMARY.md</code></td><td>Prompt for summarizing completed jobs</td></tr>
+          <tr><td><code>config/HEARTBEAT.md</code></td><td>Self-monitoring / heartbeat behavior</td></tr>
+          <tr><td><code>config/SKILL_BUILDING_GUIDE.md</code></td><td>Guide for creating new agent skills</td></tr>
+          <tr><td><code>config/CRONS.json</code></td><td>Scheduled job definitions</td></tr>
+          <tr><td><code>config/TRIGGERS.json</code></td><td>Webhook trigger definitions</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Markdown Variables</div>
+      <p>Config markdown files support includes and built-in variables:</p>
+      <table>
+        <thead>
+          <tr><th>Syntax</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>{{ filepath.md }}</code></td><td>Include another markdown file (relative to project root)</td></tr>
+          <tr><td><code>{{datetime}}</code></td><td>Current ISO timestamp</td></tr>
+          <tr><td><code>{{skills}}</code></td><td>Dynamic bullet list of active skill descriptions</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">LLM Provider Configuration</div>
+      <table>
+        <thead>
+          <tr><th>Provider</th><th>Env Vars</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Anthropic</strong> (default)</td><td><code>ANTHROPIC_API_KEY</code></td></tr>
+          <tr><td><strong>OpenAI</strong></td><td><code>OPENAI_API_KEY</code></td></tr>
+          <tr><td><strong>Google</strong></td><td><code>GOOGLE_API_KEY</code></td></tr>
+          <tr><td><strong>Custom</strong> (OpenAI-compatible)</td><td><code>CUSTOM_API_KEY</code>, <code>OPENAI_BASE_URL</code></td></tr>
+        </tbody>
+      </table>
+      <p>Set <code>LLM_PROVIDER</code> and <code>LLM_MODEL</code> in <code>.env</code> or as GitHub repository variables. Per-job overrides can be set in <code>CRONS.json</code> with <code>llm_provider</code> and <code>llm_model</code> fields.</p>
+
+      <div class="info-box warning"><strong>Managed files:</strong> Do NOT edit files in <code>.github/workflows/</code>, <code>docker/event-handler/</code>, <code>docker-compose.yml</code>, <code>.dockerignore</code>, <code>CLAUDE.md</code>, or <code>app/</code>. These are auto-synced by the package and will be overwritten on updates.</div>
+    </div>
+
+    <!-- ═══ SECTION 18: SECRETS & CREDENTIALS ═══ -->
+    <div class="section" id="s18">
+      <div class="section-header">
+        <div class="section-number">18</div>
+        <h2>Secrets &amp; Credentials</h2>
+      </div>
+      <p>23 Systems Workforce uses a prefix-based secret system to control credential visibility.</p>
+
+      <div class="sub-header">Secret Prefixes</div>
+      <table>
+        <thead>
+          <tr><th>Prefix</th><th>Visible to LLM?</th><th>Purpose</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>AGENT_</code></td><td>No (filtered)</td><td>Protected credentials for Docker agent</td><td><code>AGENT_GH_TOKEN</code></td></tr>
+          <tr><td><code>AGENT_LLM_</code></td><td>Yes</td><td>Credentials the agent can use</td><td><code>AGENT_LLM_BRAVE_API_KEY</code></td></tr>
+          <tr><td><em>(none)</em></td><td>N/A</td><td>Workflow-only (never reach container)</td><td><code>GH_WEBHOOK_SECRET</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Managing Secrets</div>
+      <pre># Set a secret (creates GitHub secret with AGENT_LLM_ prefix)
+npx thepopebot set-agent-llm-secret BRAVE_API_KEY "your-key"
+
+# Set a multi-line secret (pipe via stdin)
+npx thepopebot set-agent-llm-secret GOOGLE_CREDENTIALS &lt; credentials.json
+
+# List available secrets in a job
+skills/llm-secrets/llm-secrets.js
+
+# Access a secret value in a job
+echo $BRAVE_API_KEY</pre>
+
+      <div class="info-box danger"><strong>Never commit secrets.</strong> Always use <code>set-agent-llm-secret</code> for credentials. The <code>.env</code> file is gitignored and should only be used for local development.</div>
+    </div>
+
+    <!-- ═══ SECTION 19: TROUBLESHOOTING ═══ -->
+    <div class="section" id="s19">
+      <div class="section-header">
+        <div class="section-number">19</div>
+        <h2>Troubleshooting</h2>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Problem</th><th>Cause</th><th>Solution</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Job never starts</strong></td>
+            <td>GitHub Actions runner not available</td>
+            <td>Check <code>/runners</code> page. Verify <code>GH_TOKEN</code> has workflow permissions. Check GitHub Actions is enabled on the repo.</td>
+          </tr>
+          <tr>
+            <td><strong>Job fails immediately</strong></td>
+            <td>Missing secrets or invalid config</td>
+            <td>Check the job's GitHub Actions log. Verify required <code>AGENT_*</code> secrets exist.</td>
+          </tr>
+          <tr>
+            <td><strong>PR not auto-merging</strong></td>
+            <td>Changed files outside <code>ALLOWED_PATHS</code></td>
+            <td>Update <code>ALLOWED_PATHS</code> repo variable or merge manually. Default only allows <code>/logs</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>NotebookLM auth fails</strong></td>
+            <td>Google cookies expired</td>
+            <td>Re-run <code>notebooklm login</code> locally and update the <code>NOTEBOOKLM_AUTH_JSON</code> secret.</td>
+          </tr>
+          <tr>
+            <td><strong>Skill not found in job</strong></td>
+            <td>Skill not activated</td>
+            <td>Verify symlink exists in <code>skills/active/</code>. Run <code>ls -la skills/active/</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Telegram not responding</strong></td>
+            <td>Webhook not registered</td>
+            <td>POST to <code>/api/telegram/register</code> with API key. Verify <code>APP_URL</code> is publicly accessible.</td>
+          </tr>
+          <tr>
+            <td><strong>Chat LLM errors</strong></td>
+            <td>Invalid or missing API key</td>
+            <td>Check <code>LLM_PROVIDER</code> and corresponding API key in <code>.env</code>. Verify the key is valid.</td>
+          </tr>
+          <tr>
+            <td><strong>Database locked</strong></td>
+            <td>Multiple processes writing</td>
+            <td>Restart the event handler. SQLite handles concurrent reads but only one writer.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker container fails</strong></td>
+            <td>Image not found or build error</td>
+            <td>Check <code>JOB_IMAGE_URL</code> and <code>EVENT_HANDLER_IMAGE_URL</code> repo variables. Verify GHCR access.</td>
+          </tr>
+          <tr>
+            <td><strong>Cron job not firing</strong></td>
+            <td>Invalid schedule or disabled</td>
+            <td>Verify cron expression in <code>CRONS.json</code>. Check <code>"enabled"</code> is not <code>false</code>. Restart server after editing.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ SECTION 20: QUICK REFERENCE ═══ -->
+    <div class="section" id="s20">
+      <div class="section-header">
+        <div class="section-number">20</div>
+        <h2>Quick Reference</h2>
+      </div>
+
+      <div class="sub-header">Daily Operations Checklist</div>
+      <ul>
+        <li>Check <code>/notifications</code> for completed job results</li>
+        <li>Review open PRs on GitHub for agent-submitted changes</li>
+        <li>Monitor <code>/runners</code> for running or stuck jobs</li>
+        <li>Verify cron jobs are executing on schedule</li>
+      </ul>
+
+      <div class="sub-header">Key File Locations</div>
+      <table>
+        <thead>
+          <tr><th>Path</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>.env</code></td><td>API keys, tokens, local config (gitignored)</td></tr>
+          <tr><td><code>config/</code></td><td>Agent personality, prompts, crons, triggers</td></tr>
+          <tr><td><code>skills/</code></td><td>All available skills</td></tr>
+          <tr><td><code>skills/active/</code></td><td>Symlinks to activated skills</td></tr>
+          <tr><td><code>data/thepopebot.sqlite</code></td><td>SQLite database</td></tr>
+          <tr><td><code>logs/</code></td><td>Per-job execution logs and outputs</td></tr>
+          <tr><td><code>references/</code></td><td>SOP documents, brand templates</td></tr>
+          <tr><td><code>CLAUDE.md</code></td><td>Full technical documentation (managed)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Essential Commands</div>
+      <pre># Start locally
+npm run dev
+
+# Start with Docker
+docker compose up -d
+
+# Create API key
+# → Settings > Secrets in web UI
+
+# Set agent credential
+npx thepopebot set-agent-llm-secret KEY_NAME "value"
+
+# Activate a skill
+ln -s ../skill-name skills/active/skill-name
+
+# Check job status
+curl -H "x-api-key: tpb_..." https://your-domain.com/api/jobs/status
+
+# Create a job via API
+curl -X POST https://your-domain.com/api/create-job \
+  -H "x-api-key: tpb_..." \
+  -H "Content-Type: application/json" \
+  -d '{"job": "Your task description"}'
+
+# Upgrade thepopebot
+npx thepopebot upgrade</pre>
+
+      <div class="sub-header">Required Environment Variables</div>
+      <table>
+        <thead>
+          <tr><th>Variable</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>APP_URL</code></td><td>Public URL for webhooks and Telegram</td></tr>
+          <tr><td><code>AUTH_SECRET</code></td><td>NextAuth session encryption</td></tr>
+          <tr><td><code>GH_TOKEN</code></td><td>GitHub PAT with repo permissions</td></tr>
+          <tr><td><code>GH_OWNER</code></td><td>GitHub repository owner</td></tr>
+          <tr><td><code>GH_REPO</code></td><td>GitHub repository name</td></tr>
+          <tr><td><code>ANTHROPIC_API_KEY</code></td><td>LLM API key (or equivalent for other providers)</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+
+    <!-- ═══ SECTION 21: TECHNICAL DOCS SYSTEM ═══ -->
+    <div class="section" id="s21">
+      <div class="section-header">
+        <div class="section-number">21</div>
+        <h2>Technical Documentation System</h2>
+      </div>
+      <p>23 Systems maintains a structured technical documentation system in <code>docs/</code> designed to reduce AI agent context window usage by 70-90%. Instead of exploring dozens of source files, Claude Code reads a focused reference doc.</p>
+
+      <div class="sub-header">How It Works</div>
+      <ol class="steps">
+        <li><strong>Index-first routing</strong> — <code>docs/INDEX.md</code> is a master table of contents. AI agents read the index (~30 lines), identify which doc is relevant, and read only that one doc.</li>
+        <li><strong>Self-contained docs</strong> — Each doc covers one domain (database, skills, deployment, etc.) and can be understood independently without reading other docs.</li>
+        <li><strong>CLAUDE.md integration</strong> — A reference in <code>CLAUDE.md</code> directs agents to check <code>docs/INDEX.md</code> before exploring the codebase.</li>
+        <li><strong>Constitution enforcement</strong> — <code>.specify/CONSTITUTION.md</code> requires documentation updates when architecture changes.</li>
+      </ol>
+
+      <div class="sub-header">Documentation Index</div>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Document</th><th>When to Reference</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>01</td><td><strong>Architecture Overview</strong></td><td>Understanding system design and job lifecycle</td></tr>
+          <tr><td>02</td><td><strong>Directory Structure</strong></td><td>Finding where code lives, managed vs user-editable</td></tr>
+          <tr><td>03</td><td><strong>Database Schema</strong></td><td>Modifying database or understanding data models</td></tr>
+          <tr><td>04</td><td><strong>AI Agents &amp; LLM Integration</strong></td><td>Changing agent behavior, tools, LLM providers</td></tr>
+          <tr><td>05</td><td><strong>Skills System</strong></td><td>Creating or modifying agent skills</td></tr>
+          <tr><td>06</td><td><strong>Clusters &amp; Workers</strong></td><td>Worker clusters, triggers, concurrency</td></tr>
+          <tr><td>07</td><td><strong>Configuration Files</strong></td><td>Editing prompts, crons, triggers</td></tr>
+          <tr><td>08</td><td><strong>API &amp; Authentication</strong></td><td>API routes or authentication</td></tr>
+          <tr><td>09</td><td><strong>Docker &amp; Deployment</strong></td><td>Deployment, CI/CD, containers</td></tr>
+          <tr><td>10</td><td><strong>Template System</strong></td><td>Branded HTML documents or templates</td></tr>
+          <tr><td>11</td><td><strong>Chat &amp; Web UI</strong></td><td>Web interface or chat system</td></tr>
+          <tr><td>12</td><td><strong>Environment Variables</strong></td><td>Environment setup or debugging</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Solved Issues Knowledge Base</div>
+      <p>When a non-trivial bug is investigated and solved, a record is saved to <code>references/solved/</code> to prevent repeat investigations. Each solved issue documents:</p>
+      <ul>
+        <li><strong>Problem</strong> — What was broken and how it manifested</li>
+        <li><strong>Root Cause</strong> — The actual technical cause (not symptoms)</li>
+        <li><strong>Solution</strong> — What was changed and why it works</li>
+        <li><strong>Key Takeaway</strong> — One-line lesson for future reference</li>
+      </ul>
+
+      <div class="sub-header">When to Update Documentation</div>
+      <table>
+        <thead>
+          <tr><th>Event</th><th>Action Required</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>New feature or subsystem added</td><td>Create new doc or update relevant existing doc</td></tr>
+          <tr><td>Architecture change</td><td>Update <code>01-architecture.md</code> and affected docs</td></tr>
+          <tr><td>Database schema change</td><td>Update <code>03-database-schema.md</code> after migration</td></tr>
+          <tr><td>New skill created</td><td>Update <code>05-skills.md</code></td></tr>
+          <tr><td>Bug solved after investigation</td><td>Create <code>references/solved/issue-name.md</code></td></tr>
+          <tr><td>New doc created</td><td>Update <code>docs/INDEX.md</code> immediately</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Context Window Impact</div>
+      <table>
+        <thead>
+          <tr><th>Approach</th><th>Tokens Used</th><th>Files Read</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>No docs (explore from scratch)</td><td>5,000 – 15,000</td><td>10 – 30 files</td></tr>
+          <tr><td>With targeted <code>docs/*.md</code></td><td>500 – 2,000</td><td>1 – 3 files</td></tr>
+          <tr><td><strong>Savings</strong></td><td><strong>70 – 90% reduction</strong></td><td><strong>80 – 90% fewer reads</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box success"><strong>Key Principle:</strong> Pre-digested documentation is always cheaper than raw source code. A table that says "the settings table stores API keys as SHA-256 hashes" is 12 tokens. Reading the actual schema.js to discover that is 500+ tokens.</div>
+
+      <div class="sub-header">File Locations</div>
+      <table>
+        <thead>
+          <tr><th>Path</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>docs/INDEX.md</code></td><td>Master documentation index (read first)</td></tr>
+          <tr><td><code>docs/01-*.md</code> through <code>docs/12-*.md</code></td><td>Individual technical docs by domain</td></tr>
+          <tr><td><code>references/solved/*.md</code></td><td>Investigated bug solutions</td></tr>
+          <tr><td><code>.specify/CONSTITUTION.md</code></td><td>Documentation standards and templates</td></tr>
+          <tr><td><code>CLAUDE.md</code></td><td>AI agent instructions (references docs/INDEX.md)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

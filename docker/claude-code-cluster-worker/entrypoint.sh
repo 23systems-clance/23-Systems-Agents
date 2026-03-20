@@ -61,11 +61,13 @@ if [ -n "$LOG_DIR" ] && mkdir -p "$LOG_DIR" 2>/dev/null; then
     LOG_READY=true
 fi
 
-# Build claude args
-CLAUDE_ARGS=(-p "$PROMPT" --dangerously-skip-permissions --verbose --output-format stream-json)
+# Build claude args — prompt must be last (positional arg), -p is the --print flag
+CLAUDE_ARGS=(-p --dangerously-skip-permissions --verbose --output-format stream-json)
 if [ -n "$SYSTEM_PROMPT" ]; then
     CLAUDE_ARGS+=(--append-system-prompt "$SYSTEM_PROMPT")
 fi
+# Prompt goes last as positional argument
+CLAUDE_ARGS+=("$PROMPT")
 
 # Run Claude Code — tee to log files if ready, otherwise run normally
 if [ "$LOG_READY" = true ]; then

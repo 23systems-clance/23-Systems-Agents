@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Notes — If I Wanted To Grow An Audience In 2026, I'd Do This</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --violet: #7c3aed;
+    --violet-light: #a78bfa;
+    --violet-bg: #f5f3ff;
+    --violet-border: #ede9fe;
+    --teal: #0d9488;
+    --teal-bg: #f0fdfa;
+    --teal-border: #ccfbf1;
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text-primary: #171717;
+    --text-secondary: #525252;
+    --text-tertiary: #a3a3a3;
+    --border: #e5e5e5;
+    --border-subtle: #f0f0f0;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+
+  /* ── HEADER STRIP ── */
+  .header-strip {
+    background: #171717;
+    border-radius: 14px;
+    padding: 28px 28px 24px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header-strip::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--violet), var(--teal));
+  }
+  .header-strip .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--violet-light);
+    margin-bottom: 10px;
+  }
+  .header-strip h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #fff;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+  .header-strip .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+  }
+  .header-strip .meta a {
+    color: var(--violet-light);
+    text-decoration: none;
+  }
+
+  /* ── TL;DR ── */
+  .tldr {
+    background: linear-gradient(135deg, var(--violet-bg), var(--teal-bg));
+    border: 1px solid var(--violet-border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 24px;
+  }
+  .tldr-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .tldr p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border-subtle);
+  }
+
+  /* ── TAKEAWAY PILLS ── */
+  .takeaway-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .takeaway-pill {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .pill-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .pill-content {
+    flex: 1;
+  }
+  .pill-content strong {
+    font-size: 14px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .pill-content p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ── TOPIC CHIPS ── */
+  .topic-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .topic-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  .topic-row .ts {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 55px;
+    flex-shrink: 0;
+  }
+  .topic-row .ts a {
+    color: var(--violet);
+    text-decoration: none;
+  }
+  .topic-row .ts a:hover {
+    text-decoration: underline;
+  }
+  .topic-row .name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .topic-row .desc {
+    color: var(--text-tertiary);
+    margin-left: auto;
+    font-size: 12px;
+    text-align: right;
+  }
+
+  /* ── QUOTE ── */
+  .highlight-quote {
+    background: var(--teal-bg);
+    border-left: 4px solid var(--teal);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+  }
+  .highlight-quote p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-style: italic;
+    line-height: 1.6;
+  }
+  .highlight-quote .attr {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-style: normal;
+    margin-top: 6px;
+  }
+
+  /* ── SOURCE FOOTER ── */
+  .source-footer {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 2px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+  .source-footer a {
+    color: var(--violet);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  @media print {
+    .page { padding: 20px; }
+    .header-strip { break-inside: avoid; }
+  }
+  @media (max-width: 600px) {
+    .page { padding: 20px 16px; }
+    .header-strip h1 { font-size: 18px; }
+    .topic-row .desc { display: none; }
+  }
+</style>
+<link rel="stylesheet" href="../SOP Templates/brand-config.css">
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ═══ HEADER ═══ -->
+  <div class="header-strip">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <img src="../uploads/23 Systems Logo.png" alt="23 Systems" style="height:24px;width:auto;border-radius:5px;">
+      <span style="font-size:12px;font-weight:700;color:#fff;letter-spacing:0.5px;">23 Systems</span>
+    </div>
+    <div class="tag">Video Notes</div>
+    <h1>If I Wanted To Grow An Audience In 2026, I'd Do This</h1>
+    <div class="meta">
+      <span>Alex Hormozi</span>
+      <span>~53 min</span>
+      <span>March 19, 2026</span>
+      <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U">Watch →</a>
+    </div>
+  </div>
+
+  <!-- ═══ TL;DR ═══ -->
+  <div class="tldr">
+    <div class="tldr-label">TL;DR</div>
+    <p>Alex Hormozi breaks down branding as "a deliberate pairing of things through an outcome" and shows how it drives premium pricing (12x), better ad performance (6x CTR), and customer loyalty. He then shares 6 lessons from growing 7.8M followers in 40 months: go all-in on education over entertainment, create content for your ideal customer not the masses, get specific, optimize for revenue not views, favor long-form, and assume nothing about your audience's knowledge.</p>
+  </div>
+
+  <!-- ═══ KEY TAKEAWAYS ═══ -->
+  <div class="section">
+    <div class="section-title">Key Takeaways</div>
+    <ul class="takeaway-list">
+      <li class="takeaway-pill">
+        <div class="pill-num">1</div>
+        <div class="pill-content">
+          <strong>Brand = Deliberate Pairing</strong>
+          <p>Branding is pairing your product with things your ideal customer likes through positive outcomes. Like Nike pairing with LeBron creates a "winning" association that sells $60 t-shirts.</p>
+        </div>
+      </li>
+      <li class="takeaway-pill">
+        <div class="pill-num">2</div>
+        <div class="pill-content">
+          <strong>Good Advertising ≠ Good Branding</strong>
+          <p>Bud Light/Mulvaney was great advertising (awareness) but bad branding (wrong pairing for their audience). Know the difference.</p>
+        </div>
+      </li>
+      <li class="takeaway-pill">
+        <div class="pill-num">3</div>
+        <div class="pill-content">
+          <strong>Entertainment & Education Are Separate Pools</strong>
+          <p>Entertainment viewers don't convert to buyers. Education viewers buy books, join lists, apply to work with you. They're separate audiences, not a funnel.</p>
+        </div>
+      </li>
+      <li class="takeaway-pill">
+        <div class="pill-num">4</div>
+        <div class="pill-content">
+          <strong>Optimize for Revenue, Not Views</strong>
+          <p>All views aren't equal. Education content drives less views but far more revenue per viewer.</p>
+        </div>
+      </li>
+      <li class="takeaway-pill">
+        <div class="pill-num">5</div>
+        <div class="pill-content">
+          <strong>Clear Beats Clever</strong>
+          <p>Vague thumbnails/titles hurt. Be crystal clear about what your content delivers — people click on what they understand.</p>
+        </div>
+      </li>
+      <li class="takeaway-pill">
+        <div class="pill-num">6</div>
+        <div class="pill-content">
+          <strong>Lead with Proof, Not Confirmation</strong>
+          <p>For educational content, the intro should establish credibility ("here's why you should listen to me") not just confirm the headline.</p>
+        </div>
+      </li>
+      <li class="takeaway-pill">
+        <div class="pill-num">7</div>
+        <div class="pill-content">
+          <strong>Brand Is a Bouquet</strong>
+          <p>Think of brand elements as flowers — curate deliberately, pull weeds (bad pairings), and don't scatter randomly.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ═══ BEST QUOTES ═══ -->
+  <div class="section">
+    <div class="section-title">Best Quotes</div>
+    <div class="highlight-quote">
+      <p>"Branding is a deliberate pairing of things through an outcome"</p>
+      <div class="attr">— <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=338s" style="color:var(--teal); text-decoration:none; font-weight:600;">5:38</a></div>
+    </div>
+    <div class="highlight-quote">
+      <p>"The single most important decision in evaluating business is pricing power"</p>
+      <div class="attr">— Warren Buffett, <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=1110s" style="color:var(--teal); text-decoration:none; font-weight:600;">18:30</a></div>
+    </div>
+    <div class="highlight-quote">
+      <p>"All views are not created equal"</p>
+      <div class="attr">— <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2699s" style="color:var(--teal); text-decoration:none; font-weight:600;">44:59</a></div>
+    </div>
+    <div class="highlight-quote">
+      <p>"Don't let the five mean comments stop you from gaining the 500 new people who like the new thing"</p>
+      <div class="attr">— <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2076s" style="color:var(--teal); text-decoration:none; font-weight:600;">34:36</a></div>
+    </div>
+  </div>
+
+  <!-- ═══ TOPIC TIMELINE ═══ -->
+  <div class="section">
+    <div class="section-title">Topics Covered</div>
+    <div class="topic-timeline">
+      <div class="topic-row">
+        <span class="ts"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=0s">0:00</a></span>
+        <span class="name">Opening & Credentials</span>
+        <span class="desc">3B impressions, $105M book sales, $200M/yr portfolio</span>
+      </div>
+      <div class="topic-row">
+        <span class="ts"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=184s">3:04</a></span>
+        <span class="name">What Branding Is</span>
+        <span class="desc">Deliberate pairing definition, Coca-Cola example</span>
+      </div>
+      <div class="topic-row">
+        <span class="ts"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=374s">6:14</a></span>
+        <span class="name">Good vs Bad Branding</span>
+        <span class="desc">Bud Light/Mulvaney case study, advertising vs branding</span>
+      </div>
+      <div class="topic-row">
+        <span class="ts"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=660s">11:00</a></span>
+        <span class="name">Why Brand Makes Money</span>
+        <span class="desc">Premium pricing, ad performance, customer loyalty</span>
+      </div>
+      <div class="topic-row">
+        <span class="ts"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=841s">14:01</a></span>
+        <span class="name">Brand Building Mechanics</span>
+        <span class="desc">Nike/LeBron, weak to strong brand process, bouquet analogy</span>
+      </div>
+      <div class="topic-row">
+        <span class="ts"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=1265s">21:05</a></span>
+        <span class="name">Starting & Growing Your Brand</span>
+        <span class="desc">Flower curation, narrow vs broad, avoiding bad pairings</span>
+      </div>
+      <div class="topic-row">
+        <span class="ts"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=1721s">28:41</a></span>
+        <span class="name">Measuring Brand</span>
+        <span class="desc">Influence, direction, reach; Taylor Swift vs Trump examples</span>
+      </div>
+      <div class="topic-row">
+        <span class="ts"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2327s">38:47</a></span>
+        <span class="name">6 Growth Lessons</span>
+        <span class="desc">$4M, 35K pieces of content, 40 months of data</span>
+      </div>
+      <div class="topic-row">
+        <span class="ts"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2520s">42:00</a></span>
+        <span class="name">Lesson 1 - Education > Edutainment</span>
+        <span class="desc">Separate audience pools, not a funnel</span>
+      </div>
+      <div class="topic-row">
+        <span class="ts"><a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U&t=2898s">48:18</a></span>
+        <span class="name">Lesson 2 - For Us to For You</span>
+        <span class="desc">5 tactical shifts in packaging, intros, visuals</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SOURCE ═══ -->
+  <div class="source-footer">
+    <span>Generated by 23 Systems Agent</span>
+    <a href="https://www.youtube.com/watch?v=Jmkq5RLjm0U">https://www.youtube.com/watch?v=Jmkq5RLjm0U</a>
+  </div>
+
+</div>
+
+</body>
+</html>

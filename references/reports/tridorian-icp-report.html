@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="tridorian">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICP Report — Tridorian</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy: #1a1a2e;
+    --navy-light: #252542;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-bg: #eef0ff;
+    --accent-border: #c7ceff;
+    --white: #ffffff;
+    --light-bg: #f3f4f8;
+    --dark-text: #1e1e32;
+    --mid-text: #50506e;
+    --light-text: #8889a0;
+    --border: #c8cde0;
+    --success: #22c55e;
+    --success-bg: #ecfdf5;
+    --warn: #eab308;
+    --warn-bg: #fefce8;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--dark-text);
+    background: var(--light-bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--navy);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0;
+  }
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .sidebar-logo svg {
+    flex-shrink: 0;
+  }
+  .sidebar-logo .logo-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+  }
+  .sidebar-header .doc-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .sidebar-header .doc-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .sidebar-nav {
+    padding: 16px 0;
+  }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: var(--navy-light);
+    border-left-color: var(--accent);
+  }
+  .sidebar-nav a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 280px;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(243,244,248,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--light-text);
+  }
+  .topbar .meta {
+    display: flex;
+    gap: 24px;
+  }
+  .topbar .meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--navy);
+    padding: 64px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  }
+  .cover .doc-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+  .cover h1 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .cover .subtitle {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 400;
+    max-width: 600px;
+  }
+
+  /* ── SECTIONS ── */
+  .content {
+    padding: 40px 48px 80px;
+    max-width: 960px;
+  }
+
+  .section {
+    margin-bottom: 48px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--accent-bg);
+  }
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .sub-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 28px 0 12px;
+    padding-left: 14px;
+    border-left: 3px solid var(--accent);
+  }
+
+  p {
+    color: var(--mid-text);
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── LISTS ── */
+  ul {
+    list-style: none;
+    margin: 12px 0 20px;
+    padding: 0;
+  }
+  ul li {
+    position: relative;
+    padding: 6px 0 6px 24px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 13px;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 16px 0 20px;
+    padding: 0;
+  }
+  ol.steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 8px 0 8px 44px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 4px;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  thead th {
+    background: var(--navy);
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #eef0f4;
+    color: var(--mid-text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #f8f9fc; }
+  tbody tr:hover { background: var(--accent-bg); }
+
+  /* ── INFO BOXES ── */
+  .info-box {
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+  .info-box.info {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .info-box.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+    color: #166534;
+  }
+  .info-box.warning {
+    background: var(--warn-bg);
+    border-color: var(--warn);
+    color: #854d0e;
+  }
+  .info-box.danger {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+    color: #991b1b;
+  }
+
+  /* ── QUOTE BLOCKS ── */
+  blockquote {
+    border-left: 4px solid var(--accent);
+    margin: 16px 0;
+    padding: 14px 18px;
+    background: var(--accent-bg);
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    color: var(--mid-text);
+    font-style: italic;
+    line-height: 1.7;
+  }
+  blockquote cite {
+    display: block;
+    font-style: normal;
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-top: 8px;
+    font-size: 13px;
+  }
+
+  /* ── STAT CARDS ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .stat-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-card .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--light-text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── TAGS ── */
+  .tag-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 20px;
+  }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+  }
+  .tag.secondary {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: #bbf7d0;
+  }
+
+  /* ── STRONG / BOLD ── */
+  strong { color: var(--dark-text); font-weight: 600; }
+
+  /* ── PRINT ── */
+  @media print {
+    .sidebar, .topbar { display: none; }
+    .main { margin-left: 0; }
+    .cover { padding: 32px; }
+    .content { padding: 24px; }
+    .section { page-break-inside: avoid; }
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover { padding: 32px 20px; }
+    .cover h1 { font-size: 26px; }
+    .content { padding: 24px 20px; }
+    .topbar { padding: 10px 20px; }
+  }
+</style>
+<link rel="stylesheet" href="../SOP Templates/brand-config.css">
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <img src="../logos/23-systems-logo.png" alt="23 Systems" style="height:32px;width:auto;border-radius:6px;">
+      <span class="logo-text">23 Systems</span>
+    </div>
+    <div class="doc-type">ICP Intelligence Report</div>
+    <div class="doc-title">Tridorian</div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="#s1"><span class="num">1</span> Executive Summary</a>
+    <a href="#s2"><span class="num">2</span> Company Overview</a>
+    <a href="#s3"><span class="num">3</span> Services & Capabilities</a>
+    <a href="#s4"><span class="num">4</span> Target Industries</a>
+    <a href="#s5"><span class="num">5</span> Ideal Customer Profile</a>
+    <a href="#s6"><span class="num">6</span> Buyer Personas</a>
+    <a href="#s7"><span class="num">7</span> Customer Evidence</a>
+    <a href="#s8"><span class="num">8</span> Competitive Positioning</a>
+    <a href="#s9"><span class="num">9</span> Engagement Strategy</a>
+    <a href="#s10"><span class="num">10</span> Contact & Presence</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="meta">
+      <span>v1.0</span>
+      <span>Updated March 2026</span>
+      <span>Owner: 23 Systems</span>
+    </div>
+  </div>
+
+  <!-- Cover -->
+  <div class="cover">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+      <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzA4IiBoZWlnaHQ9IjE1NSIgdmlld0JveD0iMCAwIDcwOCAxNTUiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0yMjYuNzggNjkuMzcyNUgyMDguMTRWMTA4LjEwMkMyMDguMTQgMTExLjUyMiAyMDguNzggMTEzLjkzMiAyMTAuMDcgMTE1LjMxMkMyMTAuNyAxMTUuOTkyIDIxMS41MSAxMTYuNTAyIDIxMi40OSAxMTYuODYyQzIxMy41IDExNy4yMjIgMjE0LjcgMTE3LjQyMiAyMTYuMDggMTE3LjQ0MkMyMTcuNTIgMTE3LjQ2MiAyMTkuMTMgMTE3LjQ2MiAyMjAuOTEgMTE3LjQyMkMyMjIuNjggMTE3LjM4MiAyMjQuNjMgMTE3LjMyMiAyMjYuNzYgMTE3LjIyMkwyMjcuNCAxMTcuMTkyVjEyOS42OTJMMjI2Ljg3IDEyOS43NjJDMjIxLjMyIDEzMC40OTIgMjE2LjUxIDEzMC42MzIgMjEyLjQzIDEzMC4xODJDMjA4LjMxIDEyOS43MjIgMjA0LjkzIDEyOC42NjIgMjAyLjI5IDEyNi45OTJDMTk5LjYyIDEyNS4zMDIgMTk3LjYzIDEyMi44NjIgMTk2LjMgMTE5LjY4MkMxOTQuOTkgMTE2LjU0MiAxOTQuMzMgMTEyLjY4MiAxOTQuMzMgMTA4LjEwMlY2OS4zNzI1SDE4MFY1NS45NTI1SDE5NC4zM1YzOS41NjI1TDIwOC4xNCAzNS40MjI1VjU1Ljk2MjVIMjI3LjM5VjY5LjM4MjRIMjI2Ljc4VjY5LjM3MjVaTTI1Mi40NiA2Ni4yNTI1QzI1NC40NyA2Mi43NTI1IDI1Ny4wOCA2MC4wMzI1IDI2MC4yOSA1OC4xMjI1QzI2NC4xNSA1NS44MTI1IDI2OC44NyA1NC42NjI0IDI3NC40MiA1NC42NjI0SDI3NS4wM1Y2OS4xMzI0TDI3NC4zOSA2OS4xMDI0QzI3MS4zNyA2OC45NjI0IDI2OC41NyA2OS4yOTI1IDI2NS45OSA3MC4wOTI1QzI2My40MSA3MC44OTI1IDI2MS4wNCA3Mi4xNjI1IDI1OC44OCA3My45MDI1QzI1Ni43NSA3NS42MjI1IDI1NS4xNCA3Ny44NzI1IDI1NC4wNyA4MC42NTI1QzI1Mi45OSA4My40NjI1IDI1Mi40NSA4Ni44MTI1IDI1Mi40NSA5MC43MDI1VjEyOS43OTJIMjM4LjY0VjU1Ljk3MjVIMjUyLjQ1VjY2LjI2MjVMMjUyLjQ2IDY2LjI1MjVaTTI5MC4yMyA0My45NzI1QzI4OC45NSA0My45NzI1IDI4Ny43NiA0My43NTI1IDI4Ni42OCA0My4zMTI1QzI4NS41OSA0Mi44NzI1IDI4NC42IDQyLjIwMjQgMjgzLjczIDQxLjMyMjRDMjgyLjg1IDQwLjQ0MjQgMjgyLjE5IDM5LjQ3MjUgMjgxLjc1IDM4LjQwMjVDMjgxLjMxIDM3LjMzMjUgMjgxLjA4IDM2LjE3MjUgMjgxLjA4IDM0Ljk0MjVDMjgxLjA4IDMzLjcxMjUgMjgxLjMgMzIuNTQyNSAyODEuNzQgMzEuNDYyNUMyODIuMTggMzAuMzgyNSAyODIuODQgMjkuMzkyNSAyODMuNzEgMjguNDkyNUMyODUuNDcgMjYuNjgyNSAyODcuNjQgMjUuNzYyNSAyOTAuMjIgMjUuNzYyNUMyOTIuOCAyNS43NjI1IDI5NC44MyAyNi42NzI1IDI5Ni41OSAyOC40OTI1QzI5Ny40NiAyOS4zOTI1IDI5OC4xMiAzMC4zODI1IDI5OC41NiAzMS40NjI1QzI5OSAzMi41NDI1IDI5OS4yMiAzMy43MDI1IDI5OS4yMiAzNC45NDI1QzI5OS4yMiAzNi4xODI1IDI5OSAzNy4zNDI1IDI5OC41NiAzOC40MDI1QzI5OC4xMiAzOS40NzI1IDI5Ny40NiA0MC40NTI0IDI5Ni41OCA0MS4zMjI0QzI5NS43IDQyLjIwMjQgMjk0LjczIDQyLjg2MjUgMjkzLjY3IDQzLjMwMjVDMjkyLjYgNDMuNzQyNSAyOTEuNDUgNDMuOTcyNSAyOTAuMjIgNDMuOTcyNUgyOTAuMjNaTTI4My4yNSAxMjkuMTYyVjU1Ljk2MjVIMjk3LjA2QzI5Ny4xMiA4MC41NTI1IDI5Ny4xMiAxMDUuMTgyIDI5Ny4wNiAxMjkuNzgySDI4My4yNVYxMjkuMTcyVjEyOS4xNjJaTTM3MS4zMSAyNi45MjI1SDM4NC41MVYxMjkuNzcySDM3MC43VjExOC42MzJDMzY3LjcyIDEyMi43MTIgMzY0LjE3IDEyNS44MzIgMzYwLjA1IDEyNy45OTJDMzU1LjQgMTMwLjQzMiAzNTAuMDMgMTMxLjY2MiAzNDMuOTYgMTMxLjY2MkMzMzguODEgMTMxLjY2MiAzMzQuMDQgMTMwLjcyMiAzMjkuNjUgMTI4LjgzMkMzMjUuMjYgMTI2Ljk1MiAzMjEuMjUgMTI0LjEzMiAzMTcuNjIgMTIwLjM2MkMzMTMuOTkgMTE2LjYwMiAzMTEuMjcgMTEyLjQzMiAzMDkuNDYgMTA3Ljg0MkMzMDcuNjUgMTAzLjI1MiAzMDYuNzQgOTguMjYyNSAzMDYuNzQgOTIuODYyNUMzMDYuNzQgODcuNDYyNSAzMDcuNjUgODIuNDcyNCAzMDkuNDYgNzcuODgyNEMzMTEuMjcgNzMuMjkyNCAzMTQgNjkuMTIyNSAzMTcuNjIgNjUuMzYyNUMzMjEuMjUgNjEuNjAyNSAzMjUuMjYgNTguNzcyNSAzMjkuNjUgNTYuODkyNUMzMzQuMDQgNTUuMDEyNSAzMzguODIgNTQuMDYyNSAzNDMuOTYgNTQuMDYyNUMzNTAuMDQgNTQuMDYyNSAzNTUuNDEgNTUuMjgyNSAzNjAuMDUgNTcuNzMyNUMzNjQuMTcgNTkuODkyNSAzNjcuNzIgNjMuMDIyNCAzNzAuNyA2Ny4xMDI0VjI2LjkyMjVIMzcxLjMxWk0zNDUuNTUgMTE4LjI0MkMzNTIuNzEgMTE4LjI0MiAzNTguNyAxMTUuODEyIDM2My41IDExMC45NDJDMzY1LjkgMTA4LjUxMiAzNjcuNyAxMDUuNzkyIDM2OC45IDEwMi43ODJDMzcwLjEgOTkuNzcyNCAzNzAuNyA5Ni40NjI1IDM3MC43IDkyLjg2MjVDMzcwLjcgODkuMjYyNSAzNzAuMSA4NS45NTI1IDM2OC45IDgyLjk0MjVDMzY3LjcgNzkuOTMyNSAzNjUuOSA3Ny4yMTI1IDM2My41IDc0Ljc4MjVDMzYxLjEgNzIuMzUyNSAzNTguNCA3MC41MjI1IDM1NS40MiA2OS4zMTI1QzM1Mi40MyA2OC4wOTI1IDM0OS4xNCA2Ny40OTI1IDM0NS41NSA2Ny40OTI1QzMzOC40OCA2Ny40OTI1IDMzMi41NSA2OS45MjI1IDMyNy43NSA3NC43OTI0QzMyNS4zNSA3Ny4yMjI1IDMyMy41NSA3OS45NDI1IDMyMi4zNSA4Mi45NTI1QzMyMS4xNSA4NS45NjI1IDMyMC41NSA4OS4yNzI1IDMyMC41NSA5Mi44NzI1QzMyMC41NSA5Ni40NzI1IDMyMS4xNSA5OS43ODI0IDMyMi4zNSAxMDIuNzkyQzMyMy41NSAxMDUuODAyIDMyNS4zNSAxMDguNTIyIDMyNy43NSAxMTAuOTUyQzMzMC4xNSAxMTMuMzgyIDMzMi44NCAxMTUuMjEyIDMzNS44IDExNi40MjJDMzM4Ljc2IDExNy42MzIgMzQyLjAxIDExOC4yNDIgMzQ1LjU2IDExOC4yNDJIMzQ1LjU1Wk00NjEuNjQgMTIwLjQ1MkM0NTcuODcgMTI0LjE5MiA0NTMuNjkgMTI2Ljk5MiA0NDkuMSAxMjguODYyQzQ0NC41MiAxMzAuNzMyIDQzOS41MyAxMzEuNjYyIDQzNC4xNSAxMzEuNjYyQzQyOC43NyAxMzEuNjYyIDQyMy43OCAxMzAuNzIyIDQxOS4yMSAxMjguODYyQzQxNC42NCAxMjYuOTkyIDQxMC40OCAxMjQuMTkyIDQwNi43MiAxMjAuNDUyQzQwMi45NyAxMTYuNzIyIDQwMC4xNiAxMTIuNTUyIDM5OC4yOCAxMDcuOTUyQzM5Ni40IDEwMy4zNTIgMzk1LjQ2IDk4LjMyMjUgMzk1LjQ2IDkyLjg3MjVDMzk1LjQ2IDg3LjQyMjUgMzk2LjQgODIuNDAyNSAzOTguMjggNzcuODAyNUM0MDAuMTYgNzMuMjAyNSA0MDIuOTcgNjkuMDMyNSA0MDYuNzIgNjUuMzAyNUM0MTAuNDcgNjEuNTYyNSA0MTQuNjMgNTguNzYyNSA0MTkuMjEgNTYuODkyNUM0MjMuNzggNTUuMDIyNSA0MjguNzYgNTQuMDkyNSA0MzQuMTUgNTQuMDkyNUM0MzkuNTQgNTQuMDkyNSA0NDQuNTIgNTUuMDMyNSA0NDkuMSA1Ni44OTI1QzQ1My42OCA1OC43NjI1IDQ1Ny44NiA2MS41NjI1IDQ2MS42NCA2NS4zMDI1QzQ2NS40MSA2OS4wNDI1IDQ2OC4yNSA3My4yMTI1IDQ3MC4xNCA3Ny44MTI1QzQ3Mi4wMyA4Mi40MTI1IDQ3Mi45NyA4Ny40NDI1IDQ3Mi45NyA5Mi44ODI1QzQ3Mi45NyA5OC4zMjI1IDQ3Mi4wMiAxMDMuMzYyIDQ3MC4xNCAxMDcuOTYyQzQ2OC4yNSAxMTIuNTYyIDQ2NS40MiAxMTYuNzMyIDQ2MS42NCAxMjAuNDcyVjEyMC40NTJaTTQzNC4xNSAxMTguMDkyQzQzNy42OSAxMTguMDkyIDQ0MC45NCAxMTcuNDkyIDQ0My45MSAxMTYuMjgyQzQ0Ni44NyAxMTUuMDgyIDQ0OS41NiAxMTMuMjcyIDQ1MS45NiAxMTAuODYyQzQ1NC4zNiAxMDguNDUyIDQ1Ni4xNiAxMDUuNzUyIDQ1Ny4zNiAxMDIuNzUyQzQ1OC41NiA5OS43NTI1IDQ1OS4xNiA5Ni40NTI0IDQ1OS4xNiA5Mi44NTI0QzQ1OS4xNiA4OS4yNTI0IDQ1OC41NiA4NS45NTI1IDQ1Ny4zNiA4Mi45NTI1QzQ1Ni4xNiA3OS45NjI1IDQ1NC4zNiA3Ny4yNTI1IDQ1MS45NiA3NC44NDI1QzQ0OS41NiA3Mi40MzI1IDQ0Ni44OCA3MC42MzI1IDQ0My45MSA2OS40MjI1QzQ0MC45NSA2OC4yMjI1IDQzNy42OSA2Ny42MTI1IDQzNC4xNSA2Ny42MTI1QzQzMC42MSA2Ny42MTI1IDQyNy40NCA2OC4yMTI1IDQyNC41IDY5LjQyMjVDNDIxLjU2IDcwLjYyMjUgNDE4Ljg5IDcyLjQzMjUgNDE2LjQ5IDc0Ljg0MjVDNDE0LjA5IDc3LjI1MjUgNDEyLjI5IDc5Ljk1MjUgNDExLjA5IDgyLjk1MjVDNDA5Ljg5IDg1Ljk1MjUgNDA5LjI5IDg5LjI1MjQgNDA5LjI5IDkyLjg1MjRDNDA5LjI5IDk2LjQ1MjQgNDA5Ljg5IDk5Ljc1MjUgNDExLjA5IDEwMi43NTJDNDEyLjI5IDEwNS43NDIgNDE0LjA5IDEwOC40NTIgNDE2LjQ5IDExMC44NjJDNDE4Ljg5IDExMy4yNzIgNDIxLjU2IDExNS4wODIgNDI0LjUgMTE2LjI4MkM0MjcuNDQgMTE3LjQ4MiA0MzAuNjYgMTE4LjA5MiA0MzQuMTUgMTE4LjA5MlpNNDk2LjE1IDY2LjI1MjVDNDk4LjE2IDYyLjc1MjUgNTAwLjc3IDYwLjAzMjUgNTAzLjk4IDU4LjEyMjVDNTA3Ljg0IDU1LjgxMjUgNTEyLjU1IDU0LjY2MjQgNTE4LjExIDU0LjY2MjRINTE4LjcyVjY5LjEzMjRMNTE4LjA4IDY5LjEwMjRDNTE1LjA2IDY4Ljk2MjQgNTEyLjI2IDY5LjI5MjUgNTA5LjY4IDcwLjA5MjVDNTA3LjEgNzAuODkyNSA1MDQuNzMgNzIuMTYyNSA1MDIuNTcgNzMuOTAyNUM1MDAuNDQgNzUuNjIyNSA0OTguODMgNzcuODcyNSA0OTcuNzYgODAuNjUyNUM0OTYuNjggODMuNDYyNSA0OTYuMTQgODYuODEyNSA0OTYuMTQgOTAuNzAyNVYxMjkuNzkySDQ4Mi4zM1Y1NS45NzI1SDQ5Ni4xNFY2Ni4yNjI1TDQ5Ni4xNSA2Ni4yNTI1Wk01MzMuOTMgNDMuOTcyNUM1MzIuNjUgNDMuOTcyNSA1MzEuNDYgNDMuNzUyNSA1MzAuMzggNDMuMzEyNUM1MjkuMjkgNDIuODcyNSA1MjguMyA0Mi4yMDI0IDUyNy40MyA0MS4zMjI0QzUyNi41NSA0MC40NDI0IDUyNS44OSAzOS40NzI1IDUyNS40NSAzOC40MDI1QzUyNS4wMSAzNy4zMzI1IDUyNC43OCAzNi4xNzI1IDUyNC43OCAzNC45NDI1QzUyNC43OCAzMy43MTI1IDUyNSAzMi41NDI1IDUyNS40NCAzMS40NjI1QzUyNS44OCAzMC4zODI1IDUyNi41NCAyOS4zOTI1IDUyNy40MSAyOC40OTI1QzUyOS4xNyAyNi42ODI1IDUzMS4zNCAyNS43NjI1IDUzMy45MiAyNS43NjI1QzUzNi41IDI1Ljc2MjUgNTM4LjUzIDI2LjY3MjUgNTQwLjI5IDI4LjQ5MjVDNTQxLjE2IDI5LjM5MjUgNTQxLjgyIDMwLjM4MjUgNTQyLjI2IDMxLjQ2MjVDNTQyLjcgMzIuNTQyNSA1NDIuOTIgMzMuNzAyNSA1NDIuOTIgMzQuOTQyNUM1NDIuOTIgMzYuMTgyNSA1NDIuNyAzNy4zNDI1IDU0Mi4yNiAzOC40MDI1QzU0MS44MiAzOS40NzI1IDU0MS4xNiA0MC40NTI0IDU0MC4yOCA0MS4zMjI0QzUzOS40IDQyLjIwMjQgNTM4LjQzIDQyLjg2MjUgNTM3LjM3IDQzLjMwMjVDNTM2LjMgNDMuNzQyNSA1MzUuMTUgNDMuOTcyNSA1MzMuOTIgNDMuOTcyNUg1MzMuOTNaTTUyNi45NSAxMjkuMTYyVjU1Ljk2MjVINTQwLjc2VjEyOS43ODJINTI2Ljk1VjEyOS4xNzJWMTI5LjE2MlpNNjE1IDU1Ljk1MjVINjI4LjJWMTI5Ljc3Mkg2MTQuMzlWMTE4LjYzMkM2MTEuNDEgMTIyLjcxMiA2MDcuODYgMTI1LjgzMiA2MDMuNzQgMTI3Ljk5MkM1OTkuMDkgMTMwLjQzMiA1OTMuNzIgMTMxLjY2MiA1ODcuNjQgMTMxLjY2MkM1ODIuNDkgMTMxLjY2MiA1NzcuNzIgMTMwLjcyMiA1NzMuMzMgMTI4LjgzMkM1NjguOTQgMTI2Ljk1MiA1NjQuOTMgMTI0LjEzMiA1NjEuMyAxMjAuMzYyQzU1Ny42NyAxMTYuNjAyIDU1NC45NSAxMTIuNDMyIDU1My4xNCAxMDcuODQyQzU1MS4zMyAxMDMuMjUyIDU1MC40MiA5OC4yNjI1IDU1MC40MiA5Mi44NjI1QzU1MC40MiA4Ny40NjI1IDU1MS4zMyA4Mi40NzI0IDU1My4xNCA3Ny44ODI0QzU1NC45NSA3My4yOTI0IDU1Ny42OCA2OS4xMjI1IDU2MS4zIDY1LjM2MjVDNTY0LjkzIDYxLjYwMjUgNTY4Ljk0IDU4Ljc3MjUgNTczLjMzIDU2Ljg5MjVDNTc3LjcyIDU1LjAxMjUgNTgyLjUgNTQuMDYyNSA1ODcuNjQgNTQuMDYyNUM1OTMuNzIgNTQuMDYyNSA1OTkuMDkgNTUuMjgyNSA2MDMuNzQgNTcuNzMyNUM2MDcuODYgNTkuODkyNSA2MTEuNDEgNjMuMDIyNCA2MTQuMzkgNjcuMTAyNFY1NS45NjI1SDYxNVY1NS45NTI1Wk01ODkuMjQgMTE4LjI0MkM1OTYuNCAxMTguMjQyIDYwMi4zOSAxMTUuODEyIDYwNy4xOSAxMTAuOTQyQzYwOS41OSAxMDguNTEyIDYxMS4zOSAxMDUuNzkyIDYxMi41OSAxMDIuNzgyQzYxMy43OSA5OS43NzI0IDYxNC4zOSA5Ni40NjI1IDYxNC4zOSA5Mi44NjI1QzYxNC4zOSA4OS4yNjI1IDYxMy43OSA4NS45NTI1IDYxMi41OSA4Mi45NDI1QzYxMS4zOSA3OS45MzI1IDYwOS41OSA3Ny4yMTI1IDYwNy4xOSA3NC43ODI1QzYwNC43OSA3Mi4zNTI1IDYwMi4wOSA3MC41MjI1IDU5OS4xMSA2OS4zMTI1QzU5Ni4xMiA2OC4wOTI1IDU5Mi44MyA2Ny40OTI1IDU4OS4yNCA2Ny40OTI1QzU4Mi4xNyA2Ny40OTI1IDU3Ni4yNCA2OS45MjI1IDU3MS40MyA3NC43OTI0QzU2OS4wMyA3Ny4yMjI1IDU2Ny4yMyA3OS45NDI1IDU2Ni4wMyA4Mi45NTI1QzU2NC44MyA4NS45NjI1IDU2NC4yMyA4OS4yNzI1IDU2NC4yMyA5Mi44NzI1QzU2NC4yMyA5Ni40NzI1IDU2NC44MyA5OS43ODI0IDU2Ni4wMyAxMDIuNzkyQzU2Ny4yMyAxMDUuODAyIDU2OS4wMyAxMDguNTIyIDU3MS40MyAxMTAuOTUyQzU3My44MyAxMTMuMzgyIDU3Ni41MiAxMTUuMjEyIDU3OS40OCAxMTYuNDIyQzU4Mi40NCAxMTcuNjMyIDU4NS42OSAxMTguMjQyIDU4OS4yNCAxMTguMjQyWk02NzguNDMgNTQuMDcyNEM2ODcuMDkgNTQuMDcyNCA2OTQuMDQgNTYuODIyNCA2OTkuMjggNjIuMzIyNEM3MDQuNTEgNjcuODEyNCA3MDcuMTIgNzUuMjMyNSA3MDcuMTIgODQuNTkyNVYxMjkuNzcySDY5My4zMVY4NS4zMTI1QzY5My4zMSA4Mi40MjI1IDY5Mi45MiA3OS44NzI1IDY5Mi4xNSA3Ny42NTI1QzY5MS4zOCA3NS40NTI1IDY5MC4yMyA3My41NzI1IDY4OC43MSA3Mi4wMjI1QzY4Ny4xOCA3MC40NzI1IDY4NS4zNiA2OS4zMDI1IDY4My4yNSA2OC41MjI1QzY4MS4xMyA2Ny43NDI1IDY3OC43IDY3LjM0MjUgNjc1Ljk3IDY3LjM0MjVDNjY5Ljg3IDY3LjM0MjUgNjY0Ljk0IDY5LjI0MjUgNjYxLjIxIDczLjAzMjVDNjU3LjQ3IDc2LjgzMjUgNjU1LjYgODIuNzEyNSA2NTUuNiA5MC42ODI1VjEyOS43NzJINjQxLjc5VjU1Ljk1MjVINjU1LjZWNjUuMDAyNUM2NTguMDIgNjEuNjMyNSA2NjAuOTUgNTkuMDMyNSA2NjQuNCA1Ny4yMjI1QzY2OC40IDU1LjEyMjUgNjczLjA4IDU0LjA2MjUgNjc4LjQzIDU0LjA2MjVWNTQuMDcyNFoiIGZpbGw9IndoaXRlIj48L3BhdGg+PHBhdGggZD0iTTgxLjIgMTcuMDYyNUM4MS4yIDE1LjQ1MjUgODEuNjMgMTMuOTgyNSA4Mi4zNSAxMi43MzI1Qzg0LjIyIDkuNDgyNDggODcuMjQgNy42NzI1IDg5Ljc0IDcuMDAyNUw4My41NyAzLjQ0MjVDNzUuNjIgLTEuMTQ3NSA2NS44MyAtMS4xNDc1IDU3Ljg4IDMuNDQyNUw1MS43MSA3LjAwMjVDNTQuMjEgNy42NzI1IDU3LjIyIDkuNDgyNDggNTkuMSAxMi43MzI1QzU5LjgyIDEzLjk4MjUgNjAuMjUgMTUuNDUyNSA2MC4yNSAxNy4wNjI1VjYyLjE4MjVMNzAuNzMgNjguMjMyNUw4MS4yMSA2Mi4xODI1VjE3LjA2MjVIODEuMloiIGZpbGw9IiMwMEZGODkiPjwvcGF0aD48cGF0aCBkPSJNMTIuOTkgOTMuNTIyNEwyMC45NyA4OC45MTI0VjU4LjM4MjRMMC4wMTAwMDk4IDQ2LjI4MjVWODYuMDIyNUMwLjAxMDAwOTggOTIuNjgyNSA3LjIyMDAxIDk2Ljg1MjUgMTIuOTkgOTMuNTEyNVY5My41MjI0WiIgZmlsbD0iIzAwRkY4OSI+PC9wYXRoPjxwYXRoIGQ9Ik0yOC4xMyAxMTkuNzQzQzIyLjM2IDEyMy4wNzMgMjIuMzYgMTMxLjQwMyAyOC4xMyAxMzQuNzMzTDYyLjU1IDE1NC42MDNWMTMwLjM5M0wzNi4xMiAxMTUuMTMzTDI4LjE0IDExOS43NDNIMjguMTNaIiBmaWxsPSIjMDBGRjg5Ij48L3BhdGg+PHBhdGggZD0iTTYyLjU0IDgyLjM5MjVMNTIuMDYgNzYuMzQyNUwxMi45OCA5OC45MDI1QzExLjU4IDk5LjcxMjUgMTAuMSAxMDAuMDczIDguNjQ5OTkgMTAwLjA3M0M0Ljg5OTk5IDEwMC4wNzMgMS44MyA5OC4zNzI1IDAgOTYuNTQyNVYxMDMuNjczQzAgMTEyLjg1MyA0LjkgMTIxLjMzMyAxMi44NCAxMjUuOTIzTDE5LjAxIDEyOS40ODNDMTguMzQgMTI2Ljk4MyAxOC40IDEyMy40NjMgMjAuMjggMTIwLjIyM0MyMSAxMTguOTczIDIyLjA2IDExNy44NzMgMjMuNDYgMTE3LjA2M0w2Mi41NCA5NC41MDI1VjgyLjQwMjVWODIuMzkyNVoiIGZpbGw9IiMwMEZGODkiPjwvcGF0aD48cGF0aCBkPSJNODUuODYwMSAxOS43NTI1VjI4Ljk3MjVMMTEyLjMgNDQuMjMyNUwxMzMuMjYgMzIuMTMyNEw5OC44NDAxIDEyLjI2MjVDOTMuMDcwMSA4LjkzMjQ1IDg1Ljg2MDEgMTMuMDkyNSA4NS44NjAxIDE5Ljc1MjVaIiBmaWxsPSIjMDBGRjg5Ij48L3BhdGg+PHBhdGggZD0iTTU1LjU3OTkgMjguOTcyNVYxOS43NTI1QzU1LjU3OTkgMTMuMDkyNSA0OC4zNjk5IDguOTMyNDUgNDIuNTk5OSAxMi4yNjI1TDguMTc5OTMgMzIuMTMyNEwyOS4xMzk5IDQ0LjIzMjVMNTUuNTc5OSAyOC45NzI1WiIgZmlsbD0iIzAwRkY4OSI+PC9wYXRoPjxwYXRoIGQ9Ik0xMjAuNDYgODguOTEyNUwxMjguNDQgOTMuNTIyNUMxMzQuMjEgOTYuODUyNSAxNDEuNDIgOTIuNjkyNSAxNDEuNDIgODYuMDMyNVY0Ni4yOTI1TDEyMC40NiA1OC4zOTI1Vjg4LjkyMjVWODguOTEyNVoiIGZpbGw9IiMwMEZGODkiPjwvcGF0aD48cGF0aCBkPSJNMTEzLjMxIDExOS43NDNMMTA1LjMzIDExNS4xMzNMNzguODg5OSAxMzAuMzkzVjE1NC42MDNMMTEzLjMxIDEzNC43MzNDMTE5LjA4IDEzMS40MDMgMTE5LjA4IDEyMy4wNzMgMTEzLjMxIDExOS43NDNaIiBmaWxsPSIjMDBGRjg5Ij48L3BhdGg+PHBhdGggZD0iTTEzMi43NyAxMDAuMDczQzEzMS4zMyAxMDAuMDczIDEyOS44NCA5OS43MTI1IDEyOC40NCA5OC45MDI1TDg5LjM1OTkgNzYuMzQyNUw3OC44Nzk5IDgyLjM5MjVWOTQuNDkyNUwxMTcuOTYgMTE3LjA1M0MxMTkuMzYgMTE3Ljg2MyAxMjAuNDIgMTE4Ljk2MiAxMjEuMTQgMTIwLjIxMkMxMjMuMDEgMTIzLjQ2MiAxMjMuMDggMTI2Ljk3MyAxMjIuNDEgMTI5LjQ3M0wxMjguNTggMTI1LjkxM0MxMzYuNTMgMTIxLjMyMyAxNDEuNDMgMTEyLjg0MyAxNDEuNDIgMTAzLjY2M1Y5Ni41MzI1QzEzOS41OSA5OC4zNjI1IDEzNi41MSAxMDAuMDYzIDEzMi43NiAxMDAuMDYzTDEzMi43NyAxMDAuMDczWiIgZmlsbD0iIzAwRkY4OSI+PC9wYXRoPjwvc3ZnPg==" alt="Tridorian" style="height:48px;width:auto;">
+
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px;">Google Cloud Premier Partner &middot; tridorian.com</div>
+    </div>
+    <div class="doc-badge">ICP Intelligence Report</div>
+    <h1>Tridorian</h1>
+    <div class="subtitle">Ideal Customer Profile analysis — company intelligence, buyer personas, competitive positioning, and engagement strategy for tridorian.com</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ═══ SECTION 1: EXECUTIVE SUMMARY ═══ -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>Executive Summary</h2>
+      </div>
+      <p>Tridorian is a <strong>Google Cloud Premier Partner</strong> specializing in the design, implementation, and long-term operation of cloud infrastructure, data platforms, and AI systems. Founded in 2023 and headquartered in Singapore, the firm differentiates itself through a "build and stay" philosophy — focusing on managed services and business outcomes rather than one-off consultancy projects.</p>
+      <p>They serve high-impact sectors including Retail, FMCG, Healthcare, Finance, and Manufacturing across Asia Pacific, the Middle East, Europe, and North America. Their core value proposition centers on transforming "data chaos" into strategic assets using the Google Cloud ecosystem.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">51-200</div>
+          <div class="stat-label">Employees</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">2023</div>
+          <div class="stat-label">Founded</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">7</div>
+          <div class="stat-label">Office Locations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">Top 10</div>
+          <div class="stat-label">SEA Google Partner</div>
+        </div>
+      </div>
+
+      <div class="info-box info"><strong>Key Differentiator:</strong> "Most consultants build and leave. We build and stay." — One of only 10 firms selected by Google to lead the Corporate segment across Southeast Asia (out of 350 partners and 55 Premier Partners).</div>
+    </div>
+
+    <!-- ═══ SECTION 2: COMPANY OVERVIEW ═══ -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>Company Overview</h2>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Attribute</th><th>Detail</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Legal Name</strong></td><td>Tridorian</td></tr>
+          <tr><td><strong>Type</strong></td><td>Privately Held</td></tr>
+          <tr><td><strong>Industry</strong></td><td>Business Consulting and Services</td></tr>
+          <tr><td><strong>Founded</strong></td><td>2023</td></tr>
+          <tr><td><strong>Headquarters</strong></td><td>1 Pasir Panjang Road, Level 30, Singapore 118911</td></tr>
+          <tr><td><strong>Size</strong></td><td>51–200 employees</td></tr>
+          <tr><td><strong>LinkedIn Followers</strong></td><td>3,709</td></tr>
+          <tr><td><strong>Partner Status</strong></td><td>Google Cloud Premier Partner</td></tr>
+          <tr><td><strong>Website</strong></td><td>tridorian.com</td></tr>
+          <tr><td><strong>Contact Email</strong></td><td>hello@tridorian.com</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Tagline & Positioning</div>
+      <p><strong>"Innovate. Secure. Succeed."</strong> — Tridorian positions itself as a long-term operational partner, not a project-based consultancy. They explicitly state: "If you want a partner who disappears after go-live, we are not the right fit."</p>
+
+      <div class="sub-header">Specialties</div>
+      <div class="tag-group">
+        <span class="tag">Artificial Intelligence</span>
+        <span class="tag">Machine Learning</span>
+        <span class="tag">Data Analytics</span>
+        <span class="tag">Cloud Migration</span>
+        <span class="tag">Infrastructure Modernization</span>
+        <span class="tag">Work Transformation</span>
+        <span class="tag">AI Application Development</span>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 3: SERVICES & CAPABILITIES ═══ -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>Services & Capabilities</h2>
+      </div>
+
+      <div class="sub-header">Data Analytics — "Smart Analytics Foundation"</div>
+      <p>Their flagship offering addresses "Data Chaos" through a standardized architecture built on the Google Cloud stack.</p>
+      <ul>
+        <li><strong>Data Ingestion:</strong> Google Cloud Datastream, Fivetran, Airbyte — connecting SaaS, NoSQL, and RDBMS sources</li>
+        <li><strong>Warehouse Modernization:</strong> Google BigQuery as core, optimized through partitioning and clustering</li>
+        <li><strong>Orchestration & Governance:</strong> Dataform/DBT and Cloud Composer for reliable pipelines</li>
+        <li><strong>Visualization:</strong> Looker and Looker Studio for real-time, self-service BI</li>
+        <li><strong>Future-Readiness:</strong> MLOps on Vertex AI for predictive modeling and GenAI</li>
+      </ul>
+
+      <div class="sub-header">Agentic Platform (GenAI)</div>
+      <p>Leverages <strong>Gemini Enterprise</strong> on Google Cloud to drive AI-powered productivity.</p>
+      <ul>
+        <li><strong>Gemini in Workspace:</strong> AI-enhanced Docs, Sheets, Slides, Gmail, Chat</li>
+        <li><strong>Gemini Code Assist:</strong> Accelerated software development</li>
+        <li><strong>Vertex AI Ecosystem:</strong> Practical automation and personalization use cases</li>
+      </ul>
+
+      <div class="sub-header">Additional Solutions</div>
+      <table>
+        <thead>
+          <tr><th>Solution</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Google Cloud Platform</strong></td><td>Infrastructure, Application, and Data & ML initiatives with proven frameworks</td></tr>
+          <tr><td><strong>Google Workspace</strong></td><td>Deployment, collaboration, productivity transformation</td></tr>
+          <tr><td><strong>Looker</strong></td><td>Real-time BI dashboards, centralized analytics</td></tr>
+          <tr><td><strong>Data Migration</strong></td><td>Cloud modernization and migration services</td></tr>
+          <tr><td><strong>Security</strong></td><td>Cloud IAM, VPC Service Controls, DLP APIs, AI-driven threat detection</td></tr>
+          <tr><td><strong>Managed Services</strong></td><td>Ongoing operations, monitoring, and "2 AM" support post-launch</td></tr>
+          <tr><td><strong>Custom Solutions</strong></td><td>Tailored digital solutions for unique business requirements</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">FinOps Practice</div>
+      <p>TCO optimization through BigQuery Reservations, Dataproc autoscaling, and cloud spend governance.</p>
+
+      <div class="sub-header">Compliance Frameworks</div>
+      <div class="tag-group">
+        <span class="tag secondary">HIPAA</span>
+        <span class="tag secondary">GDPR</span>
+        <span class="tag secondary">ISO 27001</span>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 4: TARGET INDUSTRIES ═══ -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <h2>Target Industries</h2>
+      </div>
+      <p>Tridorian tailors solutions to five primary sectors, each with specific digital transformation pressures and measurable opportunities.</p>
+
+      <table>
+        <thead>
+          <tr><th>Industry</th><th>Key Challenges</th><th>Critical Stats</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Retail</strong></td>
+            <td>Consistent digital journeys, task augmentation via AI</td>
+            <td>46% automation potential; 70% boosting digital investment due to inflation</td>
+          </tr>
+          <tr>
+            <td><strong>FMCG</strong></td>
+            <td>Supply chain visibility, direct-to-consumer strategies</td>
+            <td>70% lack full supply chain visibility; 20% YoY online sales growth</td>
+          </tr>
+          <tr>
+            <td><strong>Healthcare</strong></td>
+            <td>Data interoperability, secure remote patient monitoring</td>
+            <td>75% need better interoperability; 40% increase in digital utilization</td>
+          </tr>
+          <tr>
+            <td><strong>Finance</strong></td>
+            <td>Cybersecurity against threats, digital transaction demand</td>
+            <td>85% prioritize digital cybersecurity; 70% customers prefer digital</td>
+          </tr>
+          <tr>
+            <td><strong>Manufacturing</strong></td>
+            <td>IoT optimization, digital twin for time-to-market reduction</td>
+            <td>85% implementing IoT; 30% potential operational cost reduction</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box warning"><strong>Emerging Focus:</strong> Tridorian is running dedicated AI-driven security webinars targeting the Indonesian enterprise market — signaling a vertical push into cybersecurity services for that geography.</div>
+    </div>
+
+    <!-- ═══ SECTION 5: IDEAL CUSTOMER PROFILE ═══ -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <h2>Ideal Customer Profile</h2>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Attribute</th><th>Profile</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Company Size</strong></td><td>Mid-market to enterprise (corporate segment focus)</td></tr>
+          <tr><td><strong>Geography</strong></td><td>Southeast Asia (primary), Middle East, Nordics, North America (expanding)</td></tr>
+          <tr><td><strong>Cloud Status</strong></td><td>On-prem or multi-cloud, looking to migrate/consolidate on Google Cloud</td></tr>
+          <tr><td><strong>Data Maturity</strong></td><td>Struggling with "data chaos" — siloed systems, poor data quality, 6-8 week wait for reports</td></tr>
+          <tr><td><strong>AI Readiness</strong></td><td>Want to adopt AI/GenAI but lack internal ML/AI engineering capacity</td></tr>
+          <tr><td><strong>Budget</strong></td><td>Can afford ongoing managed services (not just one-time project budgets)</td></tr>
+          <tr><td><strong>Buying Trigger</strong></td><td>Cloud migration mandate, data modernization initiative, AI/GenAI adoption push</td></tr>
+          <tr><td><strong>Partnership Need</strong></td><td>Seeking a long-term operational partner, not a build-and-leave consultancy</td></tr>
+          <tr><td><strong>Compliance</strong></td><td>Operates in regulated industries requiring HIPAA, GDPR, or ISO 27001</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box success"><strong>Fit Signal:</strong> Companies that started with a single project and expanded into managed services represent the strongest ICP match — this is Tridorian's stated growth pattern.</div>
+
+      <div class="sub-header">Disqualifiers</div>
+      <ul>
+        <li>Organizations committed to AWS or Azure (Tridorian is Google-exclusive)</li>
+        <li>Companies looking for a one-off project with no ongoing relationship</li>
+        <li>SMBs without budget for managed services or enterprise cloud spend</li>
+        <li>Organizations that need multi-cloud strategy consulting</li>
+      </ul>
+    </div>
+
+    <!-- ═══ SECTION 6: BUYER PERSONAS ═══ -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <h2>Buyer Personas</h2>
+      </div>
+
+      <div class="sub-header">Primary: CTO / VP Engineering</div>
+      <ul>
+        <li><strong>Role:</strong> Technical decision-maker responsible for infrastructure and architecture</li>
+        <li><strong>Pain:</strong> Legacy systems, rising ops costs, pressure to modernize</li>
+        <li><strong>Motivation:</strong> Reduce infrastructure complexity, consolidate onto one cloud platform</li>
+        <li><strong>Tridorian's hook:</strong> "We scope tightly, build to spec, and stay responsible for performance long after launch"</li>
+      </ul>
+
+      <div class="sub-header">Secondary: Head of Data / Chief Data Officer</div>
+      <ul>
+        <li><strong>Role:</strong> Owns data strategy, analytics capabilities, and data team productivity</li>
+        <li><strong>Pain:</strong> "Data chaos" — scattered systems, 6-8 week lead time for reports</li>
+        <li><strong>Motivation:</strong> Self-service analytics, real-time insights, AI/ML capabilities</li>
+        <li><strong>Tridorian's hook:</strong> Smart Analytics Foundation — "fast time-to-insight" with BigQuery + Looker</li>
+      </ul>
+
+      <div class="sub-header">Tertiary: CEO / Business Executive</div>
+      <ul>
+        <li><strong>Role:</strong> Strategic decision-maker focused on digital transformation ROI</li>
+        <li><strong>Pain:</strong> Competitive pressure to digitize, unclear AI adoption path</li>
+        <li><strong>Motivation:</strong> Measurable business outcomes (cost reduction, revenue growth)</li>
+        <li><strong>Tridorian's hook:</strong> "Strategic discussion partner" who drives outcomes, not just deploys technology</li>
+      </ul>
+
+      <div class="info-box info"><strong>Dual-Stakeholder Strategy:</strong> Tridorian explicitly targets both technical and non-technical stakeholders in their go-to-market. Their webinars recommend bringing "1 technical + 1 non-technical" and offer separate breakout tracks (Infra track + GenAI track).</div>
+    </div>
+
+    <!-- ═══ SECTION 7: CUSTOMER EVIDENCE ═══ -->
+    <div class="section" id="s7">
+      <div class="section-header">
+        <div class="section-number">7</div>
+        <h2>Customer Evidence</h2>
+      </div>
+      <p>Selected testimonials from Tridorian's client base demonstrating their value proposition across different use cases.</p>
+
+      <blockquote>
+        "It used to take multiple days and a team of developers to develop and deliver our advanced dashboards to production. With Looker, it only takes hours with 1 person."
+        <cite>— Punleu Chomnan, CTO of Pointer</cite>
+      </blockquote>
+
+      <blockquote>
+        "tridorian presented as a strategic discussion partner which helps make existing systems... so much stronger."
+        <cite>— Dr. Ita Lestari, CEO & Founder of FDC Dental</cite>
+      </blockquote>
+
+      <blockquote>
+        "Previously managing a complex ecosystem of tools, Google Cloud provided a user-friendly, scalable platform that consolidated our needs... we anticipate a 20% reduction in cloud infrastructure costs."
+        <cite>— Monis Rahman, Founder & CEO of Rozee</cite>
+      </blockquote>
+
+      <div class="sub-header">Customer Industries Confirmed</div>
+      <div class="tag-group">
+        <span class="tag">Healthcare (FDC Dental)</span>
+        <span class="tag">Technology (Pointer)</span>
+        <span class="tag">HR/Recruitment (Rozee)</span>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 8: COMPETITIVE POSITIONING ═══ -->
+    <div class="section" id="s8">
+      <div class="section-header">
+        <div class="section-number">8</div>
+        <h2>Competitive Positioning</h2>
+      </div>
+
+      <div class="sub-header">Strengths</div>
+      <ul>
+        <li><strong>Google-exclusive specialization:</strong> Deep expertise vs. diluted multi-cloud generalists</li>
+        <li><strong>"Build and stay" model:</strong> Managed services lock-in creates recurring revenue and client stickiness</li>
+        <li><strong>Rapid growth trajectory:</strong> Founded 2023, already Google Premier Partner and Top 10 Corporate segment leader in SEA</li>
+        <li><strong>Regional density:</strong> 7 offices across APAC, Middle East, and Europe — strong local presence</li>
+        <li><strong>Expanding to North America:</strong> Just hired Key Account Director for NA market launch</li>
+        <li><strong>Webinar-led demand gen:</strong> Active content engine with "Deal Clinic" breakout sessions for lead qualification</li>
+      </ul>
+
+      <div class="sub-header">Potential Vulnerabilities</div>
+      <ul>
+        <li><strong>Google-only:</strong> Cannot serve organizations committed to AWS/Azure</li>
+        <li><strong>Young company:</strong> Founded 2023 — limited track record vs. established Big 4 or Accenture</li>
+        <li><strong>Talent scale:</strong> 51-200 employees may limit capacity for simultaneous large engagements</li>
+        <li><strong>Brand awareness:</strong> ~3,700 LinkedIn followers — still building market recognition</li>
+      </ul>
+
+      <div class="sub-header">Go-To-Market Approach</div>
+      <ol class="steps">
+        <li><strong>Webinar-driven awareness</strong> — educational content targeting specific geographies (Thailand, Indonesia, etc.)</li>
+        <li><strong>Deal Clinic breakouts</strong> — separate tracks for technical + business buyers for direct consultation</li>
+        <li><strong>Land-and-expand</strong> — single project entry, then upsell into managed services</li>
+        <li><strong>Google co-sell</strong> — leveraging Premier Partner status and Google BDR relationships</li>
+      </ol>
+    </div>
+
+    <!-- ═══ SECTION 9: ENGAGEMENT STRATEGY ═══ -->
+    <div class="section" id="s9">
+      <div class="section-header">
+        <div class="section-number">9</div>
+        <h2>Engagement Strategy</h2>
+      </div>
+      <p>Recommended approach for engaging Tridorian based on their ICP, buying process, and organizational structure.</p>
+
+      <div class="sub-header">Key Entry Points</div>
+      <ol class="steps">
+        <li><strong>Data Foundation Workshop (Explorer level):</strong> Tridorian offers a phased onboarding — start with a workshop to assess data maturity before committing to a full engagement</li>
+        <li><strong>Webinar attendance:</strong> Their Deal Clinic sessions offer 30-minute 1:1 consults — direct access to their team</li>
+        <li><strong>Google co-referral:</strong> As a Premier Partner, Tridorian receives direct leads from Google's sales org</li>
+      </ol>
+
+      <div class="sub-header">Messaging That Resonates</div>
+      <ul>
+        <li>"Business outcomes" over "technology features"</li>
+        <li>"Long-term partnership" over "project delivery"</li>
+        <li>"Fast time-to-insight" and "self-service analytics" for data buyers</li>
+        <li>"Operational cost reduction" (cite the 20% cloud cost reduction proof point)</li>
+        <li>Compliance and security-first language for healthcare and finance prospects</li>
+      </ul>
+
+      <div class="sub-header">Topics to Address in Discovery</div>
+      <ul>
+        <li>Current cloud platform and migration timeline</li>
+        <li>Data architecture maturity and analytics bottlenecks</li>
+        <li>AI/GenAI adoption roadmap and internal capabilities gap</li>
+        <li>Compliance requirements (HIPAA, GDPR, ISO 27001)</li>
+        <li>Appetite for managed services vs. project-based engagement</li>
+      </ul>
+
+      <div class="info-box danger"><strong>Avoid:</strong> Pitching multi-cloud or AWS/Azure solutions — Tridorian is Google-exclusive. Also avoid positioning as a one-off project vendor; their ICP explicitly prefers long-term partners.</div>
+    </div>
+
+    <!-- ═══ SECTION 10: CONTACT & GLOBAL PRESENCE ═══ -->
+    <div class="section" id="s10">
+      <div class="section-header">
+        <div class="section-number">10</div>
+        <h2>Contact & Global Presence</h2>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Region</th><th>Office Locations</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Southeast Asia</strong></td><td>Singapore (HQ), Jakarta (Indonesia), Bangkok (Thailand), Manila (Philippines), Kuala Lumpur (Malaysia)</td></tr>
+          <tr><td><strong>Middle East</strong></td><td>Dubai (UAE)</td></tr>
+          <tr><td><strong>Europe</strong></td><td>Stockholm (Sweden)</td></tr>
+          <tr><td><strong>North America</strong></td><td>Seattle (USA) — newly launched</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Contact Details</div>
+      <table>
+        <thead>
+          <tr><th>Channel</th><th>Detail</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Email</strong></td><td>hello@tridorian.com</td></tr>
+          <tr><td><strong>Phone (Malaysia)</strong></td><td>+60 3 9212 0234</td></tr>
+          <tr><td><strong>Phone (Singapore)</strong></td><td>+65 3158 1620</td></tr>
+          <tr><td><strong>Phone (USA)</strong></td><td>+1 650 448 8525</td></tr>
+          <tr><td><strong>LinkedIn</strong></td><td>linkedin.com/company/tridorian</td></tr>
+          <tr><td><strong>Website</strong></td><td>tridorian.com</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Key People (from LinkedIn)</div>
+      <ul>
+        <li><strong>Sarah Fleischhacker</strong> — Key Account Director, North America (newly hired, March 2026)</li>
+        <li><strong>Kristiana Carolina</strong> — Country lead (referenced at Google SEA Kickoff)</li>
+        <li><strong>Eddy Lee</strong> — Senior team (referenced at Google SEA Kickoff)</li>
+        <li><strong>Rungsai Phatharaanan</strong> — Thailand lead (referenced at Google SEA Kickoff)</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

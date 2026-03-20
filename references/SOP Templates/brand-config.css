@@ -1,0 +1,410 @@
+/*
+ * ══════════════════════════════════════════════════════════════
+ *  BRAND CONFIGURATION — Dev Labs Template System
+ * ══════════════════════════════════════════════════════════════
+ *
+ *  HOW TO USE:
+ *  1. Add <link rel="stylesheet" href="brand-config.css"> AFTER
+ *     the <style> block in any template
+ *  2. Add a data-brand attribute to <html>:
+ *     <html lang="en" data-brand="devlabs">
+ *  3. The brand preset overrides the template's default :root vars
+ *
+ *  AVAILABLE PRESETS:
+ *    devlabs      — Dev Labs default (violet + teal)
+ *    midnight     — Deep navy + electric blue
+ *    ember        — Charcoal + warm orange/red
+ *    forest       — Dark green + emerald accents
+ *    slate        — Neutral gray + indigo
+ *    sunrise      — Warm cream + coral + gold
+ *    arctic       — Cool white + ice blue
+ *    custom       — Empty preset for client branding
+ *
+ *  VARIABLE MAP:
+ *  ┌─────────────────────┬──────────────────────────────────┐
+ *  │ Variable            │ What it controls                 │
+ *  ├─────────────────────┼──────────────────────────────────┤
+ *  │ --brand-primary     │ Main accent (buttons, numbers,   │
+ *  │                     │ active states, links)            │
+ *  │ --brand-primary-lt  │ Lighter tint (hover states,      │
+ *  │                     │ sidebar labels)                  │
+ *  │ --brand-primary-bg  │ Subtle background tint           │
+ *  │ --brand-primary-bdr │ Border for primary-bg elements   │
+ *  │ --brand-secondary   │ Secondary accent (gradients,     │
+ *  │                     │ alternate highlights)            │
+ *  │ --brand-secondary-bg│ Subtle secondary background      │
+ *  │ --brand-secondary-bdr│ Border for secondary-bg         │
+ *  │ --brand-sidebar     │ Sidebar background color         │
+ *  │ --brand-sidebar-hov │ Sidebar hover state              │
+ *  │ --brand-surface     │ Page background                  │
+ *  │ --brand-card        │ Card/raised surface background   │
+ *  │ --brand-text        │ Primary text color               │
+ *  │ --brand-text-mid    │ Secondary/body text              │
+ *  │ --brand-text-muted  │ Tertiary/muted text              │
+ *  │ --brand-border      │ Default border color             │
+ *  │ --brand-border-lt   │ Subtle/light border              │
+ *  │ --brand-success     │ Success states (green)           │
+ *  │ --brand-success-bg  │ Success background               │
+ *  │ --brand-warn        │ Warning states (amber)           │
+ *  │ --brand-warn-bg     │ Warning background               │
+ *  │ --brand-danger      │ Danger/error states (red)        │
+ *  │ --brand-danger-bg   │ Danger background                │
+ *  │ --brand-info        │ Info states (blue)               │
+ *  │ --brand-info-bg     │ Info background                  │
+ *  └─────────────────────┴──────────────────────────────────┘
+ *
+ *  GRADIENT:
+ *  Templates using gradients (modern minimal family) use:
+ *    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+ *  Change --brand-primary and --brand-secondary to rebrand all gradients.
+ *
+ * ══════════════════════════════════════════════════════════════
+ */
+
+/* ─── PRESET: Dev Labs (Default) ─── */
+[data-brand="devlabs"] {
+  --brand-primary: #7c3aed;
+  --brand-primary-lt: #a78bfa;
+  --brand-primary-bg: #f5f3ff;
+  --brand-primary-bdr: #ede9fe;
+  --brand-secondary: #0d9488;
+  --brand-secondary-bg: #f0fdfa;
+  --brand-secondary-bdr: #ccfbf1;
+  --brand-sidebar: #171717;
+  --brand-sidebar-hov: #262626;
+  --brand-surface: #fafafa;
+  --brand-card: #ffffff;
+  --brand-text: #171717;
+  --brand-text-mid: #525252;
+  --brand-text-muted: #a3a3a3;
+  --brand-border: #e5e5e5;
+  --brand-border-lt: #f0f0f0;
+  --brand-success: #16a34a;
+  --brand-success-bg: #f0fdf4;
+  --brand-warn: #d97706;
+  --brand-warn-bg: #fffbeb;
+  --brand-danger: #e11d48;
+  --brand-danger-bg: #fff1f2;
+  --brand-info: #2563eb;
+  --brand-info-bg: #eff6ff;
+}
+
+/* ─── PRESET: Midnight ─── */
+[data-brand="midnight"] {
+  --brand-primary: #3b82f6;
+  --brand-primary-lt: #60a5fa;
+  --brand-primary-bg: #eff6ff;
+  --brand-primary-bdr: #dbeafe;
+  --brand-secondary: #8b5cf6;
+  --brand-secondary-bg: #f5f3ff;
+  --brand-secondary-bdr: #ede9fe;
+  --brand-sidebar: #0f172a;
+  --brand-sidebar-hov: #1e293b;
+  --brand-surface: #f8fafc;
+  --brand-card: #ffffff;
+  --brand-text: #0f172a;
+  --brand-text-mid: #475569;
+  --brand-text-muted: #94a3b8;
+  --brand-border: #e2e8f0;
+  --brand-border-lt: #f1f5f9;
+  --brand-success: #22c55e;
+  --brand-success-bg: #f0fdf4;
+  --brand-warn: #eab308;
+  --brand-warn-bg: #fefce8;
+  --brand-danger: #ef4444;
+  --brand-danger-bg: #fef2f2;
+  --brand-info: #06b6d4;
+  --brand-info-bg: #ecfeff;
+}
+
+/* ─── PRESET: Ember ─── */
+[data-brand="ember"] {
+  --brand-primary: #ea580c;
+  --brand-primary-lt: #fb923c;
+  --brand-primary-bg: #fff7ed;
+  --brand-primary-bdr: #fed7aa;
+  --brand-secondary: #dc2626;
+  --brand-secondary-bg: #fef2f2;
+  --brand-secondary-bdr: #fecaca;
+  --brand-sidebar: #1c1917;
+  --brand-sidebar-hov: #292524;
+  --brand-surface: #fafaf9;
+  --brand-card: #ffffff;
+  --brand-text: #1c1917;
+  --brand-text-mid: #57534e;
+  --brand-text-muted: #a8a29e;
+  --brand-border: #e7e5e4;
+  --brand-border-lt: #f5f5f4;
+  --brand-success: #16a34a;
+  --brand-success-bg: #f0fdf4;
+  --brand-warn: #ca8a04;
+  --brand-warn-bg: #fefce8;
+  --brand-danger: #dc2626;
+  --brand-danger-bg: #fef2f2;
+  --brand-info: #2563eb;
+  --brand-info-bg: #eff6ff;
+}
+
+/* ─── PRESET: Forest ─── */
+[data-brand="forest"] {
+  --brand-primary: #059669;
+  --brand-primary-lt: #34d399;
+  --brand-primary-bg: #ecfdf5;
+  --brand-primary-bdr: #a7f3d0;
+  --brand-secondary: #0d9488;
+  --brand-secondary-bg: #f0fdfa;
+  --brand-secondary-bdr: #ccfbf1;
+  --brand-sidebar: #052e16;
+  --brand-sidebar-hov: #14532d;
+  --brand-surface: #f8fdf9;
+  --brand-card: #ffffff;
+  --brand-text: #052e16;
+  --brand-text-mid: #365314;
+  --brand-text-muted: #84cc16;
+  --brand-border: #d9f99d;
+  --brand-border-lt: #ecfccb;
+  --brand-success: #16a34a;
+  --brand-success-bg: #f0fdf4;
+  --brand-warn: #d97706;
+  --brand-warn-bg: #fffbeb;
+  --brand-danger: #dc2626;
+  --brand-danger-bg: #fef2f2;
+  --brand-info: #0891b2;
+  --brand-info-bg: #ecfeff;
+}
+
+/* ─── PRESET: Slate ─── */
+[data-brand="slate"] {
+  --brand-primary: #4f46e5;
+  --brand-primary-lt: #818cf8;
+  --brand-primary-bg: #eef2ff;
+  --brand-primary-bdr: #e0e7ff;
+  --brand-secondary: #6366f1;
+  --brand-secondary-bg: #eef2ff;
+  --brand-secondary-bdr: #e0e7ff;
+  --brand-sidebar: #1e1b4b;
+  --brand-sidebar-hov: #312e81;
+  --brand-surface: #fafafa;
+  --brand-card: #ffffff;
+  --brand-text: #1e1b4b;
+  --brand-text-mid: #4b5563;
+  --brand-text-muted: #9ca3af;
+  --brand-border: #e5e7eb;
+  --brand-border-lt: #f3f4f6;
+  --brand-success: #10b981;
+  --brand-success-bg: #ecfdf5;
+  --brand-warn: #f59e0b;
+  --brand-warn-bg: #fffbeb;
+  --brand-danger: #ef4444;
+  --brand-danger-bg: #fef2f2;
+  --brand-info: #3b82f6;
+  --brand-info-bg: #eff6ff;
+}
+
+/* ─── PRESET: Sunrise ─── */
+[data-brand="sunrise"] {
+  --brand-primary: #e11d48;
+  --brand-primary-lt: #fb7185;
+  --brand-primary-bg: #fff1f2;
+  --brand-primary-bdr: #ffe4e6;
+  --brand-secondary: #d97706;
+  --brand-secondary-bg: #fffbeb;
+  --brand-secondary-bdr: #fef3c7;
+  --brand-sidebar: #1c1917;
+  --brand-sidebar-hov: #292524;
+  --brand-surface: #fffbeb;
+  --brand-card: #ffffff;
+  --brand-text: #1c1917;
+  --brand-text-mid: #57534e;
+  --brand-text-muted: #a8a29e;
+  --brand-border: #e7e5e4;
+  --brand-border-lt: #f5f5f4;
+  --brand-success: #16a34a;
+  --brand-success-bg: #f0fdf4;
+  --brand-warn: #d97706;
+  --brand-warn-bg: #fffbeb;
+  --brand-danger: #dc2626;
+  --brand-danger-bg: #fef2f2;
+  --brand-info: #2563eb;
+  --brand-info-bg: #eff6ff;
+}
+
+/* ─── PRESET: Arctic ─── */
+[data-brand="arctic"] {
+  --brand-primary: #0891b2;
+  --brand-primary-lt: #22d3ee;
+  --brand-primary-bg: #ecfeff;
+  --brand-primary-bdr: #a5f3fc;
+  --brand-secondary: #0ea5e9;
+  --brand-secondary-bg: #f0f9ff;
+  --brand-secondary-bdr: #bae6fd;
+  --brand-sidebar: #0c4a6e;
+  --brand-sidebar-hov: #075985;
+  --brand-surface: #f0f9ff;
+  --brand-card: #ffffff;
+  --brand-text: #0c4a6e;
+  --brand-text-mid: #475569;
+  --brand-text-muted: #94a3b8;
+  --brand-border: #e0f2fe;
+  --brand-border-lt: #f0f9ff;
+  --brand-success: #10b981;
+  --brand-success-bg: #ecfdf5;
+  --brand-warn: #f59e0b;
+  --brand-warn-bg: #fffbeb;
+  --brand-danger: #ef4444;
+  --brand-danger-bg: #fef2f2;
+  --brand-info: #6366f1;
+  --brand-info-bg: #eef2ff;
+}
+
+/* ─── PRESET: Tridorian ─── */
+[data-brand="tridorian"] {
+  --brand-primary: #00D26A;
+  --brand-primary-lt: #00FF89;
+  --brand-primary-bg: #f0fdf4;
+  --brand-primary-bdr: #bbf7d0;
+  --brand-secondary: #00BBFF;
+  --brand-secondary-bg: #ecfeff;
+  --brand-secondary-bdr: #a5f3fc;
+  --brand-sidebar: #111111;
+  --brand-sidebar-hov: #1d1d1d;
+  --brand-surface: #fafafa;
+  --brand-card: #ffffff;
+  --brand-text: #111111;
+  --brand-text-mid: #404040;
+  --brand-text-muted: #8a8a8a;
+  --brand-border: #e5e5e5;
+  --brand-border-lt: #f0f0f0;
+  --brand-success: #00D26A;
+  --brand-success-bg: #f0fdf4;
+  --brand-warn: #d97706;
+  --brand-warn-bg: #fffbeb;
+  --brand-danger: #e11d48;
+  --brand-danger-bg: #fff1f2;
+  --brand-info: #00BBFF;
+  --brand-info-bg: #ecfeff;
+}
+
+/* ─── PRESET: Custom (Client Branding) ─── */
+/*
+ * Copy this block and replace the values with client brand colors.
+ * Use a tool like https://uicolors.app to generate shade scales.
+ *
+ * [data-brand="clientname"] {
+ *   --brand-primary: #YOUR_PRIMARY;
+ *   --brand-primary-lt: #LIGHTER_TINT;
+ *   --brand-primary-bg: #VERY_LIGHT_BG;
+ *   --brand-primary-bdr: #LIGHT_BORDER;
+ *   --brand-secondary: #YOUR_SECONDARY;
+ *   --brand-secondary-bg: #SECONDARY_BG;
+ *   --brand-secondary-bdr: #SECONDARY_BORDER;
+ *   --brand-sidebar: #DARK_BG;
+ *   --brand-sidebar-hov: #SLIGHTLY_LIGHTER;
+ *   --brand-surface: #PAGE_BG;
+ *   --brand-card: #ffffff;
+ *   --brand-text: #DARKEST_TEXT;
+ *   --brand-text-mid: #BODY_TEXT;
+ *   --brand-text-muted: #TERTIARY_TEXT;
+ *   --brand-border: #DEFAULT_BORDER;
+ *   --brand-border-lt: #SUBTLE_BORDER;
+ *   --brand-success: #16a34a;
+ *   --brand-success-bg: #f0fdf4;
+ *   --brand-warn: #d97706;
+ *   --brand-warn-bg: #fffbeb;
+ *   --brand-danger: #e11d48;
+ *   --brand-danger-bg: #fff1f2;
+ *   --brand-info: #2563eb;
+ *   --brand-info-bg: #eff6ff;
+ * }
+ */
+
+
+/* ══════════════════════════════════════════════════════════════
+ *  VARIABLE BRIDGE
+ * ══════════════════════════════════════════════════════════════
+ *  Maps --brand-* variables to each template family's native
+ *  variable names. This lets brand-config.css work with ALL
+ *  templates without modifying any template file.
+ * ══════════════════════════════════════════════════════════════ */
+
+/* ─── Modern Minimal family (meeting recap, daily plans, strategy) ─── */
+[data-brand] {
+  --violet: var(--brand-primary);
+  --violet-light: var(--brand-primary-lt);
+  --violet-bg: var(--brand-primary-bg);
+  --violet-border: var(--brand-primary-bdr);
+  --teal: var(--brand-secondary);
+  --teal-bg: var(--brand-secondary-bg);
+  --teal-border: var(--brand-secondary-bdr);
+  --sidebar-bg: var(--brand-sidebar);
+  --sidebar-hover: var(--brand-sidebar-hov);
+  --bg: var(--brand-surface);
+  --surface: var(--brand-card);
+  --surface-raised: var(--brand-card);
+  --surface-hover: var(--brand-border-lt);
+  --text-primary: var(--brand-text);
+  --text-secondary: var(--brand-text-mid);
+  --text-tertiary: var(--brand-text-muted);
+  --border: var(--brand-border);
+  --border-subtle: var(--brand-border-lt);
+  --rose: var(--brand-danger);
+  --rose-bg: var(--brand-danger-bg);
+  --amber: var(--brand-warn);
+  --amber-bg: var(--brand-warn-bg);
+  --blue: var(--brand-info);
+  --blue-bg: var(--brand-info-bg);
+  --green: var(--brand-success);
+  --green-bg: var(--brand-success-bg);
+}
+
+/* ─── Playbook family (original BDR playbook style) ─── */
+[data-brand] {
+  --navy: var(--brand-sidebar);
+  --navy-light: var(--brand-sidebar-hov);
+  --accent: var(--brand-primary);
+  --accent-light: var(--brand-primary-lt);
+  --accent-bg: var(--brand-primary-bg);
+  --accent-border: var(--brand-primary-bdr);
+  --light-bg: var(--brand-surface);
+  --dark-text: var(--brand-text);
+  --mid-text: var(--brand-text-mid);
+  --light-text: var(--brand-text-muted);
+  --success: var(--brand-success);
+  --success-bg: var(--brand-success-bg);
+  --warn: var(--brand-warn);
+  --warn-bg: var(--brand-warn-bg);
+  --danger: var(--brand-danger);
+  --danger-bg: var(--brand-danger-bg);
+  --emerald: var(--brand-secondary);
+  --emerald-bg: var(--brand-secondary-bg);
+}
+
+/* ─── Proposal/SOW family ─── */
+[data-brand] {
+  --charcoal: var(--brand-sidebar);
+  --charcoal-light: var(--brand-sidebar-hov);
+  --gold: var(--brand-primary);
+  --gold-light: var(--brand-primary-lt);
+  --gold-muted: var(--brand-primary-bg);
+  --gold-border: var(--brand-primary-bdr);
+  --cream: var(--brand-surface);
+  --warm-gray: var(--brand-surface);
+  --body-text: var(--brand-text-mid);
+  --muted-text: var(--brand-text-muted);
+}
+
+/* ─── Technical Docs family ─── */
+[data-brand] {
+  --ink: var(--brand-sidebar);
+  --ink-light: var(--brand-sidebar-hov);
+  --cyan: var(--brand-primary);
+  --cyan-light: var(--brand-primary-lt);
+  --cyan-bg: var(--brand-primary-bg);
+  --cyan-border: var(--brand-primary-bdr);
+  --purple: var(--brand-secondary);
+  --purple-bg: var(--brand-secondary-bg);
+  --purple-border: var(--brand-secondary-bdr);
+  --slate-700: var(--brand-text-mid);
+  --slate-500: var(--brand-text-muted);
+  --slate-50: var(--brand-surface);
+}

@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand Configuration Reference — Dev Labs Templates</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', -apple-system, sans-serif;
+    background: #fafafa;
+    color: #171717;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-header {
+    background: #171717;
+    padding: 48px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: '';
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
+  }
+  .page-header::after {
+    content: '';
+    position: absolute;
+    bottom: -200px; left: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(13,148,136,0.08) 0%, transparent 70%);
+  }
+  .page-header h1 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    background: linear-gradient(135deg, #fff, #e5e5e5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+  }
+  .page-header p {
+    color: rgba(255,255,255,0.4);
+    font-size: 15px;
+    margin-top: 8px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  .instructions {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 40px;
+  }
+  .instructions h2 {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+  }
+  .instructions code {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    background: #f5f3ff;
+    border: 1px solid #ede9fe;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #7c3aed;
+  }
+  .instructions pre {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    background: #171717;
+    color: #e5e5e5;
+    padding: 18px 22px;
+    border-radius: 8px;
+    margin: 14px 0;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+  .instructions pre .comment { color: #6b7280; }
+  .instructions pre .tag { color: #60a5fa; }
+  .instructions pre .attr { color: #a78bfa; }
+  .instructions pre .val { color: #34d399; }
+  .instructions ol {
+    margin: 12px 0;
+    padding-left: 20px;
+    font-size: 14px;
+    color: #525252;
+    line-height: 1.8;
+  }
+  .instructions ol li { margin-bottom: 4px; }
+
+  h2.section-heading {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    margin: 40px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2.section-heading::before {
+    content: '';
+    width: 4px;
+    height: 22px;
+    background: linear-gradient(180deg, #7c3aed, #0d9488);
+    border-radius: 2px;
+  }
+
+  /* ─── BRAND PRESET CARD ─── */
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+  }
+  .preset-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+  .preset-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+  }
+  .preset-top {
+    height: 8px;
+  }
+  .preset-header {
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .preset-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .preset-header code {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    background: #f5f5f5;
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: #525252;
+  }
+  .preset-body {
+    padding: 18px 22px;
+  }
+
+  /* Color swatches */
+  .swatch-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .swatch-group {
+    flex: 1;
+  }
+  .swatch-group .swatch-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #a3a3a3;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .swatch-strip {
+    display: flex;
+    border-radius: 6px;
+    overflow: hidden;
+    height: 32px;
+  }
+  .swatch {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  /* Sample components */
+  .preset-sample {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .sample-sidebar {
+    width: 60px;
+    border-radius: 6px;
+    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .sample-nav-item {
+    height: 4px;
+    border-radius: 2px;
+    opacity: 0.3;
+  }
+  .sample-nav-item.active { opacity: 1; }
+  .sample-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sample-metric-row {
+    display: flex;
+    gap: 6px;
+  }
+  .sample-metric {
+    flex: 1;
+    border-radius: 6px;
+    border: 1px solid;
+    padding: 6px;
+    text-align: center;
+  }
+  .sample-metric .val {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .sample-metric .lbl {
+    font-size: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 1px;
+  }
+  .sample-info {
+    border-radius: 6px;
+    padding: 6px 8px;
+    border-left: 3px solid;
+    font-size: 8px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .sample-btn {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    width: fit-content;
+  }
+
+  /* ─── TEMPLATE COMPATIBILITY ─── */
+  .compat-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 13px;
+    margin: 16px 0;
+  }
+  .compat-table thead th {
+    background: #fafafa;
+    color: #a3a3a3;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .compat-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #525252;
+    vertical-align: top;
+  }
+  .compat-table tbody tr:last-child td { border-bottom: none; }
+  .compat-table tbody tr:hover { background: #fafafa; }
+  .compat-table .check {
+    color: #16a34a;
+    font-weight: 700;
+  }
+
+  @media (max-width: 768px) {
+    .preset-grid { grid-template-columns: 1fr; }
+    .page-header { padding: 32px 20px; }
+    .page-header h1 { font-size: 28px; }
+    .container { padding: 24px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Brand Configuration Reference</h1>
+  <p>7 preset themes + custom branding for the entire Dev Labs template system</p>
+</div>
+
+<div class="container">
+
+  <!-- ═══ INSTRUCTIONS ═══ -->
+  <div class="instructions">
+    <h2>How to Brand Any Template</h2>
+    <ol>
+      <li>Add the <code>brand-config.css</code> stylesheet link <strong>after</strong> the template's <code>&lt;style&gt;</code> block</li>
+      <li>Add a <code>data-brand</code> attribute to the <code>&lt;html&gt;</code> tag</li>
+      <li>Done. Every component in the template inherits the new brand colors.</li>
+    </ol>
+    <pre><span class="tag">&lt;html</span> <span class="attr">lang</span>=<span class="val">"en"</span> <span class="attr">data-brand</span>=<span class="val">"midnight"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;head&gt;</span>
+  <span class="tag">&lt;style&gt;</span>
+    <span class="comment">/* ... template's original styles ... */</span>
+  <span class="tag">&lt;/style&gt;</span>
+  <span class="comment">&lt;!-- Brand override AFTER the style block --&gt;</span>
+  <span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"stylesheet"</span> <span class="attr">href</span>=<span class="val">"brand-config.css"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;/head&gt;</span></pre>
+    <p style="font-size:13px; color:#525252; margin-top:8px;">The <code>brand-config.css</code> file contains a <strong>variable bridge</strong> that maps generic <code>--brand-*</code> names to each template family's native variable names (<code>--violet</code>, <code>--navy</code>, <code>--gold</code>, <code>--cyan</code>, etc.). This means one brand preset works across all 8 templates without any template modifications.</p>
+  </div>
+
+  <!-- ═══ PRESET GALLERY ═══ -->
+  <h2 class="section-heading">Brand Presets</h2>
+
+  <div class="preset-grid">
+
+    <!-- Dev Labs -->
+    <div class="preset-card">
+      <div class="preset-top" style="background: linear-gradient(90deg, #7c3aed, #0d9488);"></div>
+      <div class="preset-header">
+        <h3>Dev Labs</h3>
+        <code>data-brand="devlabs"</code>
+      </div>
+      <div class="preset-body">
+        <div class="swatch-row">
+          <div class="swatch-group">
+            <div class="swatch-label">Primary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#7c3aed; color:white;">#7c3aed</div>
+              <div class="swatch" style="background:#a78bfa; color:white;">#a78bfa</div>
+              <div class="swatch" style="background:#f5f3ff; color:#7c3aed;">#f5f3ff</div>
+            </div>
+          </div>
+          <div class="swatch-group">
+            <div class="swatch-label">Secondary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#0d9488; color:white;">#0d9488</div>
+              <div class="swatch" style="background:#f0fdfa; color:#0d9488;">#f0fdfa</div>
+            </div>
+          </div>
+        </div>
+        <div class="swatch-row">
+          <div class="swatch-group">
+            <div class="swatch-label">Sidebar &amp; Text</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#171717; color:white;">sidebar</div>
+              <div class="swatch" style="background:#171717; color:white;">text</div>
+              <div class="swatch" style="background:#525252; color:white;">mid</div>
+              <div class="swatch" style="background:#a3a3a3; color:white;">muted</div>
+              <div class="swatch" style="background:#fafafa; color:#171717;">surface</div>
+            </div>
+          </div>
+        </div>
+        <div class="preset-sample">
+          <div class="sample-sidebar" style="background: #171717;">
+            <div class="sample-nav-item active" style="background: #7c3aed;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+          </div>
+          <div class="sample-content">
+            <div class="sample-metric-row">
+              <div class="sample-metric" style="border-color: #e5e5e5;">
+                <div class="val" style="background: linear-gradient(135deg,#7c3aed,#0d9488); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">42%</div>
+                <div class="lbl" style="color:#a3a3a3;">Metric</div>
+              </div>
+              <div class="sample-metric" style="border-color: #e5e5e5;">
+                <div class="val" style="background: linear-gradient(135deg,#7c3aed,#0d9488); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">$85K</div>
+                <div class="lbl" style="color:#a3a3a3;">Pipeline</div>
+              </div>
+            </div>
+            <div class="sample-info" style="background: #f5f3ff; border-color: #7c3aed; color: #7c3aed;">Info callout component</div>
+            <div class="sample-btn" style="background: linear-gradient(135deg,#7c3aed,#0d9488);">Action Button</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Midnight -->
+    <div class="preset-card">
+      <div class="preset-top" style="background: linear-gradient(90deg, #3b82f6, #8b5cf6);"></div>
+      <div class="preset-header">
+        <h3>Midnight</h3>
+        <code>data-brand="midnight"</code>
+      </div>
+      <div class="preset-body">
+        <div class="swatch-row">
+          <div class="swatch-group">
+            <div class="swatch-label">Primary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#3b82f6; color:white;">#3b82f6</div>
+              <div class="swatch" style="background:#60a5fa; color:white;">#60a5fa</div>
+              <div class="swatch" style="background:#eff6ff; color:#3b82f6;">#eff6ff</div>
+            </div>
+          </div>
+          <div class="swatch-group">
+            <div class="swatch-label">Secondary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#8b5cf6; color:white;">#8b5cf6</div>
+              <div class="swatch" style="background:#f5f3ff; color:#8b5cf6;">#f5f3ff</div>
+            </div>
+          </div>
+        </div>
+        <div class="preset-sample">
+          <div class="sample-sidebar" style="background: #0f172a;">
+            <div class="sample-nav-item active" style="background: #3b82f6;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+          </div>
+          <div class="sample-content">
+            <div class="sample-metric-row">
+              <div class="sample-metric" style="border-color: #e2e8f0;">
+                <div class="val" style="background: linear-gradient(135deg,#3b82f6,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">42%</div>
+                <div class="lbl" style="color:#94a3b8;">Metric</div>
+              </div>
+              <div class="sample-metric" style="border-color: #e2e8f0;">
+                <div class="val" style="background: linear-gradient(135deg,#3b82f6,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">$85K</div>
+                <div class="lbl" style="color:#94a3b8;">Pipeline</div>
+              </div>
+            </div>
+            <div class="sample-info" style="background: #eff6ff; border-color: #3b82f6; color: #3b82f6;">Info callout component</div>
+            <div class="sample-btn" style="background: linear-gradient(135deg,#3b82f6,#8b5cf6);">Action Button</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ember -->
+    <div class="preset-card">
+      <div class="preset-top" style="background: linear-gradient(90deg, #ea580c, #dc2626);"></div>
+      <div class="preset-header">
+        <h3>Ember</h3>
+        <code>data-brand="ember"</code>
+      </div>
+      <div class="preset-body">
+        <div class="swatch-row">
+          <div class="swatch-group">
+            <div class="swatch-label">Primary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#ea580c; color:white;">#ea580c</div>
+              <div class="swatch" style="background:#fb923c; color:white;">#fb923c</div>
+              <div class="swatch" style="background:#fff7ed; color:#ea580c;">#fff7ed</div>
+            </div>
+          </div>
+          <div class="swatch-group">
+            <div class="swatch-label">Secondary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#dc2626; color:white;">#dc2626</div>
+              <div class="swatch" style="background:#fef2f2; color:#dc2626;">#fef2f2</div>
+            </div>
+          </div>
+        </div>
+        <div class="preset-sample">
+          <div class="sample-sidebar" style="background: #1c1917;">
+            <div class="sample-nav-item active" style="background: #ea580c;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+          </div>
+          <div class="sample-content">
+            <div class="sample-metric-row">
+              <div class="sample-metric" style="border-color: #e7e5e4;">
+                <div class="val" style="background: linear-gradient(135deg,#ea580c,#dc2626); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">42%</div>
+                <div class="lbl" style="color:#a8a29e;">Metric</div>
+              </div>
+              <div class="sample-metric" style="border-color: #e7e5e4;">
+                <div class="val" style="background: linear-gradient(135deg,#ea580c,#dc2626); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">$85K</div>
+                <div class="lbl" style="color:#a8a29e;">Pipeline</div>
+              </div>
+            </div>
+            <div class="sample-info" style="background: #fff7ed; border-color: #ea580c; color: #ea580c;">Info callout component</div>
+            <div class="sample-btn" style="background: linear-gradient(135deg,#ea580c,#dc2626);">Action Button</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forest -->
+    <div class="preset-card">
+      <div class="preset-top" style="background: linear-gradient(90deg, #059669, #0d9488);"></div>
+      <div class="preset-header">
+        <h3>Forest</h3>
+        <code>data-brand="forest"</code>
+      </div>
+      <div class="preset-body">
+        <div class="swatch-row">
+          <div class="swatch-group">
+            <div class="swatch-label">Primary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#059669; color:white;">#059669</div>
+              <div class="swatch" style="background:#34d399; color:white;">#34d399</div>
+              <div class="swatch" style="background:#ecfdf5; color:#059669;">#ecfdf5</div>
+            </div>
+          </div>
+          <div class="swatch-group">
+            <div class="swatch-label">Secondary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#0d9488; color:white;">#0d9488</div>
+              <div class="swatch" style="background:#f0fdfa; color:#0d9488;">#f0fdfa</div>
+            </div>
+          </div>
+        </div>
+        <div class="preset-sample">
+          <div class="sample-sidebar" style="background: #052e16;">
+            <div class="sample-nav-item active" style="background: #059669;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+          </div>
+          <div class="sample-content">
+            <div class="sample-metric-row">
+              <div class="sample-metric" style="border-color: #d9f99d;">
+                <div class="val" style="background: linear-gradient(135deg,#059669,#0d9488); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">42%</div>
+                <div class="lbl" style="color:#84cc16;">Metric</div>
+              </div>
+              <div class="sample-metric" style="border-color: #d9f99d;">
+                <div class="val" style="background: linear-gradient(135deg,#059669,#0d9488); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">$85K</div>
+                <div class="lbl" style="color:#84cc16;">Pipeline</div>
+              </div>
+            </div>
+            <div class="sample-info" style="background: #ecfdf5; border-color: #059669; color: #059669;">Info callout component</div>
+            <div class="sample-btn" style="background: linear-gradient(135deg,#059669,#0d9488);">Action Button</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slate -->
+    <div class="preset-card">
+      <div class="preset-top" style="background: linear-gradient(90deg, #4f46e5, #6366f1);"></div>
+      <div class="preset-header">
+        <h3>Slate</h3>
+        <code>data-brand="slate"</code>
+      </div>
+      <div class="preset-body">
+        <div class="swatch-row">
+          <div class="swatch-group">
+            <div class="swatch-label">Primary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#4f46e5; color:white;">#4f46e5</div>
+              <div class="swatch" style="background:#818cf8; color:white;">#818cf8</div>
+              <div class="swatch" style="background:#eef2ff; color:#4f46e5;">#eef2ff</div>
+            </div>
+          </div>
+          <div class="swatch-group">
+            <div class="swatch-label">Secondary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#6366f1; color:white;">#6366f1</div>
+              <div class="swatch" style="background:#eef2ff; color:#6366f1;">#eef2ff</div>
+            </div>
+          </div>
+        </div>
+        <div class="preset-sample">
+          <div class="sample-sidebar" style="background: #1e1b4b;">
+            <div class="sample-nav-item active" style="background: #4f46e5;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+          </div>
+          <div class="sample-content">
+            <div class="sample-metric-row">
+              <div class="sample-metric" style="border-color: #e5e7eb;">
+                <div class="val" style="background: linear-gradient(135deg,#4f46e5,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">42%</div>
+                <div class="lbl" style="color:#9ca3af;">Metric</div>
+              </div>
+              <div class="sample-metric" style="border-color: #e5e7eb;">
+                <div class="val" style="background: linear-gradient(135deg,#4f46e5,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">$85K</div>
+                <div class="lbl" style="color:#9ca3af;">Pipeline</div>
+              </div>
+            </div>
+            <div class="sample-info" style="background: #eef2ff; border-color: #4f46e5; color: #4f46e5;">Info callout component</div>
+            <div class="sample-btn" style="background: linear-gradient(135deg,#4f46e5,#6366f1);">Action Button</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sunrise -->
+    <div class="preset-card">
+      <div class="preset-top" style="background: linear-gradient(90deg, #e11d48, #d97706);"></div>
+      <div class="preset-header">
+        <h3>Sunrise</h3>
+        <code>data-brand="sunrise"</code>
+      </div>
+      <div class="preset-body">
+        <div class="swatch-row">
+          <div class="swatch-group">
+            <div class="swatch-label">Primary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#e11d48; color:white;">#e11d48</div>
+              <div class="swatch" style="background:#fb7185; color:white;">#fb7185</div>
+              <div class="swatch" style="background:#fff1f2; color:#e11d48;">#fff1f2</div>
+            </div>
+          </div>
+          <div class="swatch-group">
+            <div class="swatch-label">Secondary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#d97706; color:white;">#d97706</div>
+              <div class="swatch" style="background:#fffbeb; color:#d97706;">#fffbeb</div>
+            </div>
+          </div>
+        </div>
+        <div class="preset-sample">
+          <div class="sample-sidebar" style="background: #1c1917;">
+            <div class="sample-nav-item active" style="background: #e11d48;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+          </div>
+          <div class="sample-content">
+            <div class="sample-metric-row">
+              <div class="sample-metric" style="border-color: #e7e5e4;">
+                <div class="val" style="background: linear-gradient(135deg,#e11d48,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">42%</div>
+                <div class="lbl" style="color:#a8a29e;">Metric</div>
+              </div>
+              <div class="sample-metric" style="border-color: #e7e5e4;">
+                <div class="val" style="background: linear-gradient(135deg,#e11d48,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">$85K</div>
+                <div class="lbl" style="color:#a8a29e;">Pipeline</div>
+              </div>
+            </div>
+            <div class="sample-info" style="background: #fff1f2; border-color: #e11d48; color: #e11d48;">Info callout component</div>
+            <div class="sample-btn" style="background: linear-gradient(135deg,#e11d48,#d97706);">Action Button</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arctic -->
+    <div class="preset-card">
+      <div class="preset-top" style="background: linear-gradient(90deg, #0891b2, #0ea5e9);"></div>
+      <div class="preset-header">
+        <h3>Arctic</h3>
+        <code>data-brand="arctic"</code>
+      </div>
+      <div class="preset-body">
+        <div class="swatch-row">
+          <div class="swatch-group">
+            <div class="swatch-label">Primary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#0891b2; color:white;">#0891b2</div>
+              <div class="swatch" style="background:#22d3ee; color:white;">#22d3ee</div>
+              <div class="swatch" style="background:#ecfeff; color:#0891b2;">#ecfeff</div>
+            </div>
+          </div>
+          <div class="swatch-group">
+            <div class="swatch-label">Secondary</div>
+            <div class="swatch-strip">
+              <div class="swatch" style="background:#0ea5e9; color:white;">#0ea5e9</div>
+              <div class="swatch" style="background:#f0f9ff; color:#0ea5e9;">#f0f9ff</div>
+            </div>
+          </div>
+        </div>
+        <div class="preset-sample">
+          <div class="sample-sidebar" style="background: #0c4a6e;">
+            <div class="sample-nav-item active" style="background: #0891b2;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+            <div class="sample-nav-item" style="background: white;"></div>
+          </div>
+          <div class="sample-content">
+            <div class="sample-metric-row">
+              <div class="sample-metric" style="border-color: #e0f2fe;">
+                <div class="val" style="background: linear-gradient(135deg,#0891b2,#0ea5e9); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">42%</div>
+                <div class="lbl" style="color:#94a3b8;">Metric</div>
+              </div>
+              <div class="sample-metric" style="border-color: #e0f2fe;">
+                <div class="val" style="background: linear-gradient(135deg,#0891b2,#0ea5e9); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">$85K</div>
+                <div class="lbl" style="color:#94a3b8;">Pipeline</div>
+              </div>
+            </div>
+            <div class="sample-info" style="background: #ecfeff; border-color: #0891b2; color: #0891b2;">Info callout component</div>
+            <div class="sample-btn" style="background: linear-gradient(135deg,#0891b2,#0ea5e9);">Action Button</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ TEMPLATE COMPATIBILITY ═══ -->
+  <h2 class="section-heading">Template Compatibility</h2>
+
+  <table class="compat-table">
+    <thead>
+      <tr>
+        <th>Template</th>
+        <th>File</th>
+        <th>Native Variables</th>
+        <th>Brand Bridge</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Sales BDR Playbook</strong></td>
+        <td>sales-bdr-playbook.html</td>
+        <td>--navy, --accent, --emerald</td>
+        <td class="check">Mapped</td>
+      </tr>
+      <tr>
+        <td><strong>Proposal / SOW</strong></td>
+        <td>template-proposal-sow.html</td>
+        <td>--charcoal, --gold</td>
+        <td class="check">Mapped</td>
+      </tr>
+      <tr>
+        <td><strong>Technical Docs</strong></td>
+        <td>template-technical-docs.html</td>
+        <td>--ink, --cyan, --purple</td>
+        <td class="check">Mapped</td>
+      </tr>
+      <tr>
+        <td><strong>Strategy Brief</strong></td>
+        <td>template-modern-minimal.html</td>
+        <td>--violet, --teal</td>
+        <td class="check">Mapped</td>
+      </tr>
+      <tr>
+        <td><strong>Meeting Recap</strong></td>
+        <td>template-meeting-recap.html</td>
+        <td>--violet, --teal</td>
+        <td class="check">Mapped</td>
+      </tr>
+      <tr>
+        <td><strong>Daily Plan (Employee)</strong></td>
+        <td>template-daily-action-employee.html</td>
+        <td>--violet, --teal</td>
+        <td class="check">Mapped</td>
+      </tr>
+      <tr>
+        <td><strong>Daily Plan (Manager)</strong></td>
+        <td>template-daily-action-manager.html</td>
+        <td>--violet, --teal</td>
+        <td class="check">Mapped</td>
+      </tr>
+      <tr>
+        <td><strong>Daily Plan (Client)</strong></td>
+        <td>template-daily-action-client.html</td>
+        <td>--violet, --teal</td>
+        <td class="check">Mapped</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ═══ CUSTOM BRAND ═══ -->
+  <h2 class="section-heading">Creating a Custom Brand</h2>
+
+  <div class="instructions">
+    <h2>For Client-Specific Branding</h2>
+    <p style="font-size:14px; color:#525252; margin-bottom:12px;">Add a new block to <code>brand-config.css</code> with the client's brand colors. You need 5 core values &mdash; everything else derives from them.</p>
+    <pre><span class="comment">/* Minimum required: 5 colors */</span>
+[<span class="attr">data-brand</span>=<span class="val">"acme-corp"</span>] {
+  <span class="comment">/* 1. Primary brand color (hex from client brand guide) */</span>
+  --brand-primary: <span class="val">#2E5BFF</span>;
+  --brand-primary-lt: <span class="val">#6C8CFF</span>;   <span class="comment">/* 30% lighter */</span>
+  --brand-primary-bg: <span class="val">#EEF2FF</span>;   <span class="comment">/* 95% lighter */</span>
+  --brand-primary-bdr: <span class="val">#D6DEFF</span>;  <span class="comment">/* 85% lighter */</span>
+
+  <span class="comment">/* 2. Secondary accent (complement or analogous) */</span>
+  --brand-secondary: <span class="val">#00C48C</span>;
+  --brand-secondary-bg: <span class="val">#E6FFF6</span>;
+  --brand-secondary-bdr: <span class="val">#B3FFE0</span>;
+
+  <span class="comment">/* 3. Sidebar (usually darkest brand color or near-black) */</span>
+  --brand-sidebar: <span class="val">#0A1628</span>;
+  --brand-sidebar-hov: <span class="val">#152238</span>;
+
+  <span class="comment">/* 4. Surface (page background — keep very light) */</span>
+  --brand-surface: <span class="val">#F8FAFF</span>;
+  --brand-card: <span class="val">#FFFFFF</span>;
+
+  <span class="comment">/* 5. Text scale */</span>
+  --brand-text: <span class="val">#0A1628</span>;
+  --brand-text-mid: <span class="val">#4B5C7E</span>;
+  --brand-text-muted: <span class="val">#8E9BB7</span>;
+  --brand-border: <span class="val">#DDE3EF</span>;
+  --brand-border-lt: <span class="val">#EEF1F7</span>;
+
+  <span class="comment">/* Semantic colors (usually keep defaults) */</span>
+  --brand-success: <span class="val">#16a34a</span>;
+  --brand-success-bg: <span class="val">#f0fdf4</span>;
+  --brand-warn: <span class="val">#d97706</span>;
+  --brand-warn-bg: <span class="val">#fffbeb</span>;
+  --brand-danger: <span class="val">#e11d48</span>;
+  --brand-danger-bg: <span class="val">#fff1f2</span>;
+  --brand-info: <span class="val">#2563eb</span>;
+  --brand-info-bg: <span class="val">#eff6ff</span>;
+}</pre>
+    <p style="font-size:13px; color:#525252; margin-top:12px;"><strong>Quick method:</strong> Take the client's primary brand hex, paste it into <a href="https://uicolors.app" style="color:#7c3aed;">uicolors.app</a>, and use the generated 50/100/500/600 shades for bg/border/light/primary. Use the 900 shade for sidebar and text.</p>
+  </div>
+
+</div>
+
+</body>
+</html>

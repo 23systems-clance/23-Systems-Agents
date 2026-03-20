@@ -303,6 +303,27 @@ To customize appearance, edit `theme.css` in the project root (loaded after `glo
 
 Skills in `skills/` are activated by symlinking into `skills/active/`. Both `.pi/skills` and `.claude/skills` point to `skills/active/`. Scripts for command-type actions go in `cron/` and `triggers/`.
 
+## Technical Documentation
+
+Detailed architecture documentation lives in `docs/INDEX.md`. **Read that index first before exploring the codebase** — it routes you to the exact doc you need and dramatically reduces context window usage.
+
+| Doc | When to Read |
+|-----|-------------|
+| `docs/01-architecture.md` | Understanding system design and job lifecycle |
+| `docs/02-directory-structure.md` | Finding where code lives, managed vs user-editable |
+| `docs/03-database-schema.md` | Modifying database or understanding data models |
+| `docs/04-ai-agents.md` | Changing agent behavior, tools, or LLM providers |
+| `docs/05-skills.md` | Creating or modifying skills |
+| `docs/06-clusters.md` | Working with worker clusters or triggers |
+| `docs/07-configuration.md` | Editing prompts, crons, triggers |
+| `docs/08-api-auth.md` | API routes or authentication |
+| `docs/09-docker-deployment.md` | Deployment, CI/CD, containers |
+| `docs/10-template-system.md` | Branded HTML documents or templates |
+| `docs/11-chat-web-ui.md` | Web interface or chat system |
+| `docs/12-environment-variables.md` | Environment setup or debugging |
+
+Solved issues and debugging knowledge base: `references/solved/`
+
 ### Markdown includes and variables
 
 Config markdown files support includes and built-in variables (processed by the package's `render-md.js`):
