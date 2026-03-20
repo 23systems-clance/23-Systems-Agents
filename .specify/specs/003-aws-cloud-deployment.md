@@ -40,7 +40,7 @@ Deploy the 23 Systems Workforce agent to AWS with two environments: a lightweigh
 - Multi-region deployment or HA database
 - Kubernetes / EKS (overengineered for this workload)
 - Migrating off SQLite to RDS (unless production scale demands it)
-- Changing the thepopebot package internals (all changes are in the user project layer)
+- Changing the 23wf package internals (all changes are in the user project layer)
 - Staging/production database sync (they are independent environments)
 
 ---

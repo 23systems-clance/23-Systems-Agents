@@ -1,6 +1,6 @@
-import { withThepopebot } from 'thepopebot/config';
+import { with23WF } from '23wf/config';
 
-export default withThepopebot({
+export default with23WF({
   experimental: {
     serverActions: {
       allowedOrigins: [

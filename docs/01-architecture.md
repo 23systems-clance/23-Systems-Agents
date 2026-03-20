@@ -2,9 +2,9 @@
 
 ## System Identity
 
-- **Product**: 23 Systems Agent (branded deployment of [thepopebot](https://github.com/stephengpope/thepopebot))
+- **Product**: 23 Systems Agent (powered by [23WF](https://github.com/23systems/23wf))
 - **Core Pattern**: Two-layer autonomous AI agent with event-driven orchestration
-- **All business logic** lives in the `thepopebot` npm package. This project is a scaffolded shell — thin Next.js wiring, user-editable configuration, GitHub Actions workflows, and Docker files.
+- **All business logic** lives in the `23wf` npm package. This project is a scaffolded shell — thin Next.js wiring, user-editable configuration, GitHub Actions workflows, and Docker files.
 
 ## Two-Layer Architecture
 
@@ -44,7 +44,7 @@ The Next.js server that orchestrates everything:
 
 | Responsibility | Implementation |
 |---------------|----------------|
-| Web UI | React pages imported from `thepopebot/chat`, `thepopebot/auth/components`, etc. |
+| Web UI | React pages imported from `23wf/chat`, `23wf/auth/components`, etc. |
 | Chat | LangGraph agent with streaming responses via `/stream/chat` |
 | Cron scheduling | `node-cron` from `config/CRONS.json`, loaded at startup |
 | Webhook triggers | Middleware matches `config/TRIGGERS.json` watch paths |
@@ -117,6 +117,6 @@ Both cron jobs and webhook triggers share the same dispatch system with three ac
 
 1. **Git-backed auditability** — Every agent action is a commit, fully reversible via git
 2. **Managed vs user-editable separation** — `app/`, `.github/`, `docker/` are auto-synced; `config/`, `skills/`, `cron/` are user-owned
-3. **Self-modification** — Agent can modify its own config, skills, crons, and triggers through git PRs
+3. **Self-modification** — Agent can modify its own config, specialties, crons, and triggers through git PRs
 4. **Prefix-based secret isolation** — `AGENT_*` secrets filtered from LLM; `AGENT_LLM_*` accessible to LLM
 5. **Path resolution from project root** — All paths resolve from `process.cwd()`, enabling npm package to access user files

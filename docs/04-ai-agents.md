@@ -18,8 +18,8 @@ Built on **LangChain + LangGraph** with a `createReactAgent` pattern. Two agent 
 | `create_job` | Dispatch an autonomous Docker agent job |
 | `get_job_status` | Check status of running/queued jobs |
 | `get_system_technical_specs` | Retrieve system environment details |
-| `get_skill_building_guide` | Read the skill creation guide |
-| `get_skill_details` | Read a specific skill's SKILL.md |
+| `get_skill_building_guide` | Read the specialty creation guide |
+| `get_skill_details` | Read a specific specialty's SKILL.md |
 | Web search | Available for anthropic & openai providers (controlled by `WEB_SEARCH` env var) |
 | MCP tools | Dynamically loaded from `mcp-servers/` via `mcp-bridge.js` |
 
@@ -100,6 +100,6 @@ Config markdown files support:
 |--------|------------|
 | `{{ filepath.md }}` | Include another file (relative to project root, recursive with circular detection) |
 | `{{datetime}}` | Current ISO timestamp |
-| `{{skills}}` | Dynamic bullet list of active skill descriptions from `skills/active/*/SKILL.md` frontmatter |
+| `{{skills}}` | Dynamic bullet list of active specialty descriptions from `skills/active/*/SKILL.md` frontmatter |
 
 Processed by the package's `render-md.js` at runtime.

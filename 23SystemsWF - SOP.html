@@ -429,8 +429,8 @@
     <a href="#s7"><span class="num">7</span> Webhook Triggers</a>
     <a href="#s8"><span class="num">8</span> API Access</a>
     <div class="divider"></div>
-    <div class="group-label">Skills</div>
-    <a href="#s9"><span class="num">9</span> Skills Overview</a>
+    <div class="group-label">Specialties</div>
+    <a href="#s9"><span class="num">9</span> Specialties Overview</a>
     <a href="#s10"><span class="num">10</span> Brave Search</a>
     <a href="#s11"><span class="num">11</span> Browser Tools</a>
     <a href="#s12"><span class="num">12</span> NotebookLM</a>
@@ -466,7 +466,7 @@
   <div class="cover">
     <div class="doc-badge">Standard Operating Procedure</div>
     <h1>23 Systems Workforce Complete Operating Guide</h1>
-    <div class="subtitle">Everything you need to deploy, operate, and extend your autonomous AI agent. Covers architecture, job lifecycle, all skills, and administration.</div>
+    <div class="subtitle">Everything you need to deploy, operate, and extend your autonomous AI agent. Covers architecture, job lifecycle, all specialties, and administration.</div>
   </div>
 
   <!-- Content -->
@@ -478,7 +478,7 @@
         <div class="section-number">1</div>
         <h2>System Overview</h2>
       </div>
-      <p>23 Systems Workforce is an autonomous AI agent powered by the <code>thepopebot</code> npm package. It accepts tasks through a web chat UI, Telegram, cron schedules, webhooks, or direct API calls, and executes them using LLM-driven Docker containers that commit results as pull requests.</p>
+      <p>23 Systems Workforce is an autonomous AI agent powered by the <code>23wf</code> npm package. It accepts tasks through a web chat UI, Telegram, cron schedules, webhooks, or direct API calls, and executes them using LLM-driven Docker containers that commit results as pull requests.</p>
 
       <div class="sub-header">What 23 Systems Workforce Can Do</div>
       <ul>
@@ -541,7 +541,7 @@
         <li><strong>Job created</strong> — Event handler receives a task via chat, cron, trigger, or API and calls <code>createJob()</code></li>
         <li><strong>Branch pushed</strong> — A <code>job/&lt;uuid&gt;</code> branch is created on GitHub with <code>logs/&lt;uuid&gt;/job.md</code> containing the task prompt</li>
         <li><strong>Workflow triggers</strong> — GitHub Actions <code>run-job.yml</code> fires on the new branch</li>
-        <li><strong>Container runs</strong> — Docker agent clones the branch, loads personality from <code>config/SOUL.md</code>, executes the task with all active skills available</li>
+        <li><strong>Container runs</strong> — Docker agent clones the branch, loads personality from <code>config/SOUL.md</code>, executes the task with all active specialties available</li>
         <li><strong>PR created</strong> — Agent commits results and opens a pull request</li>
         <li><strong>Auto-merge</strong> — <code>auto-merge.yml</code> squash-merges the PR if all changed files fall within <code>ALLOWED_PATHS</code> (default: <code>/logs</code>)</li>
         <li><strong>Notification</strong> — Results are sent back to the web UI and Telegram</li>
@@ -569,7 +569,7 @@
       <div class="sub-header">Installation Steps</div>
       <ol class="steps">
         <li>Clone your 23 Systems Workforce repository and run <code>npm install</code></li>
-        <li>Run <code>npx thepopebot init</code> to scaffold the project structure</li>
+        <li>Run <code>npx 23wf init</code> to scaffold the project structure</li>
         <li>Copy <code>.env.example</code> to <code>.env</code> and fill in required values:
           <pre>APP_URL=https://your-domain.com
 AUTH_SECRET=&lt;auto-generated&gt;
@@ -644,15 +644,15 @@ ANTHROPIC_API_KEY=sk-ant-...</pre>
 
       <div class="sub-header">Via API</div>
       <pre>curl -X POST https://your-domain.com/api/create-job \
-  -H "x-api-key: tpb_your_api_key" \
+  -H "x-api-key: 23wf_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{"job": "Analyze the logs and write a summary report"}'</pre>
 
       <div class="sub-header">Writing Good Job Prompts</div>
       <ul>
         <li>Be specific about the desired output — "generate a podcast" vs "create something"</li>
-        <li>Reference skills by name when needed — "Use the brave-search skill to find..."</li>
-        <li>Include install steps for skills that need them — "Run <code>skills/notebooklm/install.sh</code> first"</li>
+        <li>Reference specialties by name when needed — "Use the brave-search specialty to find..."</li>
+        <li>Include install steps for specialties that need them — "Run <code>skills/notebooklm/install.sh</code> first"</li>
         <li>Specify where to save outputs — "Save the report to <code>logs/</code>"</li>
         <li>Break large tasks into sequential steps in your prompt</li>
       </ul>
@@ -769,21 +769,21 @@ ANTHROPIC_API_KEY=sk-ant-...</pre>
         </tbody>
       </table>
 
-      <p>API keys are generated in <strong>Settings &gt; Secrets</strong> in the web UI. Format: <code>tpb_</code> prefix + 64 hex characters. Keys are SHA-256 hashed in the database and verified with timing-safe comparison.</p>
+      <p>API keys are generated in <strong>Settings &gt; Secrets</strong> in the web UI. Format: <code>23wf_</code> prefix + 64 hex characters. Keys are SHA-256 hashed in the database and verified with timing-safe comparison.</p>
     </div>
 
-    <!-- ═══ SECTION 9: SKILLS OVERVIEW ═══ -->
+    <!-- ═══ SECTION 9: SPECIALTIES OVERVIEW ═══ -->
     <div class="section" id="s9">
       <div class="section-header">
         <div class="section-number">9</div>
-        <h2>Skills Overview</h2>
+        <h2>Specialties Overview</h2>
       </div>
-      <p>Skills are lightweight wrappers that extend agent capabilities. They live in <code>skills/&lt;skill-name&gt;/</code> and are activated by symlinking into <code>skills/active/</code>.</p>
+      <p>Specialties are lightweight wrappers that extend agent capabilities. They live in <code>skills/&lt;skill-name&gt;/</code> and are activated by symlinking into <code>skills/active/</code>.</p>
 
-      <div class="sub-header">Active Skills</div>
+      <div class="sub-header">Active Specialties</div>
       <table>
         <thead>
-          <tr><th>Skill</th><th>Description</th><th>Requires</th></tr>
+          <tr><th>Specialty</th><th>Description</th><th>Requires</th></tr>
         </thead>
         <tbody>
           <tr><td><strong>brave-search</strong></td><td>Web search and content extraction via Brave Search API</td><td><code>BRAVE_API_KEY</code></td></tr>
@@ -795,10 +795,10 @@ ANTHROPIC_API_KEY=sk-ant-...</pre>
         </tbody>
       </table>
 
-      <div class="sub-header">Available (Inactive) Skills</div>
+      <div class="sub-header">Available (Inactive) Specialties</div>
       <table>
         <thead>
-          <tr><th>Skill</th><th>Description</th><th>Requires</th></tr>
+          <tr><th>Specialty</th><th>Description</th><th>Requires</th></tr>
         </thead>
         <tbody>
           <tr><td><strong>google-docs</strong></td><td>Create/manage Google Docs via service account</td><td><code>GOOGLE_SERVICE_ACCOUNT_JSON</code>, <code>GOOGLE_SHARED_DRIVE_ID</code></td></tr>
@@ -808,10 +808,10 @@ ANTHROPIC_API_KEY=sk-ant-...</pre>
         </tbody>
       </table>
 
-      <div class="sub-header">Activating a Skill</div>
+      <div class="sub-header">Activating a Specialty</div>
       <pre>ln -s ../skill-name skills/active/skill-name</pre>
 
-      <div class="sub-header">Creating a New Skill</div>
+      <div class="sub-header">Creating a New Specialty</div>
       <ol class="steps">
         <li>Create directory: <code>skills/my-skill/</code></li>
         <li>Write <code>SKILL.md</code> with YAML frontmatter (<code>name</code>, <code>description</code>) and usage docs</li>
@@ -825,7 +825,7 @@ ANTHROPIC_API_KEY=sk-ant-...</pre>
     <div class="section" id="s10">
       <div class="section-header">
         <div class="section-number">10</div>
-        <h2>Skill: Brave Search</h2>
+        <h2>Specialty: Brave Search</h2>
       </div>
       <p>Web search and content extraction using the official Brave Search API. No browser required — lightweight and fast.</p>
 
@@ -834,7 +834,7 @@ ANTHROPIC_API_KEY=sk-ant-...</pre>
         <li>Create an account at <strong>api-dashboard.search.brave.com</strong></li>
         <li>Create a "Free AI" subscription (credit card required, not charged)</li>
         <li>Create an API key for the subscription</li>
-        <li>Store the key: <code>npx thepopebot set-agent-llm-secret BRAVE_API_KEY "your-key"</code></li>
+        <li>Store the key: <code>npx 23wf set-agent-llm-secret BRAVE_API_KEY "your-key"</code></li>
         <li>Install dependencies: <code>cd skills/brave-search && npm install</code></li>
       </ol>
 
@@ -872,7 +872,7 @@ skills/brave-search/content.js https://example.com/article</pre>
     <div class="section" id="s11">
       <div class="section-header">
         <div class="section-number">11</div>
-        <h2>Skill: Browser Tools</h2>
+        <h2>Specialty: Browser Tools</h2>
       </div>
       <p>Chrome DevTools Protocol automation for interacting with web pages, testing frontends, and scraping dynamic content.</p>
 
@@ -904,7 +904,7 @@ skills/brave-search/content.js https://example.com/article</pre>
     <div class="section" id="s12">
       <div class="section-header">
         <div class="section-number">12</div>
-        <h2>Skill: NotebookLM</h2>
+        <h2>Specialty: NotebookLM</h2>
       </div>
       <p>Full programmatic access to Google NotebookLM — create notebooks, add sources, chat with them, and generate artifacts like audio podcasts, videos, reports, quizzes, slide decks, infographics, and more.</p>
 
@@ -915,7 +915,7 @@ skills/brave-search/content.js https://example.com/article</pre>
         <li>Install Chromium: find the Playwright binary in the pipx venv and run <code>playwright install chromium</code></li>
         <li>Authenticate: <code>notebooklm login</code> (opens browser for Google sign-in)</li>
         <li>Verify: <code>notebooklm auth check --test</code></li>
-        <li>Store credential for Docker agent: <code>npx thepopebot set-agent-llm-secret NOTEBOOKLM_AUTH_JSON &lt; ~/.notebooklm/storage_state.json</code></li>
+        <li>Store credential for Docker agent: <code>npx 23wf set-agent-llm-secret NOTEBOOKLM_AUTH_JSON &lt; ~/.notebooklm/storage_state.json</code></li>
       </ol>
 
       <div class="info-box warning"><strong>Important:</strong> Always start job prompts with <code>skills/notebooklm/install.sh</code> — this installs Python and the CLI in the Docker container.</div>
@@ -1000,9 +1000,9 @@ notebooklm source add-research "topic" --from drive --import-all</pre>
     <div class="section" id="s13">
       <div class="section-header">
         <div class="section-number">13</div>
-        <h2>Skill: Google Drive &amp; Docs</h2>
+        <h2>Specialty: Google Drive &amp; Docs</h2>
       </div>
-      <p>Interact with Google Drive shared drives and create Google Docs using a service account. Both skills share the same credentials.</p>
+      <p>Interact with Google Drive shared drives and create Google Docs using a service account. Both specialties share the same credentials.</p>
 
       <div class="sub-header">Setup</div>
       <ol class="steps">
@@ -1010,8 +1010,8 @@ notebooklm source add-research "topic" --from drive --import-all</pre>
         <li>Download the JSON credentials file</li>
         <li>Share your Google Drive folder with the service account email</li>
         <li>Store credentials:
-          <pre>npx thepopebot set-agent-llm-secret GOOGLE_SERVICE_ACCOUNT_JSON &lt; credentials.json
-npx thepopebot set-agent-llm-secret GOOGLE_SHARED_DRIVE_ID "your-drive-id"</pre>
+          <pre>npx 23wf set-agent-llm-secret GOOGLE_SERVICE_ACCOUNT_JSON &lt; credentials.json
+npx 23wf set-agent-llm-secret GOOGLE_SHARED_DRIVE_ID "your-drive-id"</pre>
         </li>
         <li>Activate: <code>ln -s ../google-drive skills/active/google-drive</code> and <code>ln -s ../google-docs skills/active/google-docs</code></li>
       </ol>
@@ -1038,7 +1038,7 @@ skills/google-docs/create.sh &lt;title&gt; &lt;content&gt; &lt;parent_folder_id&
     <div class="section" id="s14">
       <div class="section-header">
         <div class="section-number">14</div>
-        <h2>Skill: YouTube Transcript</h2>
+        <h2>Specialty: YouTube Transcript</h2>
       </div>
       <p>Fetch transcripts from YouTube videos for summarization, analysis, or feeding into NotebookLM.</p>
 
@@ -1068,14 +1068,14 @@ skills/youtube-transcript/transcript.js "https://youtu.be/EBw7gsDPAYQ"</pre>
     <div class="section" id="s15">
       <div class="section-header">
         <div class="section-number">15</div>
-        <h2>Skill: KIE AI</h2>
+        <h2>Specialty: KIE AI</h2>
       </div>
       <p>Generate AI images and videos using the kie.ai API.</p>
 
       <div class="sub-header">Setup</div>
       <ol class="steps">
         <li>Get an API key from kie.ai</li>
-        <li>Store it: <code>npx thepopebot set-agent-llm-secret KIE_AI_API_KEY "your-key"</code></li>
+        <li>Store it: <code>npx 23wf set-agent-llm-secret KIE_AI_API_KEY "your-key"</code></li>
         <li>Activate: <code>ln -s ../kie-ai skills/active/kie-ai</code></li>
       </ol>
 
@@ -1110,7 +1110,7 @@ skills/youtube-transcript/transcript.js "https://youtu.be/EBw7gsDPAYQ"</pre>
     <div class="section" id="s16">
       <div class="section-header">
         <div class="section-number">16</div>
-        <h2>Skill: SOP Generator</h2>
+        <h2>Specialty: SOP Generator</h2>
       </div>
       <p>Generate professional, branded HTML SOP documents using the Dev Labs Playbook template — the same template used to create this document.</p>
 
@@ -1180,7 +1180,7 @@ skills/youtube-transcript/transcript.js "https://youtu.be/EBw7gsDPAYQ"</pre>
           <tr><td><code>config/JOB_AGENT.md</code></td><td>Runtime environment docs loaded into Docker agent</td></tr>
           <tr><td><code>config/JOB_SUMMARY.md</code></td><td>Prompt for summarizing completed jobs</td></tr>
           <tr><td><code>config/HEARTBEAT.md</code></td><td>Self-monitoring / heartbeat behavior</td></tr>
-          <tr><td><code>config/SKILL_BUILDING_GUIDE.md</code></td><td>Guide for creating new agent skills</td></tr>
+          <tr><td><code>config/SKILL_BUILDING_GUIDE.md</code></td><td>Guide for creating new agent specialties</td></tr>
           <tr><td><code>config/CRONS.json</code></td><td>Scheduled job definitions</td></tr>
           <tr><td><code>config/TRIGGERS.json</code></td><td>Webhook trigger definitions</td></tr>
         </tbody>
@@ -1195,7 +1195,7 @@ skills/youtube-transcript/transcript.js "https://youtu.be/EBw7gsDPAYQ"</pre>
         <tbody>
           <tr><td><code>{{ filepath.md }}</code></td><td>Include another markdown file (relative to project root)</td></tr>
           <tr><td><code>{{datetime}}</code></td><td>Current ISO timestamp</td></tr>
-          <tr><td><code>{{skills}}</code></td><td>Dynamic bullet list of active skill descriptions</td></tr>
+          <tr><td><code>{{skills}}</code></td><td>Dynamic bullet list of active specialty descriptions</td></tr>
         </tbody>
       </table>
 
@@ -1238,10 +1238,10 @@ skills/youtube-transcript/transcript.js "https://youtu.be/EBw7gsDPAYQ"</pre>
 
       <div class="sub-header">Managing Secrets</div>
       <pre># Set a secret (creates GitHub secret with AGENT_LLM_ prefix)
-npx thepopebot set-agent-llm-secret BRAVE_API_KEY "your-key"
+npx 23wf set-agent-llm-secret BRAVE_API_KEY "your-key"
 
 # Set a multi-line secret (pipe via stdin)
-npx thepopebot set-agent-llm-secret GOOGLE_CREDENTIALS &lt; credentials.json
+npx 23wf set-agent-llm-secret GOOGLE_CREDENTIALS &lt; credentials.json
 
 # List available secrets in a job
 skills/llm-secrets/llm-secrets.js
@@ -1285,8 +1285,8 @@ echo $BRAVE_API_KEY</pre>
             <td>Re-run <code>notebooklm login</code> locally and update the <code>NOTEBOOKLM_AUTH_JSON</code> secret.</td>
           </tr>
           <tr>
-            <td><strong>Skill not found in job</strong></td>
-            <td>Skill not activated</td>
+            <td><strong>Specialty not found in job</strong></td>
+            <td>Specialty not activated</td>
             <td>Verify symlink exists in <code>skills/active/</code>. Run <code>ls -la skills/active/</code>.</td>
           </tr>
           <tr>
@@ -1341,9 +1341,9 @@ echo $BRAVE_API_KEY</pre>
         <tbody>
           <tr><td><code>.env</code></td><td>API keys, tokens, local config (gitignored)</td></tr>
           <tr><td><code>config/</code></td><td>Agent personality, prompts, crons, triggers</td></tr>
-          <tr><td><code>skills/</code></td><td>All available skills</td></tr>
-          <tr><td><code>skills/active/</code></td><td>Symlinks to activated skills</td></tr>
-          <tr><td><code>data/thepopebot.sqlite</code></td><td>SQLite database</td></tr>
+          <tr><td><code>skills/</code></td><td>All available specialties</td></tr>
+          <tr><td><code>skills/active/</code></td><td>Symlinks to activated specialties</td></tr>
+          <tr><td><code>data/23wf.sqlite</code></td><td>SQLite database</td></tr>
           <tr><td><code>logs/</code></td><td>Per-job execution logs and outputs</td></tr>
           <tr><td><code>references/</code></td><td>SOP documents, brand templates</td></tr>
           <tr><td><code>CLAUDE.md</code></td><td>Full technical documentation (managed)</td></tr>
@@ -1361,22 +1361,22 @@ docker compose up -d
 # → Settings > Secrets in web UI
 
 # Set agent credential
-npx thepopebot set-agent-llm-secret KEY_NAME "value"
+npx 23wf set-agent-llm-secret KEY_NAME "value"
 
-# Activate a skill
+# Activate a specialty
 ln -s ../skill-name skills/active/skill-name
 
 # Check job status
-curl -H "x-api-key: tpb_..." https://your-domain.com/api/jobs/status
+curl -H "x-api-key: 23wf_..." https://your-domain.com/api/jobs/status
 
 # Create a job via API
 curl -X POST https://your-domain.com/api/create-job \
-  -H "x-api-key: tpb_..." \
+  -H "x-api-key: 23wf_..." \
   -H "Content-Type: application/json" \
   -d '{"job": "Your task description"}'
 
-# Upgrade thepopebot
-npx thepopebot upgrade</pre>
+# Upgrade 23wf
+npx 23wf upgrade</pre>
 
       <div class="sub-header">Required Environment Variables</div>
       <table>
@@ -1406,7 +1406,7 @@ npx thepopebot upgrade</pre>
       <div class="sub-header">How It Works</div>
       <ol class="steps">
         <li><strong>Index-first routing</strong> — <code>docs/INDEX.md</code> is a master table of contents. AI agents read the index (~30 lines), identify which doc is relevant, and read only that one doc.</li>
-        <li><strong>Self-contained docs</strong> — Each doc covers one domain (database, skills, deployment, etc.) and can be understood independently without reading other docs.</li>
+        <li><strong>Self-contained docs</strong> — Each doc covers one domain (database, specialties, deployment, etc.) and can be understood independently without reading other docs.</li>
         <li><strong>CLAUDE.md integration</strong> — A reference in <code>CLAUDE.md</code> directs agents to check <code>docs/INDEX.md</code> before exploring the codebase.</li>
         <li><strong>Constitution enforcement</strong> — <code>.specify/CONSTITUTION.md</code> requires documentation updates when architecture changes.</li>
       </ol>
@@ -1421,7 +1421,7 @@ npx thepopebot upgrade</pre>
           <tr><td>02</td><td><strong>Directory Structure</strong></td><td>Finding where code lives, managed vs user-editable</td></tr>
           <tr><td>03</td><td><strong>Database Schema</strong></td><td>Modifying database or understanding data models</td></tr>
           <tr><td>04</td><td><strong>AI Agents &amp; LLM Integration</strong></td><td>Changing agent behavior, tools, LLM providers</td></tr>
-          <tr><td>05</td><td><strong>Skills System</strong></td><td>Creating or modifying agent skills</td></tr>
+          <tr><td>05</td><td><strong>Specialties System</strong></td><td>Creating or modifying agent specialties</td></tr>
           <tr><td>06</td><td><strong>Clusters &amp; Workers</strong></td><td>Worker clusters, triggers, concurrency</td></tr>
           <tr><td>07</td><td><strong>Configuration Files</strong></td><td>Editing prompts, crons, triggers</td></tr>
           <tr><td>08</td><td><strong>API &amp; Authentication</strong></td><td>API routes or authentication</td></tr>
@@ -1450,7 +1450,7 @@ npx thepopebot upgrade</pre>
           <tr><td>New feature or subsystem added</td><td>Create new doc or update relevant existing doc</td></tr>
           <tr><td>Architecture change</td><td>Update <code>01-architecture.md</code> and affected docs</td></tr>
           <tr><td>Database schema change</td><td>Update <code>03-database-schema.md</code> after migration</td></tr>
-          <tr><td>New skill created</td><td>Update <code>05-skills.md</code></td></tr>
+          <tr><td>New specialty created</td><td>Update <code>05-skills.md</code></td></tr>
           <tr><td>Bug solved after investigation</td><td>Create <code>references/solved/issue-name.md</code></td></tr>
           <tr><td>New doc created</td><td>Update <code>docs/INDEX.md</code> immediately</td></tr>
         </tbody>

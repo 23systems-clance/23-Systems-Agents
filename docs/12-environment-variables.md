@@ -32,7 +32,7 @@
 | `TELEGRAM_CHAT_ID` | Default chat ID for notifications | For Telegram notifications |
 | `GH_WEBHOOK_SECRET` | GitHub Actions webhook auth | For job notifications |
 | `WEB_SEARCH` | Enable/disable web search tool | Default: enabled |
-| `DATABASE_PATH` | Override SQLite DB location | Default: `data/thepopebot.sqlite` |
+| `DATABASE_PATH` | Override SQLite DB location | Default: `data/23wf.sqlite` |
 
 ## GitHub Repository Secrets
 

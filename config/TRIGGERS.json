@@ -54,5 +54,27 @@
       { "type": "agent", "job": "Review the GitHub event and summarize what happened:\n{{body}}", "llm_provider": "openai", "llm_model": "gpt-4o" }
     ],
     "enabled": false
+  },
+  {
+    "name": "slack-block-actions",
+    "watch_path": "/webhook/slack-interact",
+    "actions": [
+      {
+        "type": "agent",
+        "job": "A user interacted with a Slack Block Kit message.\n\nAction ID: {{body.actions.0.action_id}}\nSelected value: {{body.actions.0.value}}\nUser: {{body.user.username}} ({{body.user.id}})\nChannel: {{body.channel.id}}\nMessage timestamp: {{body.message.ts}}\nTrigger ID: {{body.trigger_id}}\n\nUse the slack-blocks skill to respond. Update the original message to confirm their choice, then take the appropriate next action based on what they selected."
+      }
+    ],
+    "enabled": false
+  },
+  {
+    "name": "slack-modal-submit",
+    "watch_path": "/webhook/slack-modal",
+    "actions": [
+      {
+        "type": "agent",
+        "job": "A user submitted a Slack modal form.\n\nCallback ID: {{body.view.callback_id}}\nSubmitted values: {{body.view.state.values}}\nUser: {{body.user.username}} ({{body.user.id}})\n\nUse the slack-blocks skill to process the form data and send results back to the appropriate channel."
+      }
+    ],
+    "enabled": false
   }
 ]

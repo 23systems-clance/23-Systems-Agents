@@ -17,7 +17,7 @@ All user-editable configuration lives in `config/`. These files control agent pe
 | `CLUSTER_SYSTEM_PROMPT.md` | Cluster workers | Default system prompt injected into all cluster worker containers |
 | `CLUSTER_ROLE_PROMPT.md` | Cluster workers | Default task prompt for roles (overridden by role-specific prompts) |
 | `PATTERN_GUIDE.md` | Reference | Documents 6 canonical automation patterns |
-| `SKILL_BUILDING_GUIDE.md` | Reference | Guide for creating new agent skills |
+| `SKILL_BUILDING_GUIDE.md` | Reference | Guide for creating new agent specialties |
 
 ## Markdown Include System
 
@@ -31,7 +31,7 @@ Current time: {{datetime}}
 ## Personality
 {{ config/SOUL.md }}
 
-## Available Skills
+## Available Specialties
 {{skills}}
 ```
 
@@ -39,7 +39,7 @@ Current time: {{datetime}}
 |--------|------------|
 | `{{ filepath.md }}` | Include file contents (path relative to project root) |
 | `{{datetime}}` | Current ISO timestamp |
-| `{{skills}}` | Bullet list of active skill names + descriptions from SKILL.md frontmatter |
+| `{{skills}}` | Bullet list of active specialty names + descriptions from SKILL.md frontmatter |
 
 - Includes are recursive (file A can include file B which includes file C)
 - Circular reference detection prevents infinite loops

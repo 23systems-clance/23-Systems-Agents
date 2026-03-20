@@ -6,7 +6,7 @@
 project-root/
 ├── CLAUDE.md                          # AI assistant context (MANAGED — auto-synced)
 ├── AGENTS.md                          # Agent instructions
-├── next.config.mjs                    # Next.js config (wraps withThepopebot())
+├── next.config.mjs                    # Next.js config (wraps with23WF())
 ├── server.js                          # HTTP server with WebSocket proxy for code workspaces
 ├── instrumentation.js                 # Server startup hook (re-exports from package)
 ├── middleware.js                       # Auth middleware (re-exports from package)
@@ -15,7 +15,7 @@ project-root/
 ├── .env                               # API keys and tokens (gitignored)
 │
 ├── app/                               # Next.js app directory (MANAGED — do not edit)
-│   ├── api/[...thepopebot]/route.js   # Catch-all API route
+│   ├── api/[...23wf]/route.js          # Catch-all API route
 │   ├── stream/chat/route.js           # Chat streaming endpoint
 │   ├── chat/[chatId]/page.js          # Resume chat
 │   ├── chats/page.js                  # Chat history
@@ -41,13 +41,13 @@ project-root/
 │   ├── CLUSTER_SYSTEM_PROMPT.md       # System prompt for cluster workers
 │   ├── CLUSTER_ROLE_PROMPT.md         # Default prompt for cluster roles
 │   ├── PATTERN_GUIDE.md              # 6 canonical automation patterns
-│   ├── SKILL_BUILDING_GUIDE.md        # Guide for building new skills
+│   ├── SKILL_BUILDING_GUIDE.md        # Guide for building new specialties
 │   ├── MCP_SERVERS.json               # Active MCP server definitions
 │   ├── CRONS.json                     # Scheduled job definitions
 │   └── TRIGGERS.json                  # Webhook trigger definitions
 │
-├── Clusters/                          # thepopebot package source (local dev)
-│   ├── package.json                   # Package manifest (thepopebot)
+├── Clusters/                          # 23wf package source (local dev)
+│   ├── package.json                   # Package manifest (23wf)
 │   ├── api/index.js                   # API route handler
 │   ├── drizzle/                       # Database migrations
 │   │   ├── *.sql                      # Migration files
@@ -85,8 +85,8 @@ project-root/
 │           ├── slack.js               # Slack integration
 │           └── openai.js              # Whisper voice-to-text
 │
-├── skills/                            # Agent skill plugins
-│   ├── active/                        # Symlinks to enabled skills
+├── skills/                            # Agent specialty plugins
+│   ├── active/                        # Symlinks to enabled specialties
 │   │   ├── brave-search → ../brave-search/
 │   │   ├── youtube-transcript → ../youtube-transcript/
 │   │   ├── notebooklm → ../notebooklm/
@@ -121,7 +121,7 @@ project-root/
 │   ├── notify-pr-complete.yml         # Job completion notification
 │   ├── notify-job-failed.yml          # Job failure notification
 │   ├── rebuild-event-handler.yml      # Rebuild on push to main
-│   └── upgrade-event-handler.yml      # Upgrade thepopebot package
+│   └── upgrade-event-handler.yml      # Upgrade 23wf package
 │
 ├── references/                        # Reference materials
 │   ├── SOP Templates/                 # HTML templates + brand system
@@ -138,7 +138,7 @@ project-root/
 
 ## Managed vs User-Editable
 
-### MANAGED (auto-synced by `thepopebot init` / `thepopebot upgrade` — do NOT edit)
+### MANAGED (auto-synced by `23wf init` / `23wf upgrade` — do NOT edit)
 
 | Path | Reason |
 |------|--------|
@@ -156,7 +156,7 @@ project-root/
 | Path | Purpose |
 |------|---------|
 | `config/` | All prompts, cron jobs, triggers, personality |
-| `skills/` | Add/activate/deactivate skills |
+| `skills/` | Add/activate/deactivate specialties |
 | `cron/` | Command-type cron scripts |
 | `triggers/` | Command-type trigger scripts |
 | `mcp-servers/` | MCP server definitions |

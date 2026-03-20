@@ -2,7 +2,7 @@
 
 ## Overview
 
-The web interface is built with Next.js 15 + React 19. All UI components live in the `thepopebot` npm package — the `app/` directory contains only thin page shells that import from the package.
+The web interface is built with Next.js 15 + React 19. All UI components live in the `23wf` npm package — the `app/` directory contains only thin page shells that import from the package.
 
 ## Web Routes
 

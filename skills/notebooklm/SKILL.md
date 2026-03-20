@@ -24,7 +24,7 @@ Requires authentication with a Google account that has NotebookLM access.
 
 3. **Set credential for Docker agent**:
    ```bash
-   npx thepopebot set-agent-llm-secret NOTEBOOKLM_AUTH_JSON < ~/.notebooklm/storage_state.json
+   npx 23wf set-agent-llm-secret NOTEBOOKLM_AUTH_JSON < ~/.notebooklm/storage_state.json
    ```
    The library reads `NOTEBOOKLM_AUTH_JSON` automatically — no file writes needed in CI/CD.
 

@@ -40,7 +40,7 @@ The `entrypoint.sh` script:
 
 Flow:
 1. Sparse checkout `logs/*/job.config.json` from job branch
-2. Resolve thepopebot version from `package-lock.json`
+2. Resolve 23wf version from `package-lock.json`
 3. Read job config overrides (llm_provider, llm_model, agent_backend)
 4. Login to GHCR if `JOB_IMAGE_URL` uses `ghcr.io`
 5. Select Docker image based on `agent_backend`:
@@ -83,7 +83,7 @@ Flow:
 
 **Trigger**: Manual `workflow_dispatch`
 
-- Creates a PR to upgrade the `thepopebot` npm package
+- Creates a PR to upgrade the `23wf` npm package
 
 ## Repository Variables
 

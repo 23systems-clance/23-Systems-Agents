@@ -1,6 +1,6 @@
 import { createServer } from 'http';
 import next from 'next';
-import { attachCodeProxy } from 'thepopebot/code/ws-proxy';
+import { attachCodeProxy } from '23wf/code/ws-proxy';
 
 const app = next({ dev: false });
 const handle = app.getRequestHandler();

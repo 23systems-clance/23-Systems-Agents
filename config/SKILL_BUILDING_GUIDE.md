@@ -1,10 +1,10 @@
-# Skill Building Guide
+# Specialty Building Guide
 
-## What is a skill?
+## What is a specialty?
 
-Skills are lightweight wrappers that extend agent abilities. They live in `skills/<skill-name>/` and are activated by symlinking into `skills/active/`. Both Pi and Claude Code discover skills from the same shared directory.
+Specialties are lightweight wrappers that extend agent abilities. They live in `skills/<skill-name>/` and are activated by symlinking into `skills/active/`. Both Pi and Claude Code discover specialties from the same shared directory.
 
-## Skill structure
+## Specialty structure
 
 - **`SKILL.md`** (required) — YAML frontmatter + markdown documentation
 - **Scripts** (optional) — prefer bash (.sh) for simplicity
@@ -12,16 +12,16 @@ Skills are lightweight wrappers that extend agent abilities. They live in `skill
 
 ## SKILL.md format
 
-The `description` from frontmatter appears in the system prompt under "Active skills."
+The `description` from frontmatter appears in the system prompt under "Active specialties."
 Use project-root-relative paths in documentation (e.g., `skills/<skill-name>/script.sh`).
 
 ```
 ---
 name: skill-name-in-kebab-case
-description: One sentence describing what the skill does and when to use it.
+description: One sentence describing what the specialty does and when to use it.
 ---
 
-# Skill Name
+# Specialty Name
 
 ## Usage
 
@@ -30,9 +30,9 @@ skills/skill-name/script.sh <args>
 ```
 ```
 
-## Example: Simple bash skill (most common pattern)
+## Example: Simple bash specialty (most common pattern)
 
-The built-in `transcribe` skill — a SKILL.md and a single bash script:
+The built-in `transcribe` specialty — a SKILL.md and a single bash script:
 
 **skills/transcribe/SKILL.md:**
 ```
@@ -66,31 +66,31 @@ curl -s -X POST "https://api.groq.com/openai/v1/audio/transcriptions" \
   -F "response_format=text"
 ```
 
-## Example: Skill with Node.js dependencies
+## Example: Specialty with Node.js dependencies
 
-The built-in `brave-search` skill uses Node.js for HTML parsing (jsdom, readability, turndown). It has a `package.json` and `.js` scripts. Dependencies are installed automatically in Docker. Use this pattern only when bash + curl isn't sufficient.
+The built-in `brave-search` specialty uses Node.js for HTML parsing (jsdom, readability, turndown). It has a `package.json` and `.js` scripts. Dependencies are installed automatically in Docker. Use this pattern only when bash + curl isn't sufficient.
 
 ## Activation
 
-After creating skill files, symlink to activate:
+After creating specialty files, symlink to activate:
 ```bash
 ln -s ../skill-name skills/active/skill-name
 ```
 
 ## Always build AND test in the same job
 
-Tell the agent to test the skill with real input after creating it and fix any issues before committing. Don't create untested skills.
+Tell the agent to test the specialty with real input after creating it and fix any issues before committing. Don't create untested specialties.
 
 ## Credential setup
 
-If a skill needs an API key, the user should set it up BEFORE the job runs:
-- `npx thepopebot set-agent-llm-secret <KEY_NAME> <value>` — creates a GitHub secret with `AGENT_LLM_` prefix, exposed as an env var in the Docker container
+If a specialty needs an API key, the user should set it up BEFORE the job runs:
+- `npx 23wf set-agent-llm-secret <KEY_NAME> <value>` — creates a GitHub secret with `AGENT_LLM_` prefix, exposed as an env var in the Docker container
 - The value is stored exactly as provided, no transformation needed
 - Also add to `.env` for local development
 - Keys can be rotated later with the same command
 
 **Multi-line secrets** (e.g., JSON service account files): omit the value argument and pipe the file via stdin:
 ```bash
-npx thepopebot set-agent-llm-secret GOOGLE_CREDENTIALS < credentials.json
+npx 23wf set-agent-llm-secret GOOGLE_CREDENTIALS < credentials.json
 ```
 Avoid `$(cat credentials.json)` — it can break on special characters and newlines.

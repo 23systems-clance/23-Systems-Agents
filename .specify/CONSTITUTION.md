@@ -101,7 +101,7 @@ Every agent job prompt should:
 2. Define the expected output format/schema
 3. Include failure handling instructions
 4. Specify where to save outputs
-5. Reference required skills by name
+5. Reference required specialties by name
 
 ### Pattern Metadata Fields
 
@@ -320,7 +320,7 @@ All architectural and system knowledge must be maintained in `docs/` as focused,
 
 #### Documentation Structure
 - **`docs/INDEX.md`** — Master table of contents with "when to reference" guide. Must be kept in sync with all doc files. Max ~50 lines to stay scannable.
-- **Individual docs** — Numbered `01-*.md` through `NN-*.md`, one per domain (architecture, database, skills, etc.)
+- **Individual docs** — Numbered `01-*.md` through `NN-*.md`, one per domain (architecture, database, specialties, etc.)
 - **Solved issues** — `references/solved/*.md` for debugging knowledge that prevents repeat investigations
 
 #### Documentation File Template
@@ -348,7 +348,7 @@ Use code blocks for file paths, commands, and config examples.
 1. **New feature or subsystem added** — Create a new doc or update the relevant existing doc
 2. **Architecture change** — Update `01-architecture.md` and any affected docs
 3. **Database schema change** — Update `03-database-schema.md` after migration
-4. **New skill created** — Update `05-skills.md`
+4. **New specialty created** — Update `05-skills.md`
 5. **Bug solved after investigation** — Create `references/solved/issue-name.md`
 6. **New doc created** — Update `docs/INDEX.md` immediately
 
@@ -382,16 +382,16 @@ One-line lesson for future reference.
 
 ## Naming Conventions — User-Facing vs Internal
 
-The `thepopebot` package uses internal naming conventions that differ from 23 Systems' user-facing terminology. All user-facing communication (UI, docs, prompts, conversations) must use the 23 Systems terms. Internal code, paths, database tables, and package APIs retain the original names.
+The `23wf` package uses internal naming conventions that differ from 23 Systems' user-facing terminology. All user-facing communication (UI, docs, prompts, conversations) must use the 23 Systems terms. Internal code, paths, database tables, and package APIs retain the original names.
 
-| Concept | User-Facing Term (23 Systems) | Internal/Code Term (thepopebot) | Notes |
-|---------|-------------------------------|----------------------------------|-------|
+| Concept | User-Facing Term (23 Systems) | Internal/Code Term (23wf) | Notes |
+|---------|-------------------------------|----------------------------|-------|
 | Pluggable capabilities | **Specialties** | `skills` | Directory `skills/`, files `SKILL.md`, template var `{{skills}}`, tool names `get_skill_building_guide` / `get_skill_details` — all stay as-is in code |
 | Multi-agent work groups | **Teams** | `clusters` | DB tables `clusters` / `cluster_roles`, config files `CLUSTER_SYSTEM_PROMPT.md` / `CLUSTER_ROLE_PROMPT.md`, routes `/cluster/`, template vars `{{CLUSTER_SHARED_DIR}}` — all stay as-is in code |
 | Autonomous workers | **Agents** | `agents` | No difference — same term in both contexts |
 
 ### Why the Split?
-The thepopebot package hardcodes internal names in paths, database migrations, template variables, and CLI tooling. Renaming at the package level would require a major version bump and DB migration. Instead, we maintain a thin translation layer:
+The 23wf package hardcodes internal names in paths, database migrations, template variables, and CLI tooling. Renaming at the package level would require a major version bump and DB migration. Instead, we maintain a thin translation layer:
 - The **portal UI** (`lib/portal/`) already presents "Teams" to users while calling `cluster*` functions internally
 - **Documentation and prompts** should use the user-facing terms with parenthetical code references where needed (e.g., "specialties (internally: `skills/`)")
 - **Config file names** retain internal naming (`CLUSTER_ROLE_PROMPT.md`, `SKILL_BUILDING_GUIDE.md`) but their prose content should use user-facing terms

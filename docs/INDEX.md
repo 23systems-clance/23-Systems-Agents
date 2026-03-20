@@ -10,7 +10,7 @@
 | 2 | [Directory Structure](./02-directory-structure.md) | Complete file tree with ownership (managed vs user-editable) | Finding where code lives, knowing what's safe to edit |
 | 3 | [Database Schema](./03-database-schema.md) | All tables, columns, relationships, migration workflow | Modifying the database or understanding data models |
 | 4 | [AI Agents & LLM Integration](./04-ai-agents.md) | LangGraph agents, LLM providers, tool definitions, MCP bridge | Modifying agent behavior, adding tools, changing LLM providers |
-| 5 | [Skills System](./05-skills.md) | Skill structure, activation, SKILL.md format, building new skills | Creating or modifying agent skills |
+| 5 | [Specialties System](./05-skills.md) | Specialty structure, activation, SKILL.md format, building new specialties | Creating or modifying agent specialties |
 | 6 | [Clusters & Workers](./06-clusters.md) | Cluster roles, triggers, Docker execution, concurrency control | Working with worker clusters or adding trigger types |
 | 7 | [Configuration Files](./07-configuration.md) | All config/ files, template variables, markdown includes | Editing prompts, crons, triggers, or personality |
 | 8 | [API & Authentication](./08-api-auth.md) | API endpoints, auth flow, API keys, WebSocket auth | Working with API routes or authentication |
@@ -32,7 +32,6 @@ When you solve a non-trivial bug, add a file here following the template in `.sp
 ## Quick Reference
 
 - **Tech Stack**: Next.js 15, React 19, NextAuth 5, Drizzle ORM (SQLite), LangChain/LangGraph, Docker
-- **Core Package**: `thepopebot` (npm) — contains all business logic; this project is a thin shell
-- **Database**: SQLite at `data/thepopebot.sqlite`
+- **Core Package**: `23wf` (npm) — contains all business logic; this project is a thin shell
+- **Database**: SQLite at `data/23wf.sqlite`
 - **LLM Default**: Anthropic Claude Sonnet via `ANTHROPIC_API_KEY`
-- **Brand**: 23 Systems (rebranded thepopebot deployment)

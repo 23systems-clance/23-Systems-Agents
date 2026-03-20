@@ -2,26 +2,26 @@
 
 ## Overview
 
-This is an autonomous AI agent powered by [thepopebot](https://github.com/stephengpope/thepopebot). It uses a **two-layer architecture**:
+This is an autonomous AI agent powered by [23WF](https://github.com/23systems/23wf). It uses a **two-layer architecture**:
 
 1. **Event Handler** — A Next.js server that orchestrates everything: web UI, Telegram chat, cron scheduling, webhook triggers, and job creation.
 2. **Docker Agent** — A container that runs the Pi coding agent for autonomous task execution. Each job gets its own branch, container, and PR.
 
-All core logic lives in the `thepopebot` npm package. This project is a scaffolded shell — thin Next.js wiring, user-editable configuration, GitHub Actions workflows, and Docker files.
+All core logic lives in the `23wf` npm package. This project is a scaffolded shell — thin Next.js wiring, user-editable configuration, GitHub Actions workflows, and Docker files.
 
 ## Directory Structure
 
 ```
 project-root/
 ├── CLAUDE.md                          # This file (project documentation)
-├── next.config.mjs                    # Next.js config (wraps withThepopebot())
+├── next.config.mjs                    # Next.js config (wraps with23WF())
 ├── instrumentation.js                 # Server startup hook (re-exports from package)
 ├── middleware.js                       # Auth middleware (re-exports from package)
 ├── .env                               # API keys and tokens (gitignored)
 ├── package.json
 │
 ├── app/                               # Next.js app directory (MANAGED — do not edit, auto-synced)
-│   ├── api/[...thepopebot]/route.js   # Catch-all API route (re-exports from package)
+│   ├── api/[...23wf]/route.js          # Catch-all API route (re-exports from package)
 │   └── stream/chat/route.js           # Chat streaming endpoint (session auth)
 │
 ├── config/                            # Agent configuration (user-editable)
@@ -30,20 +30,20 @@ project-root/
 │   ├── JOB_AGENT.md                   # Agent runtime environment docs
 │   ├── JOB_SUMMARY.md                 # Prompt for summarizing completed jobs
 │   ├── HEARTBEAT.md                   # Self-monitoring / heartbeat behavior
-│   ├── SKILL_BUILDING_GUIDE.md             # Guide for building agent skills
+│   ├── SKILL_BUILDING_GUIDE.md             # Guide for building agent specialties
 │   ├── CRONS.json                     # Scheduled job definitions
 │   └── TRIGGERS.json                  # Webhook trigger definitions
 │
 ├── .github/workflows/                 # GitHub Actions
 ├── docker/                            # Docker files (job agent + event handler)
-├── skills/                            # All available agent skills
-│   └── active/                        # Symlinks to active skills (shared by Pi + Claude Code)
-├── .pi/skills → skills/active         # Pi reads skills from here
-├── .claude/skills → skills/active     # Claude Code reads skills from here
+├── skills/                            # All available agent specialties
+│   └── active/                        # Symlinks to active specialties (shared by Pi + Claude Code)
+├── .pi/skills → skills/active         # Pi reads specialties from here
+├── .claude/skills → skills/active     # Claude Code reads specialties from here
 ├── cron/                              # Scripts for command-type cron actions
 ├── triggers/                          # Scripts for command-type trigger actions
 ├── logs/                              # Per-job output (logs/<JOB_ID>/job.md + session .jsonl)
-└── data/                              # SQLite database (data/thepopebot.sqlite)
+└── data/                              # SQLite database (data/23wf.sqlite)
 ```
 
 ## Two-Layer Architecture
@@ -215,7 +215,7 @@ All API routes are under `/api/`, handled by the catch-all route.
 | `/api/jobs/status` | GET | `x-api-key` | Check status of running/queued jobs |
 | `/api/ping` | GET | Public | Health check |
 
-**`x-api-key`**: Database-backed API keys generated through the web UI (Settings > Secrets). Keys are SHA-256 hashed, verified with timing-safe comparison. Format: `tpb_` prefix + 64 hex characters.
+**`x-api-key`**: Database-backed API keys generated through the web UI (Settings > Secrets). Keys are SHA-256 hashed, verified with timing-safe comparison. Format: `23wf_` prefix + 64 hex characters.
 
 ## Web Interface
 
@@ -227,7 +227,7 @@ NextAuth v5 with Credentials provider (email/password), JWT in httpOnly cookies.
 
 ## Database
 
-SQLite via Drizzle ORM at `data/thepopebot.sqlite`. Auto-initialized and auto-migrated on server startup. Tables: `users`, `chats`, `messages`, `notifications`, `subscriptions`, `settings` (key-value store, also stores API keys). Column naming: camelCase in JS → snake_case in SQL.
+SQLite via Drizzle ORM at `data/23wf.sqlite`. Auto-initialized and auto-migrated on server startup. Tables: `users`, `chats`, `messages`, `notifications`, `subscriptions`, `settings` (key-value store, also stores API keys). Column naming: camelCase in JS → snake_case in SQL.
 
 ## GitHub Actions Workflows
 
@@ -235,7 +235,7 @@ SQLite via Drizzle ORM at `data/thepopebot.sqlite`. Auto-initialized and auto-mi
 |----------|---------|---------|
 | `run-job.yml` | `job/*` branch created | Runs the Docker agent container |
 | `rebuild-event-handler.yml` | Push to `main` | Rebuilds server (fast path or Docker restart) |
-| `upgrade-event-handler.yml` | Manual `workflow_dispatch` | Creates PR to upgrade thepopebot package |
+| `upgrade-event-handler.yml` | Manual `workflow_dispatch` | Creates PR to upgrade 23wf package |
 | `build-image.yml` | `docker/pi-coding-agent-job/**` changes | Builds Pi coding agent Docker image to GHCR |
 | `auto-merge.yml` | Job PR opened | Squash-merges if changes are within `ALLOWED_PATHS` |
 | `notify-pr-complete.yml` | After `auto-merge.yml` | Sends job completion notification |
@@ -260,8 +260,8 @@ SQLite via Drizzle ORM at `data/thepopebot.sqlite`. Auto-initialized and auto-mi
 | `APP_URL` | Public URL for the event handler | Required |
 | `AUTO_MERGE` | Set to `"false"` to disable auto-merge | Enabled |
 | `ALLOWED_PATHS` | Comma-separated path prefixes for auto-merge | `/logs` |
-| `JOB_IMAGE_URL` | Docker image for job agent (GHCR URLs trigger auto-builds) | Default thepopebot image |
-| `EVENT_HANDLER_IMAGE_URL` | Docker image for event handler | Default thepopebot image |
+| `JOB_IMAGE_URL` | Docker image for job agent (GHCR URLs trigger auto-builds) | Default 23wf image |
+| `EVENT_HANDLER_IMAGE_URL` | Docker image for event handler | Default 23wf image |
 | `RUNS_ON` | GitHub Actions runner label | `ubuntu-latest` |
 | `LLM_PROVIDER` | LLM provider for Docker agent | `anthropic` |
 | `LLM_MODEL` | LLM model name for Docker agent | Provider default |
@@ -291,17 +291,17 @@ SQLite via Drizzle ORM at `data/thepopebot.sqlite`. Auto-initialized and auto-mi
 
 ## Managed Files
 
-The following directories are auto-synced by `thepopebot init` and `thepopebot upgrade`. **Do not edit them** — changes will be overwritten on package updates: `.github/workflows/`, `docker/event-handler/`, `docker-compose.yml`, `.dockerignore`, `CLAUDE.md`, `app/`.
+The following directories are auto-synced by `23wf init` and `23wf upgrade`. **Do not edit them** — changes will be overwritten on package updates: `.github/workflows/`, `docker/event-handler/`, `docker-compose.yml`, `.dockerignore`, `CLAUDE.md`, `app/`.
 
-All UI components live in the npm package — `app/` only contains thin page shells that import from `thepopebot/chat`, `thepopebot/auth/components`, etc.
+All UI components live in the npm package — `app/` only contains thin page shells that import from `23wf/chat`, `23wf/auth/components`, etc.
 
 ## Customization
 
-User-editable config files in `config/`: `SOUL.md` (personality), `JOB_PLANNING.md` (LLM system prompt), `JOB_AGENT.md` (runtime docs), `JOB_SUMMARY.md` (job summaries), `HEARTBEAT.md` (self-monitoring), `SKILL_BUILDING_GUIDE.md` (skill guide), `CRONS.json` (scheduled jobs), `TRIGGERS.json` (webhook triggers).
+User-editable config files in `config/`: `SOUL.md` (personality), `JOB_PLANNING.md` (LLM system prompt), `JOB_AGENT.md` (runtime docs), `JOB_SUMMARY.md` (job summaries), `HEARTBEAT.md` (self-monitoring), `SKILL_BUILDING_GUIDE.md` (specialty guide), `CRONS.json` (scheduled jobs), `TRIGGERS.json` (webhook triggers).
 
 To customize appearance, edit `theme.css` in the project root (loaded after `globals.css`, user-owned, not managed).
 
-Skills in `skills/` are activated by symlinking into `skills/active/`. Both `.pi/skills` and `.claude/skills` point to `skills/active/`. Scripts for command-type actions go in `cron/` and `triggers/`.
+Specialties in `skills/` are activated by symlinking into `skills/active/`. Both `.pi/skills` and `.claude/skills` point to `skills/active/`. Scripts for command-type actions go in `cron/` and `triggers/`.
 
 ## Technical Documentation
 
@@ -313,7 +313,7 @@ Detailed architecture documentation lives in `docs/INDEX.md`. **Read that index 
 | `docs/02-directory-structure.md` | Finding where code lives, managed vs user-editable |
 | `docs/03-database-schema.md` | Modifying database or understanding data models |
 | `docs/04-ai-agents.md` | Changing agent behavior, tools, or LLM providers |
-| `docs/05-skills.md` | Creating or modifying skills |
+| `docs/05-skills.md` | Creating or modifying specialties |
 | `docs/06-clusters.md` | Working with worker clusters or triggers |
 | `docs/07-configuration.md` | Editing prompts, crons, triggers |
 | `docs/08-api-auth.md` | API routes or authentication |
@@ -332,4 +332,4 @@ Config markdown files support includes and built-in variables (processed by the 
 |--------|-------------|
 | `{{ filepath.md }}` | Include another file (relative to project root, recursive with circular detection) |
 | `{{datetime}}` | Current ISO timestamp |
-| `{{skills}}` | Dynamic bullet list of active skill descriptions from `skills/active/*/SKILL.md` frontmatter — never hardcode skill names, this is resolved at runtime |
+| `{{skills}}` | Dynamic bullet list of active specialty descriptions from `skills/active/*/SKILL.md` frontmatter — never hardcode specialty names, this is resolved at runtime |

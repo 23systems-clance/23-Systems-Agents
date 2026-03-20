@@ -3,7 +3,7 @@
 ## Overview
 
 - **Engine**: SQLite via Drizzle ORM
-- **Location**: `data/thepopebot.sqlite` (override via `DATABASE_PATH` env var)
+- **Location**: `data/23wf.sqlite` (override via `DATABASE_PATH` env var)
 - **Initialization**: Auto-created and auto-migrated on server startup
 - **Schema source**: `Clusters/lib/db/schema.js`
 - **Migrations**: `Clusters/drizzle/*.sql`

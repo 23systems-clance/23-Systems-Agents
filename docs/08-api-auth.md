@@ -12,7 +12,7 @@
 ### API Key Authentication
 
 - **Header**: `x-api-key`
-- **Format**: `tpb_` prefix + 64 hex characters
+- **Format**: `23wf_` prefix + 64 hex characters
 - **Storage**: SHA-256 hashed in `settings` table
 - **Validation**: Timing-safe comparison to prevent timing attacks
 - **Management**: Web UI at `/settings/secrets`
@@ -27,7 +27,7 @@
 
 ## API Endpoints
 
-All routes are under `/api/`, handled by the catch-all route at `app/api/[...thepopebot]/route.js`.
+All routes are under `/api/`, handled by the catch-all route at `app/api/[...23wf]/route.js`.
 
 | Endpoint | Method | Auth | Purpose |
 |----------|--------|------|---------|
@@ -42,7 +42,7 @@ All routes are under `/api/`, handled by the catch-all route at `app/api/[...the
 
 ```bash
 curl -X POST https://your-app.com/api/create-job \
-  -H "x-api-key: tpb_abc123..." \
+  -H "x-api-key: 23wf_abc123..." \
   -H "Content-Type: application/json" \
   -d '{"job": "Analyze the logs and write a summary report"}'
 ```
