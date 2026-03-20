@@ -313,3 +313,15 @@ See [Running Different Models](docs/RUNNING_DIFFERENT_MODELS.md) for the full gu
 | Document | Description |
 |----------|-------------|
 | [NPM](docs/NPM.md) | Updating skills, versioning, and publishing releases |
+
+---
+
+## Acknowledgments
+
+23wf is built on the foundation of [thepopebot](https://github.com/stephengpope/thepopebot), created by **Steven G. Pope** ([@stephengpope](https://github.com/stephengpope)). Steven designed and built the original two-layer architecture — the event handler + Docker agent pattern, the GitHub Actions job lifecycle, the auto-merge system, the CLI scaffolding, and the plugin-based skills framework that 23wf extends. His work made this project possible.
+
+---
+
+## License
+
+MIT
