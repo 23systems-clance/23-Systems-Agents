@@ -1,4 +1,4 @@
-import { TriggersPage } from 'thepopebot/chat';
+import { TriggersPage } from '23wf/chat';
 
 export default function SettingsTriggersRoute() {
   return <TriggersPage />;

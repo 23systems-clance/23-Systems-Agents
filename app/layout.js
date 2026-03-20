@@ -1,6 +1,6 @@
 import './globals.css';
 import '../theme.css';
-import { ThemeProvider, FeaturesProvider } from 'thepopebot/chat';
+import { ThemeProvider, FeaturesProvider } from '23wf/chat';
 
 export const metadata = {
   title: '23 Systems',

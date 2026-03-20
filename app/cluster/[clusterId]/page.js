@@ -1,5 +1,5 @@
-import { auth } from 'thepopebot/auth';
-import { ClusterPage } from 'thepopebot/cluster';
+import { auth } from '23wf/auth';
+import { ClusterPage } from '23wf/cluster';
 
 export default async function ClusterRoute({ params }) {
   const session = await auth();

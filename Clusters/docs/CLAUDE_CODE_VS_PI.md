@@ -1,6 +1,6 @@
 # Claude Code CLI vs Pi Coding Agent
 
-thepopebot supports two agent backends for running jobs. Choose the one that fits your setup.
+23wf supports two agent backends for running jobs. Choose the one that fits your setup.
 
 |  | Pi Coding Agent | Claude Code CLI |
 |---|---|---|
@@ -13,14 +13,14 @@ thepopebot supports two agent backends for running jobs. Choose the one that fit
 
 ## Switching backends
 
-Run `thepopebot setup` to reconfigure, or set the `AGENT_BACKEND` GitHub variable directly:
+Run `23wf setup` to reconfigure, or set the `AGENT_BACKEND` GitHub variable directly:
 
 ```bash
 # Switch to Claude Code
-npx thepopebot set-var AGENT_BACKEND claude-code
+npx 23wf set-var AGENT_BACKEND claude-code
 
 # Switch to Pi
-npx thepopebot set-var AGENT_BACKEND pi
+npx 23wf set-var AGENT_BACKEND pi
 ```
 
 ## OAuth token setup

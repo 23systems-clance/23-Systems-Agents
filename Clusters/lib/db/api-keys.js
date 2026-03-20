@@ -3,13 +3,13 @@ import { eq } from 'drizzle-orm';
 import { getDb } from './index.js';
 import { settings } from './schema.js';
 
-const KEY_PREFIX = 'tpb_';
+const KEY_PREFIX = '23wf_';
 
 // In-memory cache: { key_hash, id } or null
 let _cache = null;
 
 /**
- * Generate a new API key: tpb_ + 64 hex chars (32 random bytes).
+ * Generate a new API key: 23wf_ + 64 hex chars (32 random bytes).
  * @returns {string}
  */
 export function generateApiKey() {
@@ -67,7 +67,7 @@ export function createApiKeyRecord(createdBy) {
 
   const key = generateApiKey();
   const keyHash = hashApiKey(key);
-  const keyPrefix = key.slice(0, 8); // "tpb_" + first 4 hex chars
+  const keyPrefix = key.slice(0, 9); // "23wf_" + first 4 hex chars
   const now = Date.now();
 
   const record = {

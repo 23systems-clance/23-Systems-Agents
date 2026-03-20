@@ -21,10 +21,10 @@ jobs:
             logs/*/job.config.json
           sparse-checkout-cone-mode: false
 
-      - name: Get thepopebot version
+      - name: Get 23wf version
         id: version
         run: |
-          VERSION=$(jq -r '.packages["node_modules/thepopebot"].version // "latest"' package-lock.json)
+          VERSION=$(jq -r '.packages["node_modules/23wf"].version // "latest"' package-lock.json)
           echo "tag=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Read job config overrides
@@ -47,11 +47,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run thepopebot Agent
+      - name: Run 23wf Agent
         env:
           ALL_SECRETS: ${{ toJson(secrets) }}
           JOB_IMAGE_URL: ${{ vars.JOB_IMAGE_URL }}
-          THEPOPEBOT_VERSION: ${{ steps.version.outputs.tag }}
+          WF_VERSION: ${{ steps.version.outputs.tag }}
           LLM_MODEL: ${{ steps.job-config.outputs.llm_model || vars.LLM_MODEL }}
           LLM_PROVIDER: ${{ steps.job-config.outputs.llm_provider || vars.LLM_PROVIDER }}
           OPENAI_BASE_URL: ${{ vars.OPENAI_BASE_URL }}
@@ -61,9 +61,9 @@ jobs:
           if [ -n "$JOB_IMAGE_URL" ]; then
             IMAGE="${JOB_IMAGE_URL}:latest"
           elif [ "$AGENT_BACKEND" = "claude-code" ]; then
-            IMAGE="stephengpope/thepopebot:claude-code-job-${THEPOPEBOT_VERSION}"
+            IMAGE="23systems/23wf:claude-code-job-${WF_VERSION}"
           else
-            IMAGE="stephengpope/thepopebot:pi-coding-agent-job-${THEPOPEBOT_VERSION}"
+            IMAGE="23systems/23wf:pi-coding-agent-job-${WF_VERSION}"
           fi
           echo "Using image: $IMAGE"
 

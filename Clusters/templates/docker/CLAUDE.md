@@ -2,7 +2,7 @@
 
 ## Images
 
-All tagged `stephengpope/thepopebot:{tag}-{version}`:
+All tagged `23systems/23wf:{tag}-{version}`:
 
 | Image | Lifecycle | Purpose |
 |-------|-----------|---------|

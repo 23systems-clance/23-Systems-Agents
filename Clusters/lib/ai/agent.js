@@ -3,7 +3,7 @@ import { SystemMessage } from '@langchain/core/messages';
 import { createModel } from './model.js';
 import { createJobTool, getJobStatusTool, getSystemTechnicalSpecsTool, getSkillBuildingGuideTool, getSkillDetailsTool, createStartHeadlessCodingTool, createGetRepositoryDetailsTool, createGetBranchFileTool } from './tools.js';
 import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
-import { jobPlanningMd, codePlanningMd, thepopebotDb } from '../paths.js';
+import { jobPlanningMd, codePlanningMd, wfDb } from '../paths.js';
 import { render_md } from '../utils/render-md.js';
 import { createWebSearchTool, getProvider } from './web-search.js';
 import { loadMCPTools, closeMCPConnections } from './mcp-bridge.js';
@@ -36,7 +36,7 @@ export async function getJobAgent() {
       console.warn('[agent] Failed to load MCP tools:', err.message);
     }
 
-    const checkpointer = SqliteSaver.fromConnString(thepopebotDb);
+    const checkpointer = SqliteSaver.fromConnString(wfDb);
 
     _agent = createReactAgent({
       llm: model,
@@ -91,7 +91,7 @@ export async function getCodeAgent({ repo, branch, workspaceId, chatId }) {
     console.log(`[agent] Web search enabled for code agent (provider: ${getProvider()})`);
   }
 
-  const checkpointer = SqliteSaver.fromConnString(thepopebotDb);
+  const checkpointer = SqliteSaver.fromConnString(wfDb);
 
   const agent = createReactAgent({
     llm: model,

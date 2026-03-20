@@ -1,5 +1,5 @@
-import { auth } from 'thepopebot/auth';
-import { ChatPage } from 'thepopebot/chat';
+import { auth } from '23wf/auth';
+import { ChatPage } from '23wf/chat';
 
 export default async function DevHome() {
   const session = await auth();

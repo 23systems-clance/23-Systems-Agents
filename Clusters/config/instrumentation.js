@@ -1,10 +1,10 @@
 /**
- * Next.js instrumentation hook for thepopebot.
+ * Next.js instrumentation hook for 23wf.
  * This file is loaded by Next.js on server start when instrumentationHook is enabled.
  *
  * Users should create an instrumentation.js in their project root that imports this:
  *
- *   export { register } from 'thepopebot/instrumentation';
+ *   export { register } from '23wf/instrumentation';
  *
  * Or they can re-export and add their own logic.
  */
@@ -62,5 +62,5 @@ export async function register() {
   const { startClusterRuntime } = await import('../lib/cluster/runtime.js');
   startClusterRuntime();
 
-  console.log('thepopebot initialized');
+  console.log('23wf initialized');
 }

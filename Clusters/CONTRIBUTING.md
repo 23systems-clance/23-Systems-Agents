@@ -1,4 +1,4 @@
-# Contributing to thepopebot
+# Contributing to 23wf
 
 Thanks for your interest in contributing! We welcome bug fixes, features, docs improvements, and other contributions.
 

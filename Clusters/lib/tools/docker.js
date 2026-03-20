@@ -69,7 +69,7 @@ function volumeName(workspaceId) {
  */
 async function detectNetwork() {
   try {
-    const { status, data } = await dockerApi('GET', '/containers/thepopebot-event-handler/json');
+    const { status, data } = await dockerApi('GET', '/containers/23wf-event-handler/json');
     if (status === 200 && data.NetworkSettings?.Networks) {
       const networks = Object.keys(data.NetworkSettings.Networks);
       if (networks.length > 0) return networks[0];
@@ -141,8 +141,8 @@ async function runCodeWorkspaceContainer({ containerName, repo, branch, codingAg
     throw new Error(`Unsupported coding agent: ${codingAgent}`);
   }
 
-  const version = process.env.THEPOPEBOT_VERSION;
-  const image = `stephengpope/thepopebot:claude-code-workspace-${version}`;
+  const version = process.env.WF_VERSION;
+  const image = `23systems/23wf:claude-code-workspace-${version}`;
 
   const env = [
     `REPO=${repo}`,
@@ -214,8 +214,8 @@ async function removeContainer(containerName) {
  * @returns {Promise<{containerId: string, containerName: string}>}
  */
 async function runHeadlessCodeContainer({ containerName, repo, branch, featureBranch, workspaceId, taskPrompt }) {
-  const version = process.env.THEPOPEBOT_VERSION;
-  const image = `stephengpope/thepopebot:claude-code-headless-${version}`;
+  const version = process.env.WF_VERSION;
+  const image = `23systems/23wf:claude-code-headless-${version}`;
 
   const env = [
     `REPO=${repo}`,
@@ -250,8 +250,8 @@ async function runHeadlessCodeContainer({ containerName, repo, branch, featureBr
  * @returns {Promise<{containerId: string, containerName: string}>}
  */
 async function runClusterWorkerContainer({ containerName, image, env = [], binds = [], workingDir }) {
-  const version = process.env.THEPOPEBOT_VERSION;
-  const resolvedImage = image || `stephengpope/thepopebot:claude-code-cluster-worker-${version}`;
+  const version = process.env.WF_VERSION;
+  const resolvedImage = image || `23systems/23wf:claude-code-cluster-worker-${version}`;
 
   return runContainer({
     containerName,
@@ -381,7 +381,7 @@ async function resolveHostPath(containerPath) {
   if (_hostProjectPath === undefined) {
     _hostProjectPath = null;
     try {
-      const { status, data } = await dockerApi('GET', '/containers/thepopebot-event-handler/json');
+      const { status, data } = await dockerApi('GET', '/containers/23wf-event-handler/json');
       if (status === 200 && data.Mounts) {
         const appMount = data.Mounts.find((m) => m.Destination === '/app' && m.Type === 'bind');
         if (appMount) _hostProjectPath = appMount.Source;

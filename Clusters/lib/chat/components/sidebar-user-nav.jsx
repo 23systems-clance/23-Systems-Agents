@@ -56,7 +56,7 @@ export function SidebarUserNav({ user, collapsed }) {
               </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild>
-              <a href="https://github.com/stephengpope/thepopebot/issues" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2" style={{ textDecoration: 'inherit', color: 'inherit' }}>
+              <a href="https://github.com/23systems/23wf/issues" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2" style={{ textDecoration: 'inherit', color: 'inherit' }}>
                 <BugIcon size={14} />
                 <span>Report Issues</span>
               </a>

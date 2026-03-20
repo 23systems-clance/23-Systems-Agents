@@ -1,10 +1,10 @@
 {
-  "name": "thepopebot",
+  "name": "23wf",
   "version": "1.2.73-beta.34",
   "type": "module",
   "description": "Create autonomous AI agents with a two-layer architecture: Next.js Event Handler + Docker Agent.",
   "bin": {
-    "thepopebot": "./bin/cli.js"
+    "23wf": "./bin/cli.js"
   },
   "main": "api/index.js",
   "exports": {

@@ -46,11 +46,11 @@ function parseUpgradeTarget(arg) {
 
 function printUsage() {
   console.log(`
-Usage: thepopebot <command>
+Usage: 23wf <command>
 
 Commands:
-  init                              Scaffold a new thepopebot project
-  upgrade|update [@beta|version]    Upgrade thepopebot (install, init, build, commit, push)
+  init                              Scaffold a new 23wf project
+  upgrade|update [@beta|version]    Upgrade 23wf (install, init, build, commit, push)
   setup                             Run interactive setup wizard
   setup-telegram                    Reconfigure Telegram webhook
   reset-auth                        Regenerate AUTH_SECRET (invalidates all sessions)
@@ -90,7 +90,7 @@ async function init() {
   const templatesDir = path.join(packageDir, 'templates');
   const noManaged = args.includes('--no-managed');
 
-  // Guard: warn if the directory is not empty (unless it's an existing thepopebot project)
+  // Guard: warn if the directory is not empty (unless it's an existing 23wf project)
   const entries = fs.readdirSync(cwd);
   if (entries.length > 0) {
     const pkgPath = path.join(cwd, 'package.json');
@@ -100,7 +100,7 @@ async function init() {
         const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
         const deps = pkg.dependencies || {};
         const devDeps = pkg.devDependencies || {};
-        if (deps.thepopebot || devDeps.thepopebot) {
+        if (deps['23wf'] || devDeps['23wf']) {
           isExistingProject = true;
         }
       } catch {}
@@ -111,7 +111,7 @@ async function init() {
       const { text, isCancel } = await import('@clack/prompts');
       const dirName = await text({
         message: 'Project directory name:',
-        defaultValue: 'my-popebot',
+        defaultValue: 'my-23wf',
       });
       if (isCancel(dirName)) {
         console.log('\nCancelled.\n');
@@ -125,7 +125,7 @@ async function init() {
     }
   }
 
-  console.log('\nScaffolding thepopebot project...\n');
+  console.log('\nScaffolding 23wf project...\n');
 
   const templateFiles = getTemplateFiles(templatesDir);
   const created = [];
@@ -216,7 +216,7 @@ async function init() {
   if (!fs.existsSync(pkgPath)) {
     const dirName = path.basename(cwd);
     const { version } = JSON.parse(fs.readFileSync(path.join(packageDir, 'package.json'), 'utf8'));
-    const thepopebotDep = version.includes('-') ? version : '^1.0.0';
+    const wfDep = version.includes('-') ? version : '^1.0.0';
     const pkg = {
       name: dirName,
       private: true,
@@ -224,12 +224,12 @@ async function init() {
         dev: 'next dev --turbopack',
         build: 'next build',
         start: 'next start',
-        setup: 'thepopebot setup',
-        'setup-telegram': 'thepopebot setup-telegram',
-        'reset-auth': 'thepopebot reset-auth',
+        setup: '23wf setup',
+        'setup-telegram': '23wf setup-telegram',
+        'reset-auth': '23wf reset-auth',
       },
       dependencies: {
-        thepopebot: thepopebotDep,
+        '23wf': wfDep,
         next: '^15.5.12',
         'next-auth': '5.0.0-beta.30',
         'next-themes': '^0.4.0',
@@ -295,12 +295,12 @@ async function init() {
   if (changed.length > 0) {
     console.log('\n  Updated templates available:');
     console.log('  These files differ from the current package templates.');
-    console.log('  This may be from your edits, or from a thepopebot update.\n');
+    console.log('  This may be from your edits, or from a 23wf update.\n');
     for (const file of changed) {
       console.log(`    ${file}`);
     }
-    console.log('\n  To view differences:  npx thepopebot diff <file>');
-    console.log('  To reset to default:  npx thepopebot reset <file>');
+    console.log('\n  To view differences:  npx 23wf diff <file>');
+    console.log('  To reset to default:  npx 23wf reset <file>');
   }
 
   // Run npm install
@@ -310,32 +310,32 @@ async function init() {
   // Create or update .env with auto-generated infrastructure values
   const envPath = path.join(cwd, '.env');
   const { randomBytes } = await import('crypto');
-  const thepopebotPkg = JSON.parse(fs.readFileSync(path.join(packageDir, 'package.json'), 'utf8'));
-  const version = thepopebotPkg.version;
+  const wfPkg = JSON.parse(fs.readFileSync(path.join(packageDir, 'package.json'), 'utf8'));
+  const version = wfPkg.version;
 
   if (!fs.existsSync(envPath)) {
     // Seed .env for new projects
     const authSecret = randomBytes(32).toString('base64');
-    const seedEnv = `# thepopebot Configuration
+    const seedEnv = `# 23wf Configuration
 # Run "npm run setup" to complete configuration
 
 AUTH_SECRET=${authSecret}
 AUTH_TRUST_HOST=true
-THEPOPEBOT_VERSION=${version}
+WF_VERSION=${version}
 `;
     fs.writeFileSync(envPath, seedEnv);
-    console.log(`  Created .env (AUTH_SECRET, THEPOPEBOT_VERSION=${version})`);
+    console.log(`  Created .env (AUTH_SECRET, WF_VERSION=${version})`);
   } else {
-    // Update THEPOPEBOT_VERSION in existing .env
+    // Update WF_VERSION in existing .env
     try {
       let envContent = fs.readFileSync(envPath, 'utf8');
-      if (envContent.match(/^THEPOPEBOT_VERSION=.*/m)) {
-        envContent = envContent.replace(/^THEPOPEBOT_VERSION=.*/m, `THEPOPEBOT_VERSION=${version}`);
+      if (envContent.match(/^WF_VERSION=.*/m)) {
+        envContent = envContent.replace(/^WF_VERSION=.*/m, `WF_VERSION=${version}`);
       } else {
-        envContent = envContent.trimEnd() + `\nTHEPOPEBOT_VERSION=${version}\n`;
+        envContent = envContent.trimEnd() + `\nWF_VERSION=${version}\n`;
       }
       fs.writeFileSync(envPath, envContent);
-      console.log(`  Updated THEPOPEBOT_VERSION to ${version}`);
+      console.log(`  Updated WF_VERSION to ${version}`);
     } catch {}
   }
 
@@ -356,8 +356,8 @@ function reset(filePath) {
     for (const file of files) {
       console.log(`  ${destPath(file)}`);
     }
-    console.log('\nUsage: thepopebot reset <file>');
-    console.log('Example: thepopebot reset config/SOUL.md\n');
+    console.log('\nUsage: 23wf reset <file>');
+    console.log('Example: 23wf reset config/SOUL.md\n');
     return;
   }
 
@@ -367,7 +367,7 @@ function reset(filePath) {
 
   if (!fs.existsSync(src)) {
     console.error(`\nTemplate not found: ${filePath}`);
-    console.log('Run "thepopebot reset" to see available templates.\n');
+    console.log('Run "23wf reset" to see available templates.\n');
     process.exit(1);
   }
 
@@ -413,8 +413,8 @@ function diff(filePath) {
     if (!anyDiff) {
       console.log('  All files match package templates.');
     }
-    console.log('\nUsage: thepopebot diff <file>');
-    console.log('Example: thepopebot diff config/SOUL.md\n');
+    console.log('\nUsage: 23wf diff <file>');
+    console.log('Example: 23wf diff config/SOUL.md\n');
     return;
   }
 
@@ -429,7 +429,7 @@ function diff(filePath) {
 
   if (!fs.existsSync(dest)) {
     console.log(`\n${filePath} does not exist in your project.`);
-    console.log(`Run "thepopebot reset ${filePath}" to create it.\n`);
+    console.log(`Run "23wf reset ${filePath}" to create it.\n`);
     return;
   }
 
@@ -439,7 +439,7 @@ function diff(filePath) {
     console.log('\nFiles are identical.\n');
   } catch (e) {
     // git diff exits with 1 when files differ (output already printed)
-    console.log(`\n  To reset: thepopebot reset ${filePath}\n`);
+    console.log(`\n  To reset: 23wf reset ${filePath}\n`);
   }
 }
 
@@ -503,23 +503,23 @@ async function upgrade() {
   const tag = parseUpgradeTarget(args[0]);
   const { confirm, isCancel } = await import('@clack/prompts');
 
-  // --- Pre-flight: verify this is a thepopebot project ---
+  // --- Pre-flight: verify this is a 23wf project ---
   const pkgPath = path.join(cwd, 'package.json');
   if (!fs.existsSync(pkgPath)) {
-    console.error('\n  Not a thepopebot project (no package.json found).\n');
+    console.error('\n  Not a 23wf project (no package.json found).\n');
     process.exit(1);
   }
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-  if (!deps.thepopebot) {
-    console.error('\n  Not a thepopebot project (thepopebot not in dependencies).\n');
+  if (!deps['23wf']) {
+    console.error('\n  Not a 23wf project (23wf not in dependencies).\n');
     process.exit(1);
   }
 
   // Get current installed version
   let currentVersion;
   try {
-    const installedPkg = path.join(cwd, 'node_modules', 'thepopebot', 'package.json');
+    const installedPkg = path.join(cwd, 'node_modules', '23wf', 'package.json');
     currentVersion = JSON.parse(fs.readFileSync(installedPkg, 'utf8')).version;
   } catch {
     currentVersion = 'unknown';
@@ -528,13 +528,13 @@ async function upgrade() {
   // Resolve target version
   let targetVersion;
   try {
-    targetVersion = execSync(`npm view thepopebot@${tag} version`, { encoding: 'utf8' }).trim();
+    targetVersion = execSync(`npm view 23wf@${tag} version`, { encoding: 'utf8' }).trim();
   } catch {
-    console.error(`\n  Could not resolve thepopebot@${tag}. Check the version/tag and try again.\n`);
+    console.error(`\n  Could not resolve 23wf@${tag}. Check the version/tag and try again.\n`);
     process.exit(1);
   }
 
-  console.log(`\n  thepopebot ${currentVersion} → ${targetVersion}`);
+  console.log(`\n  23wf ${currentVersion} → ${targetVersion}`);
 
   if (currentVersion === targetVersion) {
     console.log('  Already up to date. Nothing to do.\n');
@@ -546,7 +546,7 @@ async function upgrade() {
   if (status) {
     console.log('\n  You have local changes. Saving them before upgrading...\n');
     try {
-      execSync('git add -A && git commit -m "save local changes before thepopebot upgrade"', { stdio: 'inherit', cwd });
+      execSync('git add -A && git commit -m "save local changes before 23wf upgrade"', { stdio: 'inherit', cwd });
     } catch {
       console.error('\n  Could not save your local changes. Please try again.\n');
       return;
@@ -569,9 +569,9 @@ async function upgrade() {
   }
 
   // --- Install ---
-  console.log(`\n  Installing thepopebot@${targetVersion}...\n`);
+  console.log(`\n  Installing 23wf@${targetVersion}...\n`);
   try {
-    execSync(`npm install thepopebot@${targetVersion}`, { stdio: 'inherit', cwd });
+    execSync(`npm install 23wf@${targetVersion}`, { stdio: 'inherit', cwd });
   } catch {
     console.error('\n  Install failed. Check your internet connection and try again.\n');
     process.exit(1);
@@ -580,9 +580,9 @@ async function upgrade() {
   // --- Init (spawn new process to use the NEW version's templates) ---
   console.log('\n  Updating project files...\n');
   try {
-    execSync('npx thepopebot init', { stdio: 'inherit', cwd });
+    execSync('npx 23wf init', { stdio: 'inherit', cwd });
   } catch {
-    console.error('\n  Failed to update project files. Try running "npx thepopebot init" manually.\n');
+    console.error('\n  Failed to update project files. Try running "npx 23wf init" manually.\n');
     process.exit(1);
   }
 
@@ -599,7 +599,7 @@ async function upgrade() {
     console.error('\n  Build failed. The upgrade has been applied but the project does not build.');
     console.error('  Fix the build errors, then run:\n');
     console.error(`    npm run build`);
-    console.error(`    git add -A && git commit -m "upgrade thepopebot to ${targetVersion}"`);
+    console.error(`    git add -A && git commit -m "upgrade 23wf to ${targetVersion}"`);
     console.error('    git push\n');
     process.exit(1);
   }
@@ -609,10 +609,10 @@ async function upgrade() {
   if (changes) {
     try {
       execSync('git add -A', { cwd });
-      execSync(`git commit -m "upgrade thepopebot to ${targetVersion}"`, { stdio: 'inherit', cwd });
+      execSync(`git commit -m "upgrade 23wf to ${targetVersion}"`, { stdio: 'inherit', cwd });
     } catch {
       console.error('\n  Failed to commit upgrade. Try running manually:');
-      console.error(`    git add -A && git commit -m "upgrade thepopebot to ${targetVersion}"\n`);
+      console.error(`    git add -A && git commit -m "upgrade 23wf to ${targetVersion}"\n`);
       process.exit(1);
     }
   }
@@ -641,7 +641,7 @@ async function upgrade() {
   }
 
   // --- Summary ---
-  console.log(`\n  Upgraded thepopebot ${currentVersion} → ${targetVersion}`);
+  console.log(`\n  Upgraded 23wf ${currentVersion} → ${targetVersion}`);
   console.log('  Done!\n');
 }
 
@@ -684,7 +684,7 @@ function readStdin() {
 
 /**
  * Prompt for a secret value interactively if not provided as an argument.
- * Supports piped stdin (e.g. echo "val" | thepopebot set-var KEY).
+ * Supports piped stdin (e.g. echo "val" | 23wf set-var KEY).
  */
 async function promptForValue(key) {
   const stdin = await readStdin();
@@ -711,8 +711,8 @@ async function promptForValue(key) {
 
 async function setAgentSecret(key, value) {
   if (!key) {
-    console.error('\n  Usage: thepopebot set-agent-secret <KEY> [VALUE]\n');
-    console.error('  Example: thepopebot set-agent-secret ANTHROPIC_API_KEY\n');
+    console.error('\n  Usage: 23wf set-agent-secret <KEY> [VALUE]\n');
+    console.error('  Example: 23wf set-agent-secret ANTHROPIC_API_KEY\n');
     process.exit(1);
   }
 
@@ -738,8 +738,8 @@ async function setAgentSecret(key, value) {
 
 async function setAgentLlmSecret(key, value) {
   if (!key) {
-    console.error('\n  Usage: thepopebot set-agent-llm-secret <KEY> [VALUE]\n');
-    console.error('  Example: thepopebot set-agent-llm-secret BRAVE_API_KEY\n');
+    console.error('\n  Usage: 23wf set-agent-llm-secret <KEY> [VALUE]\n');
+    console.error('  Example: 23wf set-agent-llm-secret BRAVE_API_KEY\n');
     process.exit(1);
   }
 
@@ -761,8 +761,8 @@ async function setAgentLlmSecret(key, value) {
 
 async function setVar(key, value) {
   if (!key) {
-    console.error('\n  Usage: thepopebot set-var <KEY> [VALUE]\n');
-    console.error('  Example: thepopebot set-var LLM_MODEL claude-sonnet-4-5-20250929\n');
+    console.error('\n  Usage: 23wf set-var <KEY> [VALUE]\n');
+    console.error('  Example: 23wf set-var LLM_MODEL claude-sonnet-4-5-20250929\n');
     process.exit(1);
   }
 
@@ -783,7 +783,7 @@ async function setVar(key, value) {
 
 async function userPassword(email) {
   if (!email) {
-    console.error('\n  Usage: thepopebot user:password <email>\n');
+    console.error('\n  Usage: 23wf user:password <email>\n');
     process.exit(1);
   }
 

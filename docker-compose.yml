@@ -22,8 +22,8 @@ services:
     restart: unless-stopped
 
   event-handler:
-    container_name: thepopebot-event-handler
-    image: ${EVENT_HANDLER_IMAGE_URL:-stephengpope/thepopebot:event-handler-${THEPOPEBOT_VERSION:-latest}}
+    container_name: 23wf-event-handler
+    image: ${EVENT_HANDLER_IMAGE_URL:-23systems/23wf:event-handler-${WF_VERSION:-latest}}
     volumes:
       - .:/app
       - /app/node_modules

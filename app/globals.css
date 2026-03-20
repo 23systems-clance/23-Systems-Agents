@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "streamdown/styles.css";
-@source "../node_modules/thepopebot/lib/**/*.{js,jsx}";
+@source "../node_modules/23wf/lib/**/*.{js,jsx}";
 @source "../node_modules/streamdown/dist/**/*.js";
 
 :root {

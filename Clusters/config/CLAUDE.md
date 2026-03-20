@@ -20,7 +20,7 @@ Markdown files in `config/` support includes and built-in variables, powered by 
 
 ## Next.js Config Wrapper (index.js)
 
-`withThepopebot()` wraps user's `next.config.mjs`. Adds `transpilePackages` and `serverExternalPackages` for the npm package's dependencies that need special bundling.
+`with23WF()` wraps user's `next.config.mjs`. Adds `transpilePackages` and `serverExternalPackages` for the npm package's dependencies that need special bundling.
 
 ## Instrumentation (instrumentation.js)
 

@@ -97,7 +97,7 @@ jobs:
           file: ${{ matrix.dockerfile }}
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: stephengpope/thepopebot:${{ matrix.image }}-${{ needs.publish-staging.outputs.version }}
+          tags: 23systems/23wf:${{ matrix.image }}-${{ needs.publish-staging.outputs.version }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
@@ -119,9 +119,9 @@ jobs:
         run: |
           VERSION="${{ needs.publish-staging.outputs.version }}"
           CHANNEL="${{ needs.publish-staging.outputs.channel }}"
-          echo "Promoting thepopebot@$VERSION → $CHANNEL"
-          npm dist-tag add "thepopebot@$VERSION" "$CHANNEL"
-          npm dist-tag rm thepopebot staging
+          echo "Promoting 23wf@$VERSION → $CHANNEL"
+          npm dist-tag add "23wf@$VERSION" "$CHANNEL"
+          npm dist-tag rm 23wf staging
 
   # ─── Job 4: Create GitHub Release with LLM changelog ───
   release:
@@ -167,7 +167,7 @@ jobs:
           fi
 
           # Build prompt
-          PROMPT_HEADER="Analyze the following code diff between two releases of an npm package (thepopebot — a framework for creating autonomous AI agents). Write a changelog that:
+          PROMPT_HEADER="Analyze the following code diff between two releases of an npm package (23wf — a framework for creating autonomous AI agents). Write a changelog that:
 
           1. Describes each meaningful change in terms of **user-facing outcomes** — how the project is actually better
           2. Includes brief technical context for each change
@@ -236,10 +236,10 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           VERSION="${{ needs.publish-staging.outputs.version }}"
-          echo "Docker builds failed — cleaning up thepopebot@$VERSION"
+          echo "Docker builds failed — cleaning up 23wf@$VERSION"
 
           # Remove the staging dist-tag so it doesn't linger
-          npm dist-tag rm thepopebot staging || true
+          npm dist-tag rm 23wf staging || true
 
           # Unpublish the version (allowed within 72h of publish)
-          npm unpublish "thepopebot@$VERSION" || true
+          npm unpublish "23wf@$VERSION" || true

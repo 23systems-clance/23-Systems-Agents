@@ -1,4 +1,4 @@
-import { auth } from 'thepopebot/auth';
+import { auth } from '23wf/auth';
 import { getClusterById } from '../../../../../Clusters/lib/db/clusters.js';
 import { clusterDir } from '../../../../../Clusters/lib/cluster/execute.js';
 import fs from 'fs';

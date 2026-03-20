@@ -283,7 +283,7 @@ function createStartHeadlessCodingTool({ repo, branch, workspaceId }) {
 
         const { getCodeWorkspaceById } = await import('../db/code-workspaces.js');
         const workspace = getCodeWorkspaceById(workspaceId);
-        const featureBranch = workspace?.featureBranch || `thepopebot/new-chat-${workspaceId.replace(/-/g, '').slice(0, 8)}`;
+        const featureBranch = workspace?.featureBranch || `23wf/new-chat-${workspaceId.replace(/-/g, '').slice(0, 8)}`;
 
         const { runHeadlessCodeContainer } = await import('../tools/docker.js');
 

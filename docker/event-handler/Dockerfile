@@ -8,7 +8,7 @@ RUN apt-get update && \
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install --omit=dev && \
-    npm install --no-save thepopebot@$(node -p "require('./package.json').version")
+    npm install --no-save 23wf@$(node -p "require('./package.json').version")
 
 # ── Stage 2: runtime ─────────────────────────────────────────────
 FROM node:22-bookworm-slim

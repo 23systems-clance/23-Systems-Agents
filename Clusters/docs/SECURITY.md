@@ -2,7 +2,7 @@
 
 ## Security Measures
 
-thepopebot includes several security measures by default:
+23wf includes several security measures by default:
 
 - **API key authentication** — All external `/api` routes require a valid `x-api-key` header. Keys are SHA-256 hashed in the database.
 - **Webhook secret validation** — Telegram and GitHub webhook endpoints validate shared secrets. If a secret is not configured, the endpoint rejects all requests (fail-closed).
@@ -13,7 +13,7 @@ thepopebot includes several security measures by default:
 
 ## Disclaimer
 
-We do our best to follow security best practices, but **all software carries risk**. thepopebot is provided as-is, without warranties of any kind. You are responsible for:
+We do our best to follow security best practices, but **all software carries risk**. 23wf is provided as-is, without warranties of any kind. You are responsible for:
 
 - Securing your own infrastructure (server, network, DNS)
 - Managing your API keys and secrets

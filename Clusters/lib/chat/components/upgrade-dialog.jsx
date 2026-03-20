@@ -78,7 +78,7 @@ export function UpgradeDialog({ open, onClose, version, updateAvailable, changel
               <p>
                 Some files (prompts, crons, triggers) won't be auto-updated to avoid breaking your bot.{' '}
                 <a
-                  href="https://github.com/stephengpope/thepopebot?tab=readme-ov-file#understanding-init"
+                  href="https://github.com/23systems/23wf?tab=readme-ov-file#understanding-init"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-emerald-500 hover:underline"
@@ -92,7 +92,7 @@ export function UpgradeDialog({ open, onClose, version, updateAvailable, changel
               <p className="text-xs text-muted-foreground">
                 If you hit unrecoverable errors, see the{' '}
                 <a
-                  href="https://github.com/stephengpope/thepopebot?tab=readme-ov-file#manual-updating"
+                  href="https://github.com/23systems/23wf?tab=readme-ov-file#manual-updating"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-emerald-500 hover:underline"

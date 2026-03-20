@@ -1,5 +1,5 @@
-import { auth } from 'thepopebot/auth';
-import { CodePage } from 'thepopebot/code';
+import { auth } from '23wf/auth';
+import { CodePage } from '23wf/code';
 
 export default async function CodeRoute({ params }) {
   const session = await auth();

@@ -410,7 +410,7 @@ All specs in `.specify/specs/` are numbered by execution priority. Work them in 
 
 | # | Spec | Priority | Key Dependencies |
 |---|------|----------|-----------------|
-| **000** | Rebrand thepopebot to 23WF | P0 | Phase 1 (user-editable files) first; Phases 2-5 blocked on package fork |
+| **000** | Rebrand 23wf to 23WF | P0 | Phase 1 (user-editable files) first; Phases 2-5 blocked on package fork |
 | **001** | End User Portal | P0 | Rebrand Phase 1 complete, Clusters functional |
 | **002** | Slack Pipeline Integration | P1 | End User Portal feature-complete |
 | **003** | AWS Cloud Deployment | P1 | All features complete; staging unrestricted, production requires **"DEPLOY PRODUCTION"** |

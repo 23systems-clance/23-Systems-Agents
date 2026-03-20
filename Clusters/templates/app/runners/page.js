@@ -1,5 +1,5 @@
-import { auth } from 'thepopebot/auth';
-import { RunnersPage } from 'thepopebot/chat';
+import { auth } from '23wf/auth';
+import { RunnersPage } from '23wf/chat';
 
 export default async function RunnersRoute() {
   const session = await auth();

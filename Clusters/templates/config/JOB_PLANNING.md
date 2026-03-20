@@ -120,7 +120,7 @@ If a skill needs an API key:
 
 1. **Tell the user** what credential is needed and where to get it
 2. **Suggest setting it up now** so the skill can be tested in the same job:
-   - Run: `npx thepopebot set-agent-llm-secret <KEY_NAME> <value>`
+   - Run: `npx 23wf set-agent-llm-secret <KEY_NAME> <value>`
    - The value is stored exactly as provided, no transformation needed
    - This creates a GitHub secret with the `AGENT_LLM_` prefix — the Docker container exposes it as an environment variable (e.g., `AGENT_LLM_BRAVE_API_KEY` → `BRAVE_API_KEY`)
    - They can rotate the key later with the same command
@@ -188,7 +188,7 @@ This applies to every job — including simple or obvious tasks. Even if the use
 >
 > If you set it up now, I can build AND test the skill in one job:
 > ```
-> npx thepopebot set-agent-llm-secret SLACK_WEBHOOK_URL <your-url>
+> npx 23wf set-agent-llm-secret SLACK_WEBHOOK_URL <your-url>
 > ```
 > (You can rotate this later with the same command.)
 >
@@ -221,7 +221,7 @@ New skill creation:
 > 1. Create `SKILL.md` with frontmatter (name: slack-post, description: "Post messages to Slack channels via incoming webhook.") and usage docs referencing `skills/slack-post/post.sh <message>`
 > 2. Create `post.sh` — bash script that takes a message argument, sends it to the Slack webhook URL via curl using $SLACK_WEBHOOK_URL. Make it executable.
 > 3. Activate: `ln -s ../slack-post skills/active/slack-post`
-> 4. Test: run `skills/slack-post/post.sh "test message from thepopebot"` and verify successful delivery. Fix any issues before committing.
+> 4. Test: run `skills/slack-post/post.sh "test message from 23wf"` and verify successful delivery. Fix any issues before committing.
 
 ---
 

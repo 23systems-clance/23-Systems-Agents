@@ -178,13 +178,13 @@ These skills follow the **Agent Skills standard** (SKILL.md format), compatible 
 ## Credential setup
 
 If a skill needs an API key:
-- `npx thepopebot set-agent-llm-secret <KEY_NAME> <value>` — creates a GitHub secret with `AGENT_LLM_` prefix, exposed as an env var in the Docker container
+- `npx 23wf set-agent-llm-secret <KEY_NAME> <value>` — creates a GitHub secret with `AGENT_LLM_` prefix, exposed as an env var in the Docker container
 - Also add to `.env` for local development
 - Keys can be rotated later with the same command
 
 **Multi-line secrets** (e.g., JSON service account files): omit the value argument and pipe the file via stdin:
 ```bash
-npx thepopebot set-agent-llm-secret GOOGLE_CREDENTIALS < credentials.json
+npx 23wf set-agent-llm-secret GOOGLE_CREDENTIALS < credentials.json
 ```
 Avoid `$(cat credentials.json)` — it can break on special characters and newlines.
 

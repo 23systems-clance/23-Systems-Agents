@@ -164,13 +164,13 @@ function buildDockerImage(projectPath) {
   // Add COPY for tarball after the package.json COPY line in builder stage
   dockerfile = dockerfile.replace(
     'COPY package.json package-lock.json* ./',
-    'COPY package.json package-lock.json* ./\nCOPY .thepopebot-dev.tgz /tmp/thepopebot.tgz'
+    'COPY package.json package-lock.json* ./\nCOPY .23wf-dev.tgz /tmp/23wf.tgz'
   );
 
   // Replace npm install from registry with local tarball install
   dockerfile = dockerfile.replace(
-    /RUN npm install --omit=dev && \\\n\s+npm install --no-save thepopebot@\$\(node -p "require\('\.\/package\.json'\)\.version"\)/,
-    'RUN npm install --omit=dev && \\\n    npm install --no-save /tmp/thepopebot.tgz && rm /tmp/thepopebot.tgz'
+    /RUN npm install --omit=dev && \\\n\s+npm install --no-save 23wf@\$\(node -p "require\('\.\/package\.json'\)\.version"\)/,
+    'RUN npm install --omit=dev && \\\n    npm install --no-save /tmp/23wf.tgz && rm /tmp/23wf.tgz'
   );
 
   // Fix template paths for project context (templates/docker/... → docker/...)
@@ -179,7 +179,7 @@ function buildDockerImage(projectPath) {
   // Read version from package.json
   const pkg = JSON.parse(fs.readFileSync(path.join(PACKAGE_DIR, 'package.json'), 'utf8'));
   const version = pkg.version;
-  const imageTag = `stephengpope/thepopebot:event-handler-${version}`;
+  const imageTag = `23systems/23wf:event-handler-${version}`;
 
   // Build using stdin Dockerfile with project dir as context (no cache to ensure fresh package)
   execSync(`docker build --no-cache -f - -t ${imageTag} .`, {
@@ -188,23 +188,23 @@ function buildDockerImage(projectPath) {
     cwd: projectPath,
   });
 
-  // Update THEPOPEBOT_VERSION in .env
+  // Update WF_VERSION in .env
   const envPath = path.join(projectPath, '.env');
   if (fs.existsSync(envPath)) {
     let env = fs.readFileSync(envPath, 'utf8');
-    if (env.match(/^THEPOPEBOT_VERSION=.*/m)) {
-      env = env.replace(/^THEPOPEBOT_VERSION=.*/m, `THEPOPEBOT_VERSION=${version}`);
+    if (env.match(/^WF_VERSION=.*/m)) {
+      env = env.replace(/^WF_VERSION=.*/m, `WF_VERSION=${version}`);
     } else {
-      env = env.trimEnd() + `\nTHEPOPEBOT_VERSION=${version}\n`;
+      env = env.trimEnd() + `\nWF_VERSION=${version}\n`;
     }
     fs.writeFileSync(envPath, env);
-    console.log(`  Updated THEPOPEBOT_VERSION to ${version}`);
+    console.log(`  Updated WF_VERSION to ${version}`);
   }
 }
 
 export async function sync(projectPath) {
   if (!projectPath) {
-    console.error('\n  Usage: thepopebot sync <path-to-project>\n');
+    console.error('\n  Usage: 23wf sync <path-to-project>\n');
     process.exit(1);
   }
 
@@ -225,7 +225,7 @@ export async function sync(projectPath) {
   // npm pack may output warnings before the filename — tarball is always the last line
   const tarball = packOutput.split('\n').pop().trim();
   const tarballSrc = path.join(PACKAGE_DIR, tarball);
-  const tarballDest = path.join(projectPath, '.thepopebot-dev.tgz');
+  const tarballDest = path.join(projectPath, '.23wf-dev.tgz');
 
   try {
     fs.copyFileSync(tarballSrc, tarballDest);

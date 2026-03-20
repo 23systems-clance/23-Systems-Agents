@@ -125,7 +125,7 @@ async function* chatStream(threadId, message, attachments = [], options = {}) {
         });
         workspaceId = workspace.id;
         const shortId = workspaceId.replace(/-/g, '').slice(0, 8);
-        const featureBranch = `thepopebot/new-chat-${shortId}`;
+        const featureBranch = `23wf/new-chat-${shortId}`;
         updateFeatureBranch(workspaceId, featureBranch);
       }
       createChat(options.userId || 'unknown', 'New Chat', threadId);
@@ -382,7 +382,7 @@ async function autoTitle(threadId, firstMessage) {
           const { updateFeatureBranch } = await import('../db/code-workspaces.js');
           const shortId = chat.codeWorkspaceId.replace(/-/g, '').slice(0, 8);
           const slug = response.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-          const featureBranch = `thepopebot/${slug}-${shortId}`;
+          const featureBranch = `23wf/${slug}-${shortId}`;
           updateFeatureBranch(chat.codeWorkspaceId, featureBranch);
         } catch (err) {
           console.error('[autoTitle] Failed to update feature branch:', err.message);

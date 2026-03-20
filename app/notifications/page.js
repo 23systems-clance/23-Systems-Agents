@@ -1,5 +1,5 @@
-import { auth } from 'thepopebot/auth';
-import { NotificationsPage } from 'thepopebot/chat';
+import { auth } from '23wf/auth';
+import { NotificationsPage } from '23wf/chat';
 
 export default async function NotificationsRoute() {
   const session = await auth();

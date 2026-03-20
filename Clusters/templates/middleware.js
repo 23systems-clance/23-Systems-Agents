@@ -1,1 +1,1 @@
-export { middleware, config } from 'thepopebot/middleware';
+export { middleware, config } from '23wf/middleware';

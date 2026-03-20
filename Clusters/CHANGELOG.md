@@ -1,5 +1,7 @@
 # Changelog
 
+> **Note:** This package was renamed from `thepopebot` to `23wf` (23 Systems Workforce) in March 2026. Historical entries below reference the original package name.
+
 ## 1.2.57
 
 ### Drizzle Kit migrations

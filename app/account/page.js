@@ -1,4 +1,4 @@
-import { auth } from 'thepopebot/auth';
+import { auth } from '23wf/auth';
 import { redirect } from 'next/navigation';
 import { PortalLayout } from '../../lib/portal/components/portal-layout.jsx';
 import { PortalSettings } from '../../lib/portal/components/portal-settings.jsx';

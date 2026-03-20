@@ -2,7 +2,7 @@
 
 ## Overview
 
-thepopebot has two layers that use LLMs independently:
+23wf has two layers that use LLMs independently:
 
 - **Event Handler** — powers web chat, Telegram responses, webhook processing, and job summaries. Configured via `.env` on your server.
 - **Jobs** — the Docker agent (Pi) that runs on GitHub Actions or a self-hosted runner. Configured via GitHub repo variables.
@@ -43,14 +43,14 @@ Jobs run in Docker containers on GitHub Actions (or a self-hosted runner). Their
 Set the defaults with the CLI:
 
 ```bash
-npx thepopebot set-var LLM_PROVIDER openai
-npx thepopebot set-var LLM_MODEL gpt-4o
+npx 23wf set-var LLM_PROVIDER openai
+npx 23wf set-var LLM_MODEL gpt-4o
 ```
 
 The matching API key must exist as a GitHub secret:
 
 ```bash
-npx thepopebot set-agent-secret OPENAI_API_KEY sk-...
+npx 23wf set-agent-secret OPENAI_API_KEY sk-...
 ```
 
 These defaults apply to every job unless overridden per-job (see below).
@@ -70,10 +70,10 @@ ANTHROPIC_API_KEY=sk-ant-...
 **Jobs** (GitHub repo variables):
 
 ```bash
-npx thepopebot set-var LLM_PROVIDER custom
-npx thepopebot set-var LLM_MODEL qwen3:8b
-npx thepopebot set-var OPENAI_BASE_URL http://host.docker.internal:11434/v1
-npx thepopebot set-var RUNS_ON self-hosted
+npx 23wf set-var LLM_PROVIDER custom
+npx 23wf set-var LLM_MODEL qwen3:8b
+npx 23wf set-var OPENAI_BASE_URL http://host.docker.internal:11434/v1
+npx 23wf set-var RUNS_ON self-hosted
 ```
 
 Now your chat uses Claude while every job runs on the local Ollama instance.
@@ -115,15 +115,15 @@ The matching API key must already exist as a GitHub secret (see the Providers ta
 Point at the provider's endpoint and add your API key:
 
 ```bash
-npx thepopebot set-var LLM_PROVIDER custom
-npx thepopebot set-var LLM_MODEL deepseek-chat
-npx thepopebot set-var OPENAI_BASE_URL https://api.deepseek.com/v1
+npx 23wf set-var LLM_PROVIDER custom
+npx 23wf set-var LLM_MODEL deepseek-chat
+npx 23wf set-var OPENAI_BASE_URL https://api.deepseek.com/v1
 ```
 
 Then set the API key as a GitHub secret:
 
 ```bash
-npx thepopebot set-agent-secret CUSTOM_API_KEY sk-...
+npx 23wf set-agent-secret CUSTOM_API_KEY sk-...
 ```
 
 Cloud custom APIs are reachable from any runner — no other changes needed.
@@ -133,10 +133,10 @@ Cloud custom APIs are reachable from any runner — no other changes needed.
 For a model running on your own machine you need a [self-hosted runner](https://docs.github.com/en/actions/hosting-your-own-runners) so the job executes on your hardware:
 
 ```bash
-npx thepopebot set-var RUNS_ON self-hosted
-npx thepopebot set-var LLM_PROVIDER custom
-npx thepopebot set-var LLM_MODEL qwen3:8b
-npx thepopebot set-var OPENAI_BASE_URL http://host.docker.internal:11434/v1
+npx 23wf set-var RUNS_ON self-hosted
+npx 23wf set-var LLM_PROVIDER custom
+npx 23wf set-var LLM_MODEL qwen3:8b
+npx 23wf set-var OPENAI_BASE_URL http://host.docker.internal:11434/v1
 ```
 
 Most local servers don't need an API key. If yours does, set `AGENT_CUSTOM_API_KEY` as a GitHub secret.
@@ -160,7 +160,7 @@ If the endpoint requires an API key, also set `CUSTOM_API_KEY` in `.env`. Restar
 | What | Where | Variables |
 |------|-------|-----------|
 | Event Handler model (chat, Telegram, webhooks, summaries) | `.env` on your server | `LLM_PROVIDER`, `LLM_MODEL`, + provider API key |
-| Default job model | GitHub repo variables | `LLM_PROVIDER`, `LLM_MODEL` (set via `npx thepopebot set-var`) |
+| Default job model | GitHub repo variables | `LLM_PROVIDER`, `LLM_MODEL` (set via `npx 23wf set-var`) |
 | Per-job override | `config/CRONS.json` or `config/TRIGGERS.json` | `llm_provider`, `llm_model` on the entry |
 | Custom provider endpoint | GitHub repo variable (jobs) or `.env` (Event Handler) | `OPENAI_BASE_URL` |
 | Custom provider API key | GitHub secret (jobs) or `.env` (Event Handler) | `AGENT_CUSTOM_API_KEY` / `CUSTOM_API_KEY` |

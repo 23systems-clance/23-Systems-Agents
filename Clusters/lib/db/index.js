@@ -3,7 +3,7 @@ import path from 'path';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import { thepopebotDb, dataDir, PROJECT_ROOT } from '../paths.js';
+import { wfDb, dataDir, PROJECT_ROOT } from '../paths.js';
 import * as schema from './schema.js';
 
 let _db = null;
@@ -18,7 +18,7 @@ export function getDb() {
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
-    const sqlite = new Database(thepopebotDb);
+    const sqlite = new Database(wfDb);
     sqlite.pragma('journal_mode = WAL');
     _db = drizzle(sqlite, { schema });
   }
@@ -35,13 +35,13 @@ export function initDatabase() {
     fs.mkdirSync(dataDir, { recursive: true });
   }
 
-  const sqlite = new Database(thepopebotDb);
+  const sqlite = new Database(wfDb);
   sqlite.pragma('journal_mode = WAL');
   const db = drizzle(sqlite, { schema });
 
   // Resolve migrations folder from the installed package.
   // import.meta.url doesn't survive webpack bundling, so resolve from PROJECT_ROOT.
-  const migrationsFolder = path.join(PROJECT_ROOT, 'node_modules', 'thepopebot', 'drizzle');
+  const migrationsFolder = path.join(PROJECT_ROOT, 'node_modules', '23wf', 'drizzle');
 
   migrate(db, { migrationsFolder });
 

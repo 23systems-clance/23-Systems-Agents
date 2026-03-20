@@ -13,7 +13,7 @@ templates/app/cluster/    ← Next.js page wiring (thin imports from package)
 templates/app/clusters/   ← Next.js page wiring (list, roles)
 ```
 
-Package export: `thepopebot/cluster` → `lib/cluster/components/index.js`
+Package export: `23wf/cluster` → `lib/cluster/components/index.js`
 
 ## Database Tables
 

@@ -1,20 +1,20 @@
 /**
- * Next.js config wrapper for thepopebot.
+ * Next.js config wrapper for 23wf.
  * Enables instrumentation hook for cron scheduling on server start.
  *
  * Usage in user's next.config.mjs:
- *   import { withThepopebot } from 'thepopebot/config';
- *   export default withThepopebot({});
+ *   import { with23WF } from '23wf/config';
+ *   export default with23WF({});
  *
  * @param {Object} nextConfig - User's Next.js config
  * @returns {Object} Enhanced Next.js config
  */
-export function withThepopebot(nextConfig = {}) {
+export function with23WF(nextConfig = {}) {
   return {
     ...nextConfig,
     distDir: process.env.NEXT_BUILD_DIR || '.next',
     transpilePackages: [
-      'thepopebot',
+      '23wf',
       ...(nextConfig.transpilePackages || []),
     ],
     env: {

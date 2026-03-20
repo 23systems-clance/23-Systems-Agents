@@ -134,11 +134,11 @@ Sometimes you want the LLM to have access to certain credentials - browser login
 
 ```bash
 # Protected (filtered from LLM) — set via CLI:
-npx thepopebot set-agent-secret GH_TOKEN ghp_xxx
-npx thepopebot set-agent-secret ANTHROPIC_API_KEY sk-ant-xxx
+npx 23wf set-agent-secret GH_TOKEN ghp_xxx
+npx 23wf set-agent-secret ANTHROPIC_API_KEY sk-ant-xxx
 
 # Accessible to LLM (not filtered) — set via CLI:
-npx thepopebot set-agent-llm-secret BROWSER_PASSWORD mypass123
+npx 23wf set-agent-llm-secret BROWSER_PASSWORD mypass123
 ```
 
 | Credential Type | Put In | Why |

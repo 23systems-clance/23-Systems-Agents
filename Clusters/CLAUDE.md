@@ -1,6 +1,6 @@
-# thepopebot — Package Source Reference
+# 23wf — Package Source Reference
 
-Technical reference for AI assistants modifying the thepopebot NPM package source code.
+Technical reference for AI assistants modifying the 23wf NPM package source code.
 
 **Architecture**: Event Handler (Next.js) creates `job/*` branches → GitHub Actions runs Docker agent (Pi or Claude Code) → task executed → PR created → auto-merge → notification. Agent jobs log to `logs/{JOB_ID}/`.
 
@@ -15,9 +15,9 @@ The npm package (`api/`, `lib/`, `config/`, `bin/`) is published to npm. In prod
 
 ## Package vs. Templates — Where Code Goes
 
-All event handler logic, API routes, library code, and core functionality lives in the **npm package** (`api/`, `lib/`, `config/`, `bin/`). This is what users import when they `import ... from 'thepopebot/...'`.
+All event handler logic, API routes, library code, and core functionality lives in the **npm package** (`api/`, `lib/`, `config/`, `bin/`). This is what users import when they `import ... from '23wf/...'`.
 
-The `templates/` directory contains **only files that get scaffolded into user projects** via `npx thepopebot init`. Templates are for user-editable configuration and thin wiring — things users are expected to customize or override. Never add core logic to templates.
+The `templates/` directory contains **only files that get scaffolded into user projects** via `npx 23wf init`. Templates are for user-editable configuration and thin wiring — things users are expected to customize or override. Never add core logic to templates.
 
 **When adding or modifying event handler code, always put it in the package itself (e.g., `api/`, `lib/`), not in `templates/`.** Templates should only contain:
 - Configuration files users edit (`config/SOUL.md`, `config/CRONS.json`, etc.)
@@ -62,7 +62,7 @@ Files in managed directories are auto-synced (created, updated, **and deleted**)
 │   └── utils/
 │       └── render-md.js        # Markdown {{include}} processor
 ├── config/
-│   ├── index.js                # withThepopebot() Next.js config wrapper
+│   ├── index.js                # with23WF() Next.js config wrapper
 │   └── instrumentation.js      # Server startup hook (loads .env, starts crons)
 ├── bin/                        # CLI entry point (init, setup, reset, diff, upgrade)
 ├── setup/                      # Interactive setup wizard
@@ -73,7 +73,7 @@ Files in managed directories are auto-synced (created, updated, **and deleted**)
 
 ## NPM Package Exports
 
-Exports defined in `package.json` `exports` field. Pattern: `thepopebot/{module}` maps to source files in `api/`, `lib/`, `config/`. Includes `./cluster/*`, `./voice/*` exports. Add new exports there when creating new importable modules.
+Exports defined in `package.json` `exports` field. Pattern: `23wf/{module}` maps to source files in `api/`, `lib/`, `config/`. Includes `./cluster/*`, `./voice/*` exports. Add new exports there when creating new importable modules.
 
 ## Build System
 
@@ -81,7 +81,7 @@ Run `npm run build` before publish. esbuild compiles `lib/chat/components/**/*.j
 
 ## Database
 
-SQLite via Drizzle ORM at `data/thepopebot.sqlite` (override with `DATABASE_PATH`). Auto-initialized on server start. See `lib/db/CLAUDE.md` for schema details, CRUD patterns, and column naming.
+SQLite via Drizzle ORM at `data/23wf.sqlite` (override with `DATABASE_PATH`). Auto-initialized on server start. See `lib/db/CLAUDE.md` for schema details, CRUD patterns, and column naming.
 
 ### Migration Rules
 

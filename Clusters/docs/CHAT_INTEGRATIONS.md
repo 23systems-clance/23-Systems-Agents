@@ -29,7 +29,7 @@ See [Configuration](CONFIGURATION.md) for manual Telegram setup instructions.
 
 ## Channel Adapter Architecture
 
-thepopebot uses a channel adapter pattern to normalize messages across different chat platforms. The AI layer is channel-agnostic — it receives the same normalized message format regardless of the source.
+23wf uses a channel adapter pattern to normalize messages across different chat platforms. The AI layer is channel-agnostic — it receives the same normalized message format regardless of the source.
 
 ### Base Class
 

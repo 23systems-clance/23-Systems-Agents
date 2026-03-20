@@ -5,7 +5,7 @@ import { cronsFile, cronDir } from './paths.js';
 import { executeAction } from './actions.js';
 
 function getInstalledVersion() {
-  const pkgPath = path.join(process.cwd(), 'node_modules', 'thepopebot', 'package.json');
+  const pkgPath = path.join(process.cwd(), 'node_modules', '23wf', 'package.json');
   return JSON.parse(fs.readFileSync(pkgPath, 'utf8')).version;
 }
 
@@ -98,7 +98,7 @@ function compareVersions(a, b) {
 async function fetchAndStoreReleaseNotes(target) {
   try {
     const ghRes = await fetch(
-      `https://api.github.com/repos/stephengpope/thepopebot/releases/tags/v${target}`
+      `https://api.github.com/repos/23systems/23wf/releases/tags/v${target}`
     );
     if (!ghRes.ok) return;
     const release = await ghRes.json();
@@ -110,7 +110,7 @@ async function fetchAndStoreReleaseNotes(target) {
 }
 
 /**
- * Check npm registry for a newer version of thepopebot.
+ * Check npm registry for a newer version of 23wf.
  */
 async function runVersionCheck() {
   try {
@@ -119,8 +119,8 @@ async function runVersionCheck() {
     if (isPrerelease(installed)) {
       // Beta path: check both stable and beta dist-tags
       const results = await Promise.allSettled([
-        fetch('https://registry.npmjs.org/thepopebot/latest'),
-        fetch('https://registry.npmjs.org/thepopebot/beta'),
+        fetch('https://registry.npmjs.org/23wf/latest'),
+        fetch('https://registry.npmjs.org/23wf/beta'),
       ]);
 
       const candidates = [];
@@ -151,7 +151,7 @@ async function runVersionCheck() {
       }
     } else {
       // Stable path: existing logic, untouched
-      const res = await fetch('https://registry.npmjs.org/thepopebot/latest');
+      const res = await fetch('https://registry.npmjs.org/23wf/latest');
       if (!res.ok) {
         console.warn(`[version check] npm registry returned ${res.status}`);
         return;

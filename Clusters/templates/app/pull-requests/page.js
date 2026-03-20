@@ -1,5 +1,5 @@
-import { auth } from 'thepopebot/auth';
-import { PullRequestsPage } from 'thepopebot/chat';
+import { auth } from '23wf/auth';
+import { PullRequestsPage } from '23wf/chat';
 
 export default async function PullRequestsRoute() {
   const session = await auth();

@@ -1,1 +1,1 @@
-export { POST } from 'thepopebot/chat/api';
+export { POST } from '23wf/chat/api';

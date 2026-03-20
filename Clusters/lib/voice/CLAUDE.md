@@ -25,5 +25,5 @@ useVoiceInput({ getToken, onTranscript, onError, onVolumeChange })
 
 ## Package Exports
 
-- `thepopebot/voice` → `useVoiceInput` hook (client)
-- `thepopebot/voice/actions` → `getVoiceToken` server action
+- `23wf/voice` → `useVoiceInput` hook (client)
+- `23wf/voice/actions` → `getVoiceToken` server action

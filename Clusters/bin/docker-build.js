@@ -8,7 +8,7 @@
  *   npm run docker:build -- --image event-handler   # build one image
  *
  * Reads the version from package.json and tags each image as:
- *   stephengpope/thepopebot:{image}-{version}
+ *   23systems/23wf:{image}-{version}
  */
 
 import { spawn } from 'child_process';
@@ -21,7 +21,7 @@ const ROOT = path.resolve(__dirname, '..');
 
 const pkg = JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 const VERSION = pkg.version;
-const REPO = 'stephengpope/thepopebot';
+const REPO = '23systems/23wf';
 
 const IMAGES = [
   {

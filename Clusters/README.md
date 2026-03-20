@@ -1,8 +1,8 @@
-# Why thepopebot?
+# Why 23wf?
 
 **The repository IS the agent** — Every action your agent takes is a git commit. You can see exactly what it did, when, and why. If it screws up, revert it. Want to clone your agent? Fork the repo — code, personality, scheduled jobs, full history, all of it goes with your fork.
 
-**Free compute, built in** — Every GitHub account comes with free cloud computing time. thepopebot uses that to run your agent. One task or a hundred in parallel — the compute is already included.
+**Free compute, built in** — Every GitHub account comes with free cloud computing time. 23wf uses that to run your agent. One task or a hundred in parallel — the compute is already included.
 
 **Self-evolving** — The agent modifies its own code through pull requests. Every change is auditable, every change is reversible. You stay in control.
 
@@ -50,7 +50,7 @@ You interact with your bot via the web chat interface or Telegram (optional). Th
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=stephengpope/thepopebot&type=date&legend=top-left)](https://www.star-history.com/#stephengpope/thepopebot&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/svg?repos=23systems/23wf&type=date&legend=top-left)](https://www.star-history.com/#23systems/23wf&type=date&legend=top-left)
 
 ---
 
@@ -75,7 +75,7 @@ You interact with your bot via the web chat interface or Telegram (optional). Th
 
 ```bash
 mkdir my-agent && cd my-agent
-npx thepopebot@latest init
+npx 23wf@latest init
 ```
 
 This creates a Next.js project with configuration files, GitHub Actions workflows, and agent templates. You don't need to create a GitHub repo first — the setup wizard handles that.
@@ -136,7 +136,7 @@ See [Claude Code vs Pi](docs/CLAUDE_CODE_VS_PI.md) for more details on the two a
 >
 > ```bash
 > # Update .env and GitHub variable in one command:
-> npx thepopebot set-var APP_URL https://your-new-url.ngrok.io
+> npx 23wf set-var APP_URL https://your-new-url.ngrok.io
 > # If Telegram is configured, re-register the webhook:
 > npm run setup-telegram
 > ```
@@ -146,9 +146,9 @@ See [Claude Code vs Pi](docs/CLAUDE_CODE_VS_PI.md) for more details on the two a
 ## Updating
 
 ```bash
-npx thepopebot upgrade          # latest stable
-npx thepopebot upgrade @beta    # latest beta
-npx thepopebot upgrade 1.2.72   # specific version
+npx 23wf upgrade          # latest stable
+npx 23wf upgrade @beta    # latest beta
+npx 23wf upgrade 1.2.72   # specific version
 ```
 
 Saves your local changes, syncs with GitHub, installs the new version, rebuilds, pushes, and restarts Docker.
@@ -162,7 +162,7 @@ Saves your local changes, syncs with GitHub, installs the new version, rebuilds,
 5. Pushes everything to GitHub
 6. Restarts Docker containers (if running)
 
-Pushing to `main` triggers the `rebuild-event-handler.yml` workflow on your server. It detects the version change, runs `thepopebot init`, updates `THEPOPEBOT_VERSION` in the server's `.env`, pulls the new Docker image, restarts the container, rebuilds `.next`, and reloads PM2 — no manual `docker compose` needed.
+Pushing to `main` triggers the `rebuild-event-handler.yml` workflow on your server. It detects the version change, runs `23wf init`, updates `WF_VERSION` in the server's `.env`, pulls the new Docker image, restarts the container, rebuilds `.next`, and reloads PM2 — no manual `docker compose` needed.
 
 > **Upgrade failed?** See [Recovering from a Failed Upgrade](docs/UPGRADE.md#recovering-from-a-failed-upgrade).
 
@@ -170,7 +170,7 @@ Pushing to `main` triggers the `rebuild-event-handler.yml` workflow on your serv
 
 #### How your project is structured
 
-When you ran `thepopebot init` the first time, it scaffolded a project folder with two kinds of files:
+When you ran `23wf init` the first time, it scaffolded a project folder with two kinds of files:
 
 **Your files** — These are yours to customize. `init` will never overwrite them:
 
@@ -202,15 +202,15 @@ These files differ from the current package templates.
 
   config/CRONS.json
 
-To view differences:  npx thepopebot diff <file>
-To reset to default:  npx thepopebot reset <file>
+To view differences:  npx 23wf diff <file>
+To reset to default:  npx 23wf reset <file>
 ```
 
 You can review at your own pace:
 
 ```bash
-npx thepopebot diff config/CRONS.json    # see what changed
-npx thepopebot reset config/CRONS.json   # accept the new template
+npx 23wf diff config/CRONS.json    # see what changed
+npx 23wf reset config/CRONS.json   # accept the new template
 ```
 
 #### If you've modified managed files
@@ -218,12 +218,12 @@ npx thepopebot reset config/CRONS.json   # accept the new template
 If you've made custom changes to managed files (e.g., added extra steps to a GitHub Actions workflow), use `--no-managed` so `init` doesn't overwrite your changes:
 
 ```bash
-npx thepopebot init --no-managed
+npx 23wf init --no-managed
 ```
 
 #### Template file conventions
 
-The `templates/` directory contains files scaffolded into user projects by `thepopebot init`. Two naming conventions handle files that npm or AI tools would otherwise misinterpret:
+The `templates/` directory contains files scaffolded into user projects by `23wf init`. Two naming conventions handle files that npm or AI tools would otherwise misinterpret:
 
 **`.template` suffix** — Files ending in `.template` are scaffolded with the suffix stripped. This is used for files that npm mangles (`.gitignore`) or that AI tools would pick up as real project docs (`CLAUDE.md`).
 
@@ -239,7 +239,7 @@ The `templates/` directory contains files scaffolded into user projects by `thep
 
 ## CLI Commands
 
-All commands are run via `npx thepopebot <command>` (or the `npm run` shortcuts where noted).
+All commands are run via `npx 23wf <command>` (or the `npm run` shortcuts where noted).
 
 **Project setup:**
 
@@ -277,7 +277,7 @@ GitHub secrets use a prefix convention so the workflow can route them correctly:
 
 ## Security
 
-thepopebot includes API key authentication, webhook secret validation (fail-closed), session encryption, secret filtering in the Docker agent, and auto-merge path restrictions. However, all software carries risk — thepopebot is provided as-is, and you are responsible for securing your own infrastructure. If you're running locally with a tunnel (ngrok, Cloudflare Tunnel, port forwarding), be aware that your dev server endpoints are publicly accessible with no rate limiting and no TLS on the local hop.
+23wf includes API key authentication, webhook secret validation (fail-closed), session encryption, secret filtering in the Docker agent, and auto-merge path restrictions. However, all software carries risk — 23wf is provided as-is, and you are responsible for securing your own infrastructure. If you're running locally with a tunnel (ngrok, Cloudflare Tunnel, port forwarding), be aware that your dev server endpoints are publicly accessible with no rate limiting and no TLS on the local hop.
 
 See [Security](docs/SECURITY.md) for full details on what's exposed, the risks, and recommendations.
 

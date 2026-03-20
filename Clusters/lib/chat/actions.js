@@ -369,7 +369,7 @@ export async function createChatWorkspace(repo, branch) {
   const { createCodeWorkspace, updateFeatureBranch } = await import('../db/code-workspaces.js');
   const workspace = createCodeWorkspace(user.id, { repo, branch });
   const shortId = workspace.id.replace(/-/g, '').slice(0, 8);
-  const featureBranch = `thepopebot/new-chat-${shortId}`;
+  const featureBranch = `23wf/new-chat-${shortId}`;
   updateFeatureBranch(workspace.id, featureBranch);
   return {
     id: workspace.id,

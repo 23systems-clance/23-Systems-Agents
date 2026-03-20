@@ -1,7 +1,7 @@
 import path from 'path';
 
 /**
- * Central path resolver for thepopebot.
+ * Central path resolver for 23wf.
  * All paths resolve from process.cwd() (the user's project root).
  */
 
@@ -40,7 +40,7 @@ export const logsDir = path.join(PROJECT_ROOT, 'logs');
 export const dataDir = path.join(PROJECT_ROOT, 'data');
 
 // Database
-export const thepopebotDb = process.env.DATABASE_PATH || path.join(PROJECT_ROOT, 'data', 'thepopebot.sqlite');
+export const wfDb = process.env.DATABASE_PATH || path.join(PROJECT_ROOT, 'data', '23wf.sqlite');
 
 // Cluster data (bind-mount root for cluster containers)
 export const clusterDataDir = process.env.CLUSTER_DATA_PATH || path.join(PROJECT_ROOT, 'data', 'clusters');
