@@ -241,7 +241,7 @@ Every feature currently provided by GitHub Actions must have a direct equivalent
 | GitHub Feature | Current Implementation | New Implementation | Phase |
 |---|---|---|---|
 | **Job dispatch (queue)** | `job/*` branch creation triggers `run-job.yml` | BullMQ + Redis queue, API-driven `createJob()` enqueues directly | Phase 0 |
-| **Agent execution** | `run-job.yml` spins up Docker container on GH runner | Worker process pulls from BullMQ, spawns Docker container locally (Phase 0) or K8s Job (Phase 1) | Phase 0 |
+| **Agent execution** | `run-job.yml` spins up Docker container on GH runner | Worker process pulls from BullMQ, spawns microsandbox microVM locally (Phase 0) or K8s Job (Phase 1) | Phase 0 |
 | **Auto-merge** | `auto-merge.yml` — squash-merges PRs within `ALLOWED_PATHS` | Worker process merges via `gh pr merge` after validation (same logic, no workflow needed) | Phase 0 |
 | **Job completion notification** | `notify-pr-complete.yml` POSTs to event handler webhook | Worker process calls event handler notification API directly after job completes (in-process, no webhook round-trip) | Phase 0 |
 | **Job failure notification** | `notify-job-failed.yml` POSTs on workflow failure | Worker process catches container exit code, calls notification API on failure | Phase 0 |
@@ -257,7 +257,7 @@ Every feature currently provided by GitHub Actions must have a direct equivalent
 | **Runner selection** | `vars.RUNS_ON` (ubuntu-latest or self-hosted) | Not needed — worker runs containers directly. K8s node selection via nodeSelector/affinity (Phase 1) | Phase 1 |
 | **Auto-merge kill switch** | `vars.AUTO_MERGE` = `"false"` disables auto-merge | Config flag in `settings` table or env var on worker | Phase 0 |
 | **Allowed paths whitelist** | `vars.ALLOWED_PATHS` — comma-separated prefixes for auto-merge | Same config, read by worker process instead of workflow | Phase 0 |
-| **Per-tenant isolation** | None — all jobs share one GitHub org | K8s namespaces + network policies + resource quotas (Phase 1). Docker resource limits (Phase 0) | Phase 0 → 1 |
+| **Per-tenant isolation** | None — all jobs share one GitHub org | K8s namespaces + network policies + resource quotas (Phase 1). Microsandbox VM-level isolation + resource limits (Phase 0) | Phase 0 → 1 |
 | **Concurrency control** | GitHub's 20 parallel jobs limit (hard cap) | BullMQ concurrency settings per queue. Unlimited with K8s (Phase 1) | Phase 0 |
 | **Job status API** | `/api/jobs/status` queries GitHub API for running workflows | `/api/jobs/status` queries BullMQ + Postgres directly (faster, no GitHub API rate limits) | Phase 0 |
 
@@ -329,7 +329,7 @@ These are internal modules in `worker/`, not agent skills. They run inside the w
 | Module | File | Purpose |
 |--------|------|---------|
 | Job dispatcher | `Clusters/lib/tools/bullmq-dispatcher.js` | Enqueue agent jobs to BullMQ |
-| Container spawner | `worker/container.js` | Spawn Docker container with secrets injection, capture results |
+| Sandbox spawner | `worker/sandbox.js` | Spawn microsandbox microVM with secrets injection, capture results |
 | Auto-merge | `worker/auto-merge.js` | Validate PR changed files against ALLOWED_PATHS and squash-merge |
 | Notifier | `worker/notify.js` | Send job completion/failure notifications to event handler |
 | LLM router | `worker/llm-router.js` | Route LLM requests between local Ollama (Phi-4 14B) and cloud APIs |
