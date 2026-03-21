@@ -60,7 +60,12 @@ async function getWorkflowRunJobs(runId) {
  * @returns {Promise<object>} - Status summary with jobs array
  */
 async function getJobStatus(jobId) {
-  // Fetch both in_progress and queued runs (scoped to run-job.yml)
+  // When JOB_DISPATCH=bullmq, query Postgres jobs table directly
+  if (process.env.JOB_DISPATCH === 'bullmq') {
+    return getJobStatusFromDb(jobId);
+  }
+
+  // Default: query GitHub Actions API
   const [inProgress, queued] = await Promise.all([
     getWorkflowRuns('in_progress', { workflow: 'run-job.yml' }),
     getWorkflowRuns('queued', { workflow: 'run-job.yml' }),
@@ -122,6 +127,58 @@ async function getJobStatus(jobId) {
     queued: queuedCount,
     running: runningCount,
   };
+}
+
+/**
+ * Get job status from Postgres jobs table (BullMQ mode).
+ * Returns same response shape as GitHub API version.
+ */
+async function getJobStatusFromDb(jobId) {
+  const { getDb } = await import('../db/index.js');
+  const { jobs: jobsTable } = await import('../db/schema.js');
+  const { eq, inArray, desc } = await import('drizzle-orm');
+
+  const db = getDb();
+  const STEPS = ['resolve', 'spawn', 'execute', 'validate', 'retry', 'merge', 'notify'];
+
+  let query = db.select().from(jobsTable);
+  if (jobId) {
+    query = query.where(eq(jobsTable.id, jobId));
+  } else {
+    // Return active/queued jobs, plus recent completed (last 20)
+    query = query.where(
+      inArray(jobsTable.status, ['queued', 'active', 'completed', 'failed'])
+    ).orderBy(desc(jobsTable.createdAt)).limit(50);
+  }
+
+  const rows = await query;
+
+  const jobs = rows.map(row => {
+    const startedAt = row.started_at ? new Date(row.started_at).toISOString() : null;
+    const durationMinutes = row.duration_ms ? Math.round(row.duration_ms / 60000) : 0;
+    const currentStepIdx = row.current_step ? STEPS.indexOf(row.current_step) : -1;
+
+    return {
+      job_id: row.id,
+      branch: row.branch,
+      status: row.status === 'active' ? 'in_progress' : row.status,
+      started_at: startedAt,
+      duration_minutes: durationMinutes,
+      current_step: row.current_step,
+      steps_completed: currentStepIdx >= 0 ? currentStepIdx : 0,
+      steps_total: STEPS.length,
+      pr_url: row.pr_url,
+      pr_number: row.pr_number,
+      merge_result: row.merge_result,
+      exit_code: row.exit_code,
+      error: row.error,
+    };
+  });
+
+  const runningCount = jobs.filter(j => j.status === 'in_progress').length;
+  const queuedCount = jobs.filter(j => j.status === 'queued').length;
+
+  return { jobs, queued: queuedCount, running: runningCount };
 }
 
 /**

@@ -3,6 +3,64 @@ import { z } from 'zod';
 import { githubApi } from './github.js';
 import { createModel } from '../ai/model.js';
 
+// Dispatcher adapter — default is GitHub-only (current behavior)
+let _dispatcher = null;
+
+/**
+ * Set the job dispatcher. Called from instrumentation.js when JOB_DISPATCH=bullmq.
+ * @param {Function} dispatcher - async (jobId, branch, title, jobDescription, options) => void
+ */
+export function setJobDispatcher(dispatcher) {
+  _dispatcher = dispatcher;
+}
+
+/**
+ * Push a GitHub branch with job config. Always called (even with BullMQ)
+ * because the agent needs the branch to work on.
+ */
+export async function pushGitHubBranch(jobId, branch, title, jobDescription, options = {}) {
+  const { GH_OWNER, GH_REPO } = process.env;
+  const repo = `/repos/${GH_OWNER}/${GH_REPO}`;
+
+  const mainRef = await githubApi(`${repo}/git/ref/heads/main`);
+  const mainSha = mainRef.object.sha;
+  const mainCommit = await githubApi(`${repo}/git/commits/${mainSha}`);
+  const baseTreeSha = mainCommit.tree.sha;
+
+  const config = { title, job: jobDescription };
+  if (options.llmProvider) config.llm_provider = options.llmProvider;
+  if (options.llmModel) config.llm_model = options.llmModel;
+  if (options.agentBackend) config.agent_backend = options.agentBackend;
+
+  const treeEntries = [
+    {
+      path: `logs/${jobId}/job.config.json`,
+      mode: '100644',
+      type: 'blob',
+      content: JSON.stringify(config, null, 2),
+    },
+  ];
+
+  const tree = await githubApi(`${repo}/git/trees`, {
+    method: 'POST',
+    body: JSON.stringify({ base_tree: baseTreeSha, tree: treeEntries }),
+  });
+
+  const commit = await githubApi(`${repo}/git/commits`, {
+    method: 'POST',
+    body: JSON.stringify({
+      message: `🤖 Agent Job: ${title}`,
+      tree: tree.sha,
+      parents: [mainSha],
+    }),
+  });
+
+  await githubApi(`${repo}/git/refs`, {
+    method: 'POST',
+    body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: commit.sha }),
+  });
+}
+
 /**
  * Generate a short descriptive title for a job using the LLM.
  * Uses structured output to avoid thinking-token leaks with extended-thinking models.
@@ -34,62 +92,19 @@ async function generateJobTitle(jobDescription) {
  * @returns {Promise<{job_id: string, branch: string, title: string}>} - Job ID, branch name, and title
  */
 async function createJob(jobDescription, options = {}) {
-  const { GH_OWNER, GH_REPO } = process.env;
   const jobId = uuidv4();
   const branch = `job/${jobId}`;
-  const repo = `/repos/${GH_OWNER}/${GH_REPO}`;
 
   // Generate a short descriptive title
   const title = await generateJobTitle(jobDescription);
 
-  // 1. Get main branch SHA and its tree SHA
-  const mainRef = await githubApi(`${repo}/git/ref/heads/main`);
-  const mainSha = mainRef.object.sha;
-  const mainCommit = await githubApi(`${repo}/git/commits/${mainSha}`);
-  const baseTreeSha = mainCommit.tree.sha;
+  // Always push the GitHub branch (agent needs it to work on)
+  await pushGitHubBranch(jobId, branch, title, jobDescription, options);
 
-  // 2. Build job.config.json — single source of truth for job metadata
-  const config = { title, job: jobDescription };
-  if (options.llmProvider) config.llm_provider = options.llmProvider;
-  if (options.llmModel) config.llm_model = options.llmModel;
-  if (options.agentBackend) config.agent_backend = options.agentBackend;
-
-  const treeEntries = [
-    {
-      path: `logs/${jobId}/job.config.json`,
-      mode: '100644',
-      type: 'blob',
-      content: JSON.stringify(config, null, 2),
-    },
-  ];
-
-  // 3. Create tree (base_tree preserves all existing files)
-  const tree = await githubApi(`${repo}/git/trees`, {
-    method: 'POST',
-    body: JSON.stringify({
-      base_tree: baseTreeSha,
-      tree: treeEntries,
-    }),
-  });
-
-  // 4. Create a single commit with job config
-  const commit = await githubApi(`${repo}/git/commits`, {
-    method: 'POST',
-    body: JSON.stringify({
-      message: `🤖 Agent Job: ${title}`,
-      tree: tree.sha,
-      parents: [mainSha],
-    }),
-  });
-
-  // 5. Create branch pointing to the commit (triggers run-job.yml)
-  await githubApi(`${repo}/git/refs`, {
-    method: 'POST',
-    body: JSON.stringify({
-      ref: `refs/heads/${branch}`,
-      sha: commit.sha,
-    }),
-  });
+  // If a custom dispatcher is set (e.g. BullMQ), also enqueue there
+  if (_dispatcher) {
+    await _dispatcher(jobId, branch, title, jobDescription, options);
+  }
 
   return { job_id: jobId, branch, title };
 }

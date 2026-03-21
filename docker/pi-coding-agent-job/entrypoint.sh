@@ -60,7 +60,12 @@ LOG_DIR="/job/logs/${JOB_ID}"
 mkdir -p "${LOG_DIR}"
 
 # 1. Build system prompt from config MD files
-SYSTEM_FILES=("SOUL.md" "JOB_AGENT.md")
+# SYSTEM_FILES env var allows the worker to override (e.g. "SOUL.md,HEARTBEAT.md" for lightweight jobs)
+if [ -n "$SYSTEM_FILES_OVERRIDE" ]; then
+    IFS=',' read -ra SYSTEM_FILES <<< "$SYSTEM_FILES_OVERRIDE"
+else
+    SYSTEM_FILES=("SOUL.md" "JOB_AGENT.md")
+fi
 > /job/.pi/SYSTEM.md
 for i in "${!SYSTEM_FILES[@]}"; do
     cat "/job/config/${SYSTEM_FILES[$i]}" >> /job/.pi/SYSTEM.md

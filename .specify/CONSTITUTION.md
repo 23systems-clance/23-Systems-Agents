@@ -406,7 +406,7 @@ The 23wf package hardcodes internal names in paths, database migrations, templat
 
 ## Spec Execution Order
 
-All specs in `.specify/specs/` are numbered by execution priority. Work them in order — each builds on the last.
+All specs live in `specs/` as numbered directories (e.g., `specs/006-infra-migration-k8s/spec.md`). Work them in order — each builds on the last.
 
 | # | Spec | Priority | Key Dependencies |
 |---|------|----------|-----------------|

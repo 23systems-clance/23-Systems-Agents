@@ -18,6 +18,7 @@
 | 10 | [Template System](./10-template-system.md) | SOP/HTML templates, brand-config.css, variable bridge, presets | Creating branded documents or new templates |
 | 11 | [Chat & Web UI](./11-chat-web-ui.md) | Chat system, streaming, components, web routes | Modifying the web interface or chat behavior |
 | 12 | [Environment Variables](./12-environment-variables.md) | All env vars, GitHub secrets/variables, prefix conventions | Setting up or debugging configuration |
+| 13 | [Local Infrastructure Setup](./13-local-infra-setup.md) | Docker Compose, PM2, Ollama, BullMQ worker setup | Setting up local BullMQ infrastructure |
 
 ## Solved Issues & Debugging Knowledge
 
@@ -31,7 +32,10 @@ When you solve a non-trivial bug, add a file here following the template in `.sp
 
 ## Quick Reference
 
-- **Tech Stack**: Next.js 15, React 19, NextAuth 5, Drizzle ORM (SQLite), LangChain/LangGraph, Docker
+- **Tech Stack**: Next.js 15, React 19, NextAuth 5, Drizzle ORM (Postgres/SQLite), LangChain/LangGraph, BullMQ, Docker
 - **Core Package**: `23wf` (npm) — contains all business logic; this project is a thin shell
-- **Database**: SQLite at `data/23wf.sqlite`
+- **Database**: Postgres 16 via `DATABASE_URL` (SQLite fallback at `data/23wf.sqlite`)
+- **Job Queue**: BullMQ + Redis via `REDIS_URL` (when `JOB_DISPATCH=bullmq`)
+- **Worker**: Standalone Node.js process (`worker/index.js`) managed by PM2
 - **LLM Default**: Anthropic Claude Sonnet via `ANTHROPIC_API_KEY`
+- **Local LLM**: Ollama (Phi-4 14B) via `OLLAMA_URL` for summaries — cloud fallback

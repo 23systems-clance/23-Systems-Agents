@@ -64,7 +64,12 @@ mkdir -p "${LOG_DIR}"
 
 # Build system prompt from config MD files
 SYSTEM_PROMPT_FILE="${LOG_DIR}/system-prompt.md"
-SYSTEM_FILES=("SOUL.md" "JOB_AGENT.md")
+# SYSTEM_FILES_OVERRIDE env var allows the worker to override (e.g. "SOUL.md,HEARTBEAT.md" for lightweight jobs)
+if [ -n "$SYSTEM_FILES_OVERRIDE" ]; then
+    IFS=',' read -ra SYSTEM_FILES <<< "$SYSTEM_FILES_OVERRIDE"
+else
+    SYSTEM_FILES=("SOUL.md" "JOB_AGENT.md")
+fi
 > "$SYSTEM_PROMPT_FILE"
 for i in "${!SYSTEM_FILES[@]}"; do
     cat "/job/config/${SYSTEM_FILES[$i]}" >> "$SYSTEM_PROMPT_FILE"

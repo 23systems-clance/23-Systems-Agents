@@ -65,15 +65,8 @@ fi
 SPEC_BASENAME=$(basename "$SPEC_PATH" .md)
 SPEC_NAME=$(echo "$SPEC_BASENAME" | sed -E "s/^[0-9]+-//")
 
-# Determine if this is a flat file or directory-based spec
-IS_FLAT=false
-SPEC_DIR=""
-if [[ "$SPEC_PATH" == */.specify/specs/* ]]; then
-  IS_FLAT=true
-  SPEC_DIR=$(dirname "$SPEC_PATH")
-else
-  SPEC_DIR=$(dirname "$SPEC_PATH")
-fi
+# Spec directory is the parent of spec.md
+SPEC_DIR=$(dirname "$SPEC_PATH")
 
 # Count clarification markers
 CLARIFY_COUNT=$(grep -c '\[NEEDS CLARIFICATION\]\|\[Gap\]\|\[Ambiguity\]\|\[Conflict\]\|\[Assumption\]' "$SPEC_PATH" 2>/dev/null || true)

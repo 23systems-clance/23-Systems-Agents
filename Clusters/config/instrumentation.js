@@ -39,9 +39,25 @@ export async function register() {
     throw new Error('AUTH_SECRET environment variable is required');
   }
 
-  // Initialize auth database
+  // Initialize database (Postgres if DATABASE_URL set, otherwise SQLite)
   const { initDatabase } = await import('../lib/db/index.js');
-  initDatabase();
+  await initDatabase();
+
+  // Wire up BullMQ dispatcher if JOB_DISPATCH=bullmq
+  if (process.env.JOB_DISPATCH === 'bullmq') {
+    const { setJobDispatcher } = await import('../lib/tools/create-job.js');
+    const { enqueueBullMQ } = await import('../lib/tools/bullmq-dispatcher.js');
+    setJobDispatcher(enqueueBullMQ);
+    console.log('  Job dispatch: BullMQ');
+  }
+
+  // Seed capability registry from skills/active/ and config/templates/
+  try {
+    const { seedCapabilities } = await import('../lib/db/capabilities.js');
+    await seedCapabilities();
+  } catch (err) {
+    console.warn('  Warning: capability seeding failed:', err.message);
+  }
 
   // Start cron scheduler
   const { loadCrons } = await import('../lib/cron.js');

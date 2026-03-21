@@ -1,7 +1,7 @@
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { getJobAgent, getCodeAgent } from './agent.js';
-import { createModel } from './model.js';
+import { createModel, createLocalModel } from './model.js';
 import { jobSummaryMd } from '../paths.js';
 import { render_md } from '../utils/render-md.js';
 import { getChatById, createChat, saveMessage, updateChatTitle, linkChatToWorkspace } from '../db/chats.js';
@@ -405,7 +405,7 @@ async function autoTitle(threadId, firstMessage) {
  */
 async function summarizeJob(results) {
   try {
-    const model = await createModel({ maxTokens: 1024 });
+    const model = await createLocalModel({ maxTokens: 1024 });
     const systemPrompt = render_md(jobSummaryMd);
 
     if (!systemPrompt) {

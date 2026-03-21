@@ -113,6 +113,79 @@ Both cron jobs and webhook triggers share the same dispatch system with three ac
 
 **Decision rule**: If the task needs to *think*, use `agent`. If it needs to *do*, use `command`. If it needs to *call*, use `webhook`.
 
+## BullMQ Worker Architecture (Phase 0)
+
+When `JOB_DISPATCH=bullmq`, jobs are dispatched via BullMQ + Redis instead of GitHub Actions:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│  ┌──────────────────┐         ┌──────────────────┐                 │
+│  │  EVENT HANDLER   │ ──1──►  │   BullMQ Queue   │                 │
+│  │  (Next.js)       │         │   (Redis)        │                 │
+│  │                  │         └────────┬─────────┘                 │
+│  │  - Web UI        │                  │                           │
+│  │  - Chat          │                  2 (worker dequeues)         │
+│  │  - Cron jobs     │                  │                           │
+│  │  - Webhooks      │                  ▼                           │
+│  │  - API           │         ┌──────────────────┐                 │
+│  └────────▲─────────┘         │  WORKER          │                 │
+│           │                   │  (7-step         │                 │
+│           │                   │   blueprint)     │                 │
+│           │                   └────────┬─────────┘                 │
+│           │                            │                           │
+│           │                            3 (spawns Docker container) │
+│           │                            │                           │
+│           │                   ┌────────▼─────────┐                 │
+│           │                   │  DOCKER AGENT    │                 │
+│           │                   │  (Pi / Claude)   │                 │
+│           │                   └────────┬─────────┘                 │
+│           │                            │                           │
+│           │                            4 (commits + opens PR)      │
+│           │                            │                           │
+│           │                   ┌────────▼─────────┐                 │
+│           │                   │  Worker:         │                 │
+│           │                   │  validate →      │                 │
+│           │                   │  auto-merge →    │                 │
+│           5 (notification)    │  notify          │                 │
+│           └───────────────────┘                  │                 │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Worker Blueprint (7-Step State Machine)
+
+| Step | Name | Action |
+|------|------|--------|
+| 1 | Resolve | Read job config, query capabilities, resolve Docker image, build env vars |
+| 2 | Spawn | Start Docker container with resource limits (memory, timeout) |
+| 3 | Execute | Await container exit code, enforce timeout watchdog |
+| 4 | Validate | Find PR, check changed files, run eslint, detect anomalies |
+| 5 | Retry | Re-spawn with validation errors as context (max 1 retry) |
+| 6 | Auto-Merge | Squash-merge if all files within ALLOWED_PATHS |
+| 7 | Notify | Send completion webhook to event handler |
+
+### Infrastructure Components
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Job queue | BullMQ + Redis | Job dispatch, progress tracking, concurrency control |
+| Database | Postgres 16 | Jobs, capabilities, job_capabilities tables |
+| Worker | Node.js (PM2) | Separate process, dequeues and executes jobs |
+| Local LLM | Ollama (Phi-4 14B) | Planning, chat, summaries — cloud fallback on failure |
+| Feature flag | `JOB_DISPATCH` env var | `github` (default) or `bullmq` |
+
+### LLM Routing
+
+When `OLLAMA_URL` is set, lightweight requests (summaries, titles) route to Ollama first with automatic cloud fallback. Agent execution always uses cloud (Claude Sonnet).
+
+| Request Type | Primary | Fallback |
+|-------------|---------|----------|
+| Agent execution | Claude Sonnet (cloud) | — |
+| Job summary | Ollama (Phi-4 14B) | Cloud provider |
+| Chat/planning | Cloud provider | — |
+| Auto-title | Cloud provider | — |
+
 ## Key Design Principles
 
 1. **Git-backed auditability** — Every agent action is a commit, fully reversible via git
@@ -120,3 +193,5 @@ Both cron jobs and webhook triggers share the same dispatch system with three ac
 3. **Self-modification** — Agent can modify its own config, specialties, crons, and triggers through git PRs
 4. **Prefix-based secret isolation** — `AGENT_*` secrets filtered from LLM; `AGENT_LLM_*` accessible to LLM
 5. **Path resolution from project root** — All paths resolve from `process.cwd()`, enabling npm package to access user files
+6. **Gradual migration** — `JOB_DISPATCH` flag allows switching between GitHub Actions and BullMQ without code changes
+7. **Resource limits** — Per-job timeout and memory limits with kill + notification on breach

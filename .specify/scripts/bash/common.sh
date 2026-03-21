@@ -40,55 +40,39 @@ get_current_feature() {
 }
 
 # Find the spec file for the current feature.
-# 23 Systems Agents uses flat files in .specify/specs/ (e.g., 000-rebrand.md)
-# rather than directories in specs/ (e.g., specs/000-rebrand/spec.md).
+# Specs live in directories: specs/NNN-name/spec.md
 # Resolution order:
-#   1. .specify/.current-feature → match in .specify/specs/
-#   2. Branch name → match in .specify/specs/
-#   3. Fallback to specs/ directory structure (reference project compat)
+#   1. .specify/.current-feature → match directory in specs/
+#   2. Branch name → match directory in specs/
 get_feature_spec() {
     local repo_root=$(get_repo_root)
-    local specify_specs_dir="${repo_root}/.specify/specs"
+    local specs_dir="${repo_root}/specs"
     local feature_name=$(get_current_feature)
 
-    # Try .specify/specs/ flat file first (this project's convention)
-    if [[ -d "$specify_specs_dir" && -n "$feature_name" ]]; then
-        # If feature_name looks like "N-name" (has number prefix), match exactly
-        # Otherwise match by name, preferring lowest-numbered spec (the primary one)
+    # Try current-feature match
+    if [[ -d "$specs_dir" && -n "$feature_name" ]]; then
         local match=""
         if [[ "$feature_name" =~ ^[0-9]+-. ]]; then
-            match=$(find "$specify_specs_dir" -maxdepth 1 -name "${feature_name}*" -type f 2>/dev/null | head -1)
+            match=$(find "$specs_dir" -maxdepth 1 -type d -name "${feature_name}*" 2>/dev/null | head -1)
         else
-            match=$(find "$specify_specs_dir" -maxdepth 1 -name "*${feature_name}*" -type f 2>/dev/null | sort | head -1)
+            match=$(find "$specs_dir" -maxdepth 1 -type d -name "*${feature_name}*" 2>/dev/null | sort | head -1)
         fi
-        if [[ -n "$match" ]]; then
-            echo "$match"
+        if [[ -n "$match" && -f "${match}/spec.md" ]]; then
+            echo "${match}/spec.md"
             return
         fi
     fi
 
-    # Try branch-based match in .specify/specs/
-    if [[ -d "$specify_specs_dir" ]]; then
+    # Try branch-based match
+    if [[ -d "$specs_dir" ]]; then
         local branch=$(get_current_branch)
         local feature_num=$(get_feature_number "$branch")
         if [[ -n "$feature_num" ]]; then
-            local match=$(find "$specify_specs_dir" -maxdepth 1 -name "${feature_num}-*" -type f 2>/dev/null | head -1)
-            if [[ -n "$match" ]]; then
-                echo "$match"
+            local match=$(find "$specs_dir" -maxdepth 1 -type d -name "${feature_num}-*" 2>/dev/null | head -1)
+            if [[ -n "$match" && -f "${match}/spec.md" ]]; then
+                echo "${match}/spec.md"
                 return
             fi
-        fi
-    fi
-
-    # Fallback: specs/ directory structure (reference project compat)
-    local branch=$(get_current_branch)
-    local feature_num=$(get_feature_number "$branch")
-    local short_name=$(get_feature_short_name "$branch")
-    if [[ -n "$feature_num" ]]; then
-        local dir="${repo_root}/specs/${feature_num}-${short_name}"
-        if [[ -f "${dir}/spec.md" ]]; then
-            echo "${dir}/spec.md"
-            return
         fi
     fi
 
@@ -96,48 +80,29 @@ get_feature_spec() {
 }
 
 # Find the spec file for a given spec number.
-# Checks .specify/specs/ flat files first, then specs/ directories.
 get_spec_by_number() {
     local spec_number="$1"
     local repo_root=$(get_repo_root)
-    local specify_specs_dir="${repo_root}/.specify/specs"
+    local specs_dir="${repo_root}/specs"
 
-    # Try .specify/specs/ flat file
-    if [[ -d "$specify_specs_dir" ]]; then
-        local match=$(find "$specify_specs_dir" -maxdepth 1 -name "${spec_number}-*" -type f 2>/dev/null | head -1)
-        if [[ -n "$match" ]]; then
-            echo "$match"
+    if [[ -d "$specs_dir" ]]; then
+        local match=$(find "$specs_dir" -maxdepth 1 -type d -name "${spec_number}-*" 2>/dev/null | head -1)
+        if [[ -n "$match" && -f "${match}/spec.md" ]]; then
+            echo "${match}/spec.md"
             return
         fi
-    fi
-
-    # Fallback: specs/ directory
-    local spec_dir=$(find "${repo_root}/specs" -maxdepth 1 -type d -name "${spec_number}-*" 2>/dev/null | head -1)
-    if [[ -n "$spec_dir" && -f "${spec_dir}/spec.md" ]]; then
-        echo "${spec_dir}/spec.md"
-        return
     fi
 
     echo ""
 }
 
-# List all available specs across both locations
+# List all available specs
 list_all_specs() {
     local repo_root=$(get_repo_root)
-    local specify_specs_dir="${repo_root}/.specify/specs"
+    local specs_dir="${repo_root}/specs"
 
-    # Flat files in .specify/specs/
-    if [[ -d "$specify_specs_dir" ]]; then
-        find "$specify_specs_dir" -maxdepth 1 -name "[0-9]*-*.md" -type f 2>/dev/null | sort
-    fi
-
-    # Directories in specs/
-    if [[ -d "${repo_root}/specs" ]]; then
-        for dir in "${repo_root}/specs"/[0-9]*-*/; do
-            if [[ -f "${dir}spec.md" ]]; then
-                echo "${dir}spec.md"
-            fi
-        done
+    if [[ -d "$specs_dir" ]]; then
+        find "$specs_dir" -maxdepth 2 -name "spec.md" -type f 2>/dev/null | sort
     fi
 }
 
