@@ -1,10 +1,10 @@
-# Specialty Building Guide
+# Skill Building Guide
 
-## What is a specialty?
+## What is a skill?
 
-Specialties are lightweight wrappers that extend agent abilities. They live in `skills/<skill-name>/` and are activated by symlinking into `skills/active/`. Both Pi and Claude Code discover specialties from the same shared directory.
+Skills are lightweight wrappers that extend agent abilities. They live in `skills/<skill-name>/` and are activated by symlinking into `skills/active/`. Both Pi and Claude Code discover skills from the same shared directory.
 
-## Specialty structure
+## Skill structure
 
 - **`SKILL.md`** (required) — YAML frontmatter + markdown documentation
 - **Scripts** (optional) — prefer bash (.sh) for simplicity
@@ -12,13 +12,13 @@ Specialties are lightweight wrappers that extend agent abilities. They live in `
 
 ## SKILL.md format
 
-The `description` from frontmatter appears in the system prompt under "Active specialties."
+The `description` from frontmatter appears in the system prompt under "Active skills."
 Use project-root-relative paths in documentation (e.g., `skills/<skill-name>/script.sh`).
 
 ```
 ---
 name: skill-name-in-kebab-case
-description: One sentence describing what the specialty does and when to use it.
+description: One sentence describing what the skill does and when to use it.
 ---
 
 # Specialty Name
@@ -30,9 +30,9 @@ skills/skill-name/script.sh <args>
 ```
 ```
 
-## Example: Simple bash specialty (most common pattern)
+## Example: Simple bash skill (most common pattern)
 
-The built-in `transcribe` specialty — a SKILL.md and a single bash script:
+The built-in `transcribe` skill — a SKILL.md and a single bash script:
 
 **skills/transcribe/SKILL.md:**
 ```
@@ -66,24 +66,24 @@ curl -s -X POST "https://api.groq.com/openai/v1/audio/transcriptions" \
   -F "response_format=text"
 ```
 
-## Example: Specialty with Node.js dependencies
+## Example: Skill with Node.js dependencies
 
-The built-in `brave-search` specialty uses Node.js for HTML parsing (jsdom, readability, turndown). It has a `package.json` and `.js` scripts. Dependencies are installed automatically in Docker. Use this pattern only when bash + curl isn't sufficient.
+The built-in `search-web` skill uses Node.js for HTML parsing (jsdom, readability, turndown). It has a `package.json` and `.js` scripts. Dependencies are installed automatically in Docker. Use this pattern only when bash + curl isn't sufficient.
 
 ## Activation
 
-After creating specialty files, symlink to activate:
+After creating skill files, symlink to activate:
 ```bash
 ln -s ../skill-name skills/active/skill-name
 ```
 
 ## Always build AND test in the same job
 
-Tell the agent to test the specialty with real input after creating it and fix any issues before committing. Don't create untested specialties.
+Tell the agent to test the skill with real input after creating it and fix any issues before committing. Don't create untested skills.
 
 ## Credential setup
 
-If a specialty needs an API key, the user should set it up BEFORE the job runs:
+If a skill needs an API key, the user should set it up BEFORE the job runs:
 - `npx 23wf set-agent-llm-secret <KEY_NAME> <value>` — creates a GitHub secret with `AGENT_LLM_` prefix, exposed as an env var in the Docker container
 - The value is stored exactly as provided, no transformation needed
 - Also add to `.env` for local development

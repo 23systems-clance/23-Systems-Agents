@@ -1,6 +1,6 @@
 {
   "id": "data-processor",
-  "name": "Data Processor",
+  "name": "Data Processing Team",
   "description": "Upload data files and get them cleaned, transformed, and analyzed automatically.",
   "icon": "database",
   "category": "data",
@@ -44,25 +44,25 @@
     "folders": ["input", "processed", "output", "reports"],
     "roles": [
       {
-        "roleName": "Collector",
+        "roleName": "Collector Agent",
         "role": "You are a data collector and validator. Your job is to read the input data, validate its structure, count records, flag any issues (missing fields, encoding problems, duplicates), and prepare it for processing. Save a validation report alongside the data.",
         "prompt": "Task: {{input.task}}\nInput format: {{input.input_format}}\n\nCheck {{CLUSTER_SHARED_DIR}}input/ for data files.\n\n1. Read and parse the input data\n2. Validate structure (count rows/records, check for missing fields)\n3. Flag issues: duplicates, malformed rows, encoding problems\n4. Save validation report to {{CLUSTER_SHARED_DIR}}processed/validation.md\n5. If issues found, save a cleaned version to {{CLUSTER_SHARED_DIR}}processed/cleaned-data (same format as input)\n6. If no issues, copy input as-is to {{CLUSTER_SHARED_DIR}}processed/",
         "maxConcurrency": 1,
         "dependsOn": null
       },
       {
-        "roleName": "Transformer",
+        "roleName": "Transformer Agent",
         "role": "You are a data transformer. Take validated data and transform it according to the task instructions. Apply any requested operations: filtering, aggregation, format conversion, calculations, deduplication.",
         "prompt": "Task: {{input.task}}\nOutput format: {{input.output_format}}\n\nRead validated data from {{CLUSTER_SHARED_DIR}}processed/\nRead validation report from {{CLUSTER_SHARED_DIR}}processed/validation.md\n\nTransform the data according to the task:\n1. Apply requested operations (clean, filter, aggregate, convert)\n2. Output in requested format:\n   - csv: Clean CSV with headers\n   - json: Structured JSON array\n   - report: Summary statistics and insights (markdown)\n   - both: CSV/JSON + summary report\n\nSave output to {{CLUSTER_SHARED_DIR}}output/",
         "maxConcurrency": 1,
-        "dependsOn": "Collector"
+        "dependsOn": "Collector Agent"
       },
       {
-        "roleName": "Validator",
+        "roleName": "Validator Agent",
         "role": "You are a data quality validator. Your job is to verify the transformed output is correct — check record counts, spot-check values, ensure the transformation was applied correctly. Produce a final quality report.",
         "prompt": "Read the original input from {{CLUSTER_SHARED_DIR}}input/\nRead the transformed output from {{CLUSTER_SHARED_DIR}}output/\nRead the validation report from {{CLUSTER_SHARED_DIR}}processed/validation.md\n\nVerify:\n1. Record counts match expectations (accounting for any filtering)\n2. Spot-check 3-5 records for correctness\n3. Output format matches requested: {{input.output_format}}\n4. No data corruption or loss\n\nSave quality report to {{CLUSTER_SHARED_DIR}}reports/quality-report.md\nInclude: pass/fail status, record counts, any discrepancies found",
         "maxConcurrency": 1,
-        "dependsOn": "Transformer"
+        "dependsOn": "Transformer Agent"
       }
     ]
   }

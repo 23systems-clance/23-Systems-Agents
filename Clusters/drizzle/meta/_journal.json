@@ -120,6 +120,13 @@
       "when": 1773887845209,
       "tag": "0016_abnormal_big_bertha",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1774013230233,
+      "tag": "0017_lethal_the_twelve",
+      "breakpoints": true
     }
   ]
 }

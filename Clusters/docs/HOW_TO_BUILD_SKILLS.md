@@ -16,13 +16,13 @@ Skills work with both Pi and Claude Code — they share the same `skills/active/
 
 **How they load**: On-demand (progressive disclosure). At startup, the agent scans skill directories and puts **only the name + description** from each SKILL.md frontmatter into the system prompt. The full instructions are NOT loaded until the agent decides the skill is relevant and reads the file.
 
-**The complete runtime flow** (using brave-search as example):
+**The complete runtime flow** (using search-web as example):
 
-1. Agent starts, scans skills, sees `brave-search/SKILL.md`, puts description in system prompt
+1. Agent starts, scans skills, sees `search-web/SKILL.md`, puts description in system prompt
 2. User says "search for python async tutorials"
-3. Agent sees the description, decides brave-search is relevant
+3. Agent sees the description, decides search-web is relevant
 4. Agent reads the full SKILL.md to learn the commands
-5. Agent runs: `skills/brave-search/search.js "python async tutorials"`
+5. Agent runs: `skills/search-web/search.js "python async tutorials"`
 6. `search.js` runs as a child process, reads `$BRAVE_API_KEY` from the environment, calls the Brave Search API, prints results to stdout
 7. Agent reads results, responds to user
 
@@ -30,10 +30,10 @@ Skills work with both Pi and Claude Code — they share the same `skills/active/
 
 ## What's inside a skill folder
 
-Real example: brave-search
+Real example: search-web
 
 ```
-skills/brave-search/
+skills/search-web/
 ├── SKILL.md          ← instructions for both agent and human
 ├── package.json      ← declares npm dependencies
 ├── search.js         ← Node.js script that calls Brave Search API, prints results to stdout
@@ -43,25 +43,25 @@ skills/brave-search/
 **SKILL.md contents**:
 ```markdown
 ---
-name: brave-search
+name: search-web
 description: Web search and content extraction via Brave Search API. Use for searching documentation, facts, or any web content.
 ---
 # Brave Search
 
 ## Setup
-cd skills/brave-search && npm install
+cd skills/search-web && npm install
 
 ## Search
-skills/brave-search/search.js "query"              # Basic search (5 results)
-skills/brave-search/search.js "query" -n 10        # More results (max 20)
-skills/brave-search/search.js "query" --content    # Include page content as markdown
-skills/brave-search/search.js "query" --freshness pw  # Results from last week
+skills/search-web/search.js "query"              # Basic search (5 results)
+skills/search-web/search.js "query" -n 10        # More results (max 20)
+skills/search-web/search.js "query" --content    # Include page content as markdown
+skills/search-web/search.js "query" --freshness pw  # Results from last week
 
 ## Extract Page Content
-skills/brave-search/content.js https://example.com
+skills/search-web/content.js https://example.com
 ```
 
-Skills use project-root-relative paths (e.g., `skills/brave-search/search.js`).
+Skills use project-root-relative paths (e.g., `skills/search-web/search.js`).
 
 **Setup**: Run `npm install` once in the skill directory. The `package.json` declares what dependencies the scripts need. In Docker, dependencies are installed automatically by the entrypoint.
 
@@ -146,11 +146,11 @@ curl -s -X POST "https://api.groq.com/openai/v1/audio/transcriptions" \
 
 ### Skill with Node.js dependencies
 
-The built-in `brave-search` skill uses Node.js for HTML parsing (jsdom, readability, turndown). It has a `package.json` and `.js` scripts. Dependencies are installed automatically in Docker. Use this pattern only when bash + curl isn't sufficient.
+The built-in `search-web` skill uses Node.js for HTML parsing (jsdom, readability, turndown). It has a `package.json` and `.js` scripts. Dependencies are installed automatically in Docker. Use this pattern only when bash + curl isn't sufficient.
 
 ---
 
-## browser-tools skill
+## automate-browser skill
 
 Uses **Chrome DevTools Protocol (CDP) directly** — not Playwright, not Puppeteer. Connects to Chrome running with `--remote-debugging-port=9222`. Standalone JS scripts:
 
@@ -169,7 +169,7 @@ Requires a visible Chrome window with remote debugging enabled.
 
 **Skills repo**: `https://github.com/badlogic/pi-skills`
 
-Available skills: brave-search, browser-tools, gccli (Google Calendar), gdcli (Google Drive), gmcli (Gmail), subagent, transcribe, vscode, youtube-transcript.
+Available skills: search-web, automate-browser, gccli (Google Calendar), gdcli (Google Drive), gmcli (Gmail), subagent, transcribe, vscode, fetch-transcript.
 
 These skills follow the **Agent Skills standard** (SKILL.md format), compatible with Pi, Claude Code, Codex CLI, Amp, and Droid.
 

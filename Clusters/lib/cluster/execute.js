@@ -2,8 +2,8 @@ import { randomUUID } from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import { clusterDataDir } from '../paths.js';
-import { stopContainer as dockerStopContainer, removeContainer, runClusterWorkerContainer, resolveHostPath, listContainers } from '../tools/docker.js';
-import { getRoleWithCluster, getClusterRolesByCluster, roleShortId } from '../db/clusters.js';
+import { stopContainer as dockerStopContainer, removeContainer, runClusterWorkerContainer, resolveHostPath, listContainers, waitForContainer } from '../tools/docker.js';
+import { getRoleWithCluster, getClusterRolesByCluster, getNextRoleInCluster, roleShortId } from '../db/clusters.js';
 
 /**
  * Compute naming for a cluster's Docker resources.
@@ -253,6 +253,12 @@ export async function runClusterRole(roleData, payload, trigger) {
     scheduleWorkerDirCleanup(containerName, workerWorkDir);
   }
 
+  // Schedule pipeline continuation — trigger next role when this one completes
+  // Only for manual triggers (UI "Go" button) and pipeline-chained triggers
+  if (trigger && (trigger.type === 'manual' || trigger.type === 'pipeline')) {
+    schedulePipelineContinuation(containerName, roleData, payload);
+  }
+
   return { containerName };
 }
 
@@ -274,6 +280,47 @@ function scheduleWorkerDirCleanup(containerName, dirPath) {
       }
     }
   }, 5000);
+}
+
+/**
+ * Schedule pipeline continuation: wait for container to exit, then trigger the next role.
+ * Runs in the background (fire-and-forget). Only continues on exit code 0.
+ */
+function schedulePipelineContinuation(containerName, roleData, payload) {
+  (async () => {
+    try {
+      const exitCode = await waitForContainer(containerName);
+      console.log(`[cluster] Pipeline: ${roleData.roleName} exited with code ${exitCode}`);
+
+      if (exitCode !== 0) {
+        console.log(`[cluster] Pipeline: stopping — ${roleData.roleName} exited with non-zero code`);
+        return;
+      }
+
+      const nextRole = getNextRoleInCluster(roleData.clusterId, roleData.sortOrder);
+      if (!nextRole) {
+        console.log(`[cluster] Pipeline: ${roleData.roleName} was the last role — pipeline complete`);
+        return;
+      }
+
+      const nextRoleData = getRoleWithCluster(nextRole.id);
+      if (!nextRoleData) return;
+
+      const check = await canRunRole(nextRoleData);
+      if (!check.allowed) {
+        console.log(`[cluster] Pipeline: cannot run next role ${nextRoleData.roleName}: ${check.reason}`);
+        return;
+      }
+
+      // Forward the original payload prompt so the pipeline context carries through
+      const pipelinePayload = payload ? { ...payload } : {};
+
+      console.log(`[cluster] Pipeline: triggering next role ${nextRoleData.roleName}`);
+      await runClusterRole(check.roleData, pipelinePayload, { type: 'pipeline', previousRole: roleData.roleName });
+    } catch (err) {
+      console.error(`[cluster] Pipeline continuation error:`, err.message);
+    }
+  })();
 }
 
 /**

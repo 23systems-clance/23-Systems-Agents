@@ -48,39 +48,39 @@ git clone https://github.com/badlogic/pi-skills ~/pi-skills
 
 # Symlink individual skills (user-level)
 mkdir -p ~/.claude/skills
-ln -s ~/pi-skills/brave-search ~/.claude/skills/brave-search
-ln -s ~/pi-skills/browser-tools ~/.claude/skills/browser-tools
+ln -s ~/pi-skills/search-web ~/.claude/skills/search-web
+ln -s ~/pi-skills/automate-browser ~/.claude/skills/automate-browser
 ln -s ~/pi-skills/gccli ~/.claude/skills/gccli
 ln -s ~/pi-skills/gdcli ~/.claude/skills/gdcli
 ln -s ~/pi-skills/gmcli ~/.claude/skills/gmcli
 ln -s ~/pi-skills/transcribe ~/.claude/skills/transcribe
 ln -s ~/pi-skills/vscode ~/.claude/skills/vscode
-ln -s ~/pi-skills/youtube-transcript ~/.claude/skills/youtube-transcript
+ln -s ~/pi-skills/fetch-transcript ~/.claude/skills/fetch-transcript
 
 # Or project-level
 mkdir -p .claude/skills
-ln -s ~/pi-skills/brave-search .claude/skills/brave-search
-ln -s ~/pi-skills/browser-tools .claude/skills/browser-tools
+ln -s ~/pi-skills/search-web .claude/skills/search-web
+ln -s ~/pi-skills/automate-browser .claude/skills/automate-browser
 ln -s ~/pi-skills/gccli .claude/skills/gccli
 ln -s ~/pi-skills/gdcli .claude/skills/gdcli
 ln -s ~/pi-skills/gmcli .claude/skills/gmcli
 ln -s ~/pi-skills/transcribe .claude/skills/transcribe
 ln -s ~/pi-skills/vscode .claude/skills/vscode
-ln -s ~/pi-skills/youtube-transcript .claude/skills/youtube-transcript
+ln -s ~/pi-skills/fetch-transcript .claude/skills/fetch-transcript
 ```
 
 ## Available Skills
 
 | Skill | Description |
 |-------|-------------|
-| [brave-search](brave-search/SKILL.md) | Web search and content extraction via Brave Search |
-| [browser-tools](browser-tools/SKILL.md) | Interactive browser automation via Chrome DevTools Protocol |
+| [search-web](search-web/SKILL.md) | Web search and content extraction via Brave Search |
+| [automate-browser](automate-browser/SKILL.md) | Interactive browser automation via Chrome DevTools Protocol |
 | [gccli](gccli/SKILL.md) | Google Calendar CLI for events and availability |
 | [gdcli](gdcli/SKILL.md) | Google Drive CLI for file management and sharing |
 | [gmcli](gmcli/SKILL.md) | Gmail CLI for email, drafts, and labels |
 | [transcribe](transcribe/SKILL.md) | Speech-to-text transcription via Groq Whisper API |
 | [vscode](vscode/SKILL.md) | VS Code integration for diffs and file comparison |
-| [youtube-transcript](youtube-transcript/SKILL.md) | Fetch YouTube video transcripts |
+| [fetch-transcript](fetch-transcript/SKILL.md) | Fetch YouTube video transcripts |
 
 ## Skill Format
 
@@ -98,21 +98,21 @@ Detailed instructions here...
 Helper files available at: skills/skill-name/
 ```
 
-Skills use project-root-relative paths (e.g., `skills/brave-search/search.js`).
+Skills use project-root-relative paths (e.g., `skills/search-web/search.js`).
 
 ## Requirements
 
 Some skills require additional setup. Generally, the agent will walk you through that. But if not, here you go:
 
-- **brave-search**: Requires Node.js. Run `npm install` in the skill directory.
-- **browser-tools**: Requires Chrome and Node.js. Run `npm install` in the skill directory.
+- **search-web**: Requires Node.js. Run `npm install` in the skill directory.
+- **automate-browser**: Requires Chrome and Node.js. Run `npm install` in the skill directory.
 - **gccli**: Requires Node.js. Install globally with `npm install -g @mariozechner/gccli`.
 - **gdcli**: Requires Node.js. Install globally with `npm install -g @mariozechner/gdcli`.
 - **gmcli**: Requires Node.js. Install globally with `npm install -g @mariozechner/gmcli`.
 - **subagent**: Requires pi-coding-agent. Install globally with `npm install -g @mariozechner/pi-coding-agent`.
 - **transcribe**: Requires curl and a Groq API key.
 - **vscode**: Requires VS Code with `code` CLI in PATH.
-- **youtube-transcript**: Requires Node.js. Run `npm install` in the skill directory.
+- **fetch-transcript**: Requires Node.js. Run `npm install` in the skill directory.
 
 ## License
 

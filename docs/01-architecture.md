@@ -61,7 +61,7 @@ Containers spun up by GitHub Actions that execute autonomous tasks:
 | Pi Coding Agent | `pi-coding-agent-job` | Default. Lightweight Python-based autonomous agent |
 | Claude Code Headless | `claude-code-job` | Claude Code in headless mode |
 | Claude Code Workspace | `claude-code-workspace` | Interactive terminal via xterm.js in browser |
-| Cluster Worker | `claude-code-cluster-worker` | Role-based worker containers |
+| Cluster Agent | `claude-code-cluster-worker` | Role-based agent containers |
 
 ## Job Lifecycle (Complete Flow)
 

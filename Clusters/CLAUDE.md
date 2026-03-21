@@ -122,7 +122,7 @@ Both use `lib/tools/docker.js` for container lifecycle via Unix socket API.
 
 ## Skills System
 
-Plugin directories under `skills/`. Activate by symlinking into `skills/active/`. Each skill has `SKILL.md` with YAML frontmatter (`name`, `description`). The `{{skills}}` template variable in markdown files resolves active skill descriptions at runtime. Default active skills: `browser-tools`, `llm-secrets`, `modify-self`.
+Plugin directories under `skills/`. Activate by symlinking into `skills/active/`. Each skill has `SKILL.md` with YAML frontmatter (`name`, `description`). The `{{skills}}` template variable in markdown files resolves active skill descriptions at runtime. Default active skills: `automate-browser`, `list-secrets`, `modify-self`.
 
 ## Template Config & Markdown Includes
 

@@ -1,8 +1,8 @@
-# 06 — Clusters & Workers
+# 06 — Clusters & Agents
 
 ## Overview
 
-Clusters are groups of Docker containers spawned from role definitions. Each role has its own trigger, prompt, and concurrency settings. Workers are ephemeral containers — they spin up, execute, and terminate.
+Clusters are groups of Docker containers spawned from role definitions. Each role has its own trigger, prompt, and concurrency settings. Agents are ephemeral containers — they spin up, execute, and terminate.
 
 ## Data Model
 
@@ -93,4 +93,4 @@ cluster
 |-------|---------|
 | `/clusters` | List all clusters |
 | `/cluster/{id}` | View cluster details, roles, and controls |
-| `/cluster/{id}/logs` | Live worker execution logs |
+| `/cluster/{id}/logs` | Live agent execution logs |

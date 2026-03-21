@@ -414,6 +414,9 @@ All specs in `.specify/specs/` are numbered by execution priority. Work them in 
 | **001** | End User Portal | P0 | Rebrand Phase 1 complete, Clusters functional |
 | **002** | Slack Pipeline Integration | P1 | End User Portal feature-complete |
 | **003** | AWS Cloud Deployment | P1 | All features complete; staging unrestricted, production requires **"DEPLOY PRODUCTION"** |
+| **005** | Rebrand Verification | P1 | Spec 000 complete |
+| **006** | Infra Migration: GitHub Actions → K8s + BullMQ | P1 | Mac Mini M4 base 16GB RAM (Phase 0); Spec 003 (AWS) is an alternative cloud path, not a prerequisite |
+| **007** | Capability Marketplace | P2 | Spec 006 Phase 0 complete (capability registry in Postgres); task router, usage metering, licensing, tenant publishing, versioning |
 
 ---
 

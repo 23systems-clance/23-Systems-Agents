@@ -15,7 +15,10 @@ export const middleware = auth((req) => {
     return;
   }
 
-  // /login is the only unprotected page (login + first-user setup)
+  // /consult is a public landing page (no auth required)
+  if (pathname.startsWith('/consult')) return;
+
+  // /login is the only other unprotected page (login + first-user setup)
   if (pathname === '/login') {
     if (req.auth) return NextResponse.redirect(new URL('/', req.url));
     return;

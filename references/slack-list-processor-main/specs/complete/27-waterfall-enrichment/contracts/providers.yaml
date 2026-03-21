@@ -1,0 +1,240 @@
+# Provider Configuration Contract
+# Defines waterfall order, pricing, authentication, and capabilities for enrichment providers
+
+providers:
+  apollo:
+    name: "Apollo.io"
+    capabilities:
+      - email_enrichment
+    authentication:
+      type: api_key
+      header: X-Api-Key
+      env_var: APOLLO_API_KEY
+    api:
+      base_url: https://api.apollo.io/v1
+      endpoints:
+        bulk_match: POST /people/match
+      rate_limits:
+        requests_per_second: 10
+        requests_per_minute: 600
+    webhooks:
+      enabled: true
+      endpoint: /api/webhooks/apollo/phone-results
+      signature_header: x-webhook-signature
+      signature_algorithm: HMAC-SHA256
+    pricing:
+      email:
+        cost_per_unit: 0.05
+        currency: USD
+        credits_per_unit: null
+      phone:
+        cost_per_unit: null # Not used for phone enrichment (unreliable webhooks)
+    waterfall_priority:
+      email: 1 # Try first for emails
+      phone: null # Not used for phone enrichment
+    timeout_ms: 5000
+    retry_policy:
+      max_attempts: 3
+      backoff_strategy: exponential
+      initial_delay_ms: 1000
+
+  wiza:
+    name: "Wiza.co"
+    capabilities:
+      - email_enrichment
+      - phone_enrichment
+    authentication:
+      type: bearer_token
+      header: Authorization
+      env_var: WIZA_API_KEY
+    api:
+      base_url: https://wiza.co/api
+      endpoints:
+        individual_reveal: POST /individual_reveals
+        get_reveal: GET /individual_reveals/{id}
+      rate_limits:
+        requests_per_second: 15
+        requests_per_minute: 900
+    webhooks:
+      enabled: true
+      endpoint: /api/webhooks/wiza/enrichment-results
+      signature_header: x-auth-key
+      signature_algorithm: SHA256 # Hash of API key (not HMAC)
+      retry_policy:
+        max_retries: 3
+        timeout_ms: 300000 # 5 minutes
+    pricing:
+      email:
+        cost_per_unit: 0.05 # 2 credits × $0.025
+        currency: USD
+        credits_per_unit: 2
+      phone:
+        cost_per_unit: 0.125 # 5 credits × $0.025
+        currency: USD
+        credits_per_unit: 5
+    waterfall_priority:
+      email: 2 # Try second for emails (after Apollo)
+      phone: 1 # Try first for phones
+    timeout_ms: 5000
+    retry_policy:
+      max_attempts: 3
+      backoff_strategy: exponential
+      initial_delay_ms: 1000
+
+  ai_ark:
+    name: "AI Ark"
+    capabilities:
+      - email_enrichment
+      - phone_enrichment
+    authentication:
+      type: custom_header
+      header: X-TOKEN
+      env_var: AI_ARK_API_KEY
+    api:
+      base_url: https://api.ai-ark.com/api/developer-portal/v1
+      endpoints:
+        mobile_phone_finder: POST /people/mobile-phone-finder
+        export_email: POST /people/export-email
+        fetch_credits: GET /payments/credits
+      rate_limits:
+        requests_per_second: 5
+        requests_per_minute: 300
+        requests_per_hour: 18000
+    webhooks:
+      enabled: true
+      endpoint: /api/webhooks/aiark/enrichment-results
+      signature_header: x-webhook-signature
+      signature_algorithm: HMAC-SHA256
+      retry_policy:
+        max_retries: 3
+        timeout_ms: 300000 # 5 minutes
+    pricing:
+      email:
+        cost_per_unit: 0.14 # Estimate - confirm with AI Ark sales
+        currency: USD
+        credits_per_unit: null
+      phone:
+        cost_per_unit: 0.27 # Estimate - confirm with AI Ark sales
+        currency: USD
+        credits_per_unit: null
+    waterfall_priority:
+      email: 3 # Try last for emails (most expensive)
+      phone: 2 # Try second for phones (after Wiza)
+    timeout_ms: 5000
+    retry_policy:
+      max_attempts: 3
+      backoff_strategy: exponential
+      initial_delay_ms: 1000
+
+  findymail:
+    name: "Findymail"
+    capabilities:
+      - email_verification
+    authentication:
+      type: bearer_token
+      header: Authorization
+      env_var: FINDYMAIL_API_KEY
+    api:
+      base_url: https://app.findymail.com
+      endpoints:
+        verify_email: POST /api/verify
+      rate_limits:
+        max_concurrent: 300 # Concurrent request limit (not per-second)
+    webhooks:
+      enabled: false # Synchronous API - no webhooks needed
+    pricing:
+      email_verification:
+        cost_per_unit: null # TBD - confirm from Findymail account pricing
+        currency: USD
+        credits_per_unit: null
+    waterfall_priority:
+      email: null # Not an enrichment provider
+      phone: null # Not applicable
+    timeout_ms: 5000
+    retry_policy:
+      max_attempts: 3
+      backoff_strategy: exponential
+      initial_delay_ms: 1000
+
+# Waterfall Configuration
+waterfalls:
+  email:
+    description: "Email enrichment waterfall - sequential provider fallback"
+    providers:
+      - apollo  # $0.05/email
+      - wiza    # $0.05/email
+      - ai_ark  # $0.14/email (estimate)
+    stop_on_success: true
+    skip_if_exists: true # FR-026: Skip contacts with existing email
+    cache_ttl_seconds: 2592000 # 30 days
+
+  phone:
+    description: "Phone enrichment waterfall - async webhook-based"
+    providers:
+      - wiza    # $0.125/phone
+      - ai_ark  # $0.27/phone (estimate)
+    stop_on_success: true
+    skip_if_exists: true # FR-026: Skip contacts with existing phone
+    cache_ttl_seconds: 2592000 # 30 days
+    async_delivery: true
+    webhook_timeout_ms: 300000 # 5 minutes per provider
+
+# Quality Gates
+quality_gates:
+  email_verification:
+    description: "Email verification via Findymail - runs after email waterfall completes"
+    provider: findymail
+    trigger: email_enrichment_complete # After email waterfall
+    mode: optional # User chooses via Slack button
+    slack_prompt:
+      buttons:
+        - action_id: verify_emails
+          label: "Verify Emails"
+          style: primary
+        - action_id: skip_verification
+          label: "Do Not Verify"
+      job_status: AWAITING_EMAIL_VERIFICATION
+    concurrency: 200 # Conservative limit within 300 API max
+    batch_size: 50 # Process in batches for progress tracking
+    output_columns:
+      - name: "Email Verified"
+        values: ["true", "false"]
+      - name: "Email Provider"
+        values: ["Google", "Microsoft", "Yahoo", etc.]
+    ordering:
+      all_mode: "Runs after email waterfall, before phone enrichment begins"
+      email_mode: "Runs after email waterfall, before file generation"
+
+  dnc_scrub:
+    description: "DNC scrub for phone numbers - runs after phone enrichment completes"
+    trigger: phone_enrichment_complete
+    mode: optional
+    slack_prompt:
+      buttons:
+        - action_id: scrub_phones
+          label: "Scrub Phones"
+          style: primary
+        - action_id: skip_scrub
+          label: "Do Not Scrub"
+      job_status: AWAITING_DNC_DECISION
+
+# Global Configuration
+config:
+  max_contacts_per_job: 2000 # FR-025: Limit to prevent excessive API calls
+  cache_enabled: true
+  cache_provider: redis
+  cost_tracking_enabled: true
+  audit_logging_enabled: true
+
+# Validation Rules
+validation:
+  email_format: RFC5322 # FR-012
+  phone_format: E164   # FR-013
+  required_contact_fields:
+    - domain # OR
+    - company_name # OR
+    - linkedin_url
+  name_requirements:
+    - first_name # OR
+    - last_name  # OR
+    - full_name

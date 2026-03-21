@@ -94,7 +94,7 @@ Channel subscriptions for multi-platform notifications.
 
 ### `clusters`
 
-Worker cluster definitions — groups of role-based Docker containers.
+Agent cluster definitions — groups of role-based Docker containers.
 
 | Column | Type | Notes |
 |--------|------|-------|

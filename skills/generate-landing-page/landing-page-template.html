@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" data-style="terminal">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{PAGE_TITLE}}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0a0a12;
+    --surface: #12121e;
+    --surface-2: #1a1a2e;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-glow: rgba(67, 97, 238, 0.08);
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.7);
+    --green: #22c55e;
+    --green-dim: rgba(34, 197, 94, 0.7);
+    --yellow: #eab308;
+    --white: #e8e8f0;
+    --mid: #8888a0;
+    --dim: #555570;
+    --border: rgba(255,255,255,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 20px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .header-right a {
+    color: var(--mid);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .header-right a:hover { color: var(--white); }
+  .header-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--white);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .header-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  /* ── HERO SECTION ── */
+  .hero {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 80px 48px;
+    text-align: center;
+  }
+  .hero .tagline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .hero h1 .hl {
+    color: var(--accent-light);
+  }
+  .hero .desc {
+    font-size: 16px;
+    color: var(--mid);
+    line-height: 1.7;
+    margin-bottom: 36px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero .cta-btn {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .hero .cta-btn:hover { background: var(--accent-light); }
+
+  /* ── FEATURES GRID ── */
+  .features {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 48px 80px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+  }
+  .feature-card .feature-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(67, 97, 238, 0.15);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .feature-card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .feature-card p {
+    font-size: 13px;
+    color: var(--mid);
+    line-height: 1.6;
+  }
+
+  /* ── METRICS BAR ── */
+  .metrics-bar {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 48px 60px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .metric .metric-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent-light);
+    margin-bottom: 4px;
+  }
+  .metric .metric-label {
+    font-size: 12px;
+    color: var(--dim);
+    font-weight: 500;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 24px 48px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 12px;
+    color: var(--dim);
+  }
+
+  @media (max-width: 768px) {
+    .hero { padding: 48px 20px; }
+    .hero h1 { font-size: 32px; }
+    .features { grid-template-columns: 1fr; padding: 20px; }
+    .metrics-bar { grid-template-columns: repeat(2, 1fr); padding: 0 20px 40px; }
+    .header { padding: 16px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">23</div>
+    {{COMPANY_NAME}}
+  </div>
+  <div class="header-right">
+    <a href="#">Services</a>
+    <a href="#">About</a>
+    <button class="header-btn">{{CTA_TEXT}}</button>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="tagline">// {{HERO_TAGLINE}}</div>
+  <h1>{{HERO_HEADLINE}}</h1>
+  <p class="desc">{{HERO_DESCRIPTION}}</p>
+  <a href="#" class="cta-btn">{{CTA_TEXT}}</a>
+</div>
+
+<!-- METRICS (customize values) -->
+<div class="metrics-bar">
+  <div class="metric">
+    <div class="metric-val">99%</div>
+    <div class="metric-label">Uptime</div>
+  </div>
+  <div class="metric">
+    <div class="metric-val">24/7</div>
+    <div class="metric-label">Support</div>
+  </div>
+  <div class="metric">
+    <div class="metric-val">5min</div>
+    <div class="metric-label">Setup</div>
+  </div>
+  <div class="metric">
+    <div class="metric-val">Free</div>
+    <div class="metric-label">Trial</div>
+  </div>
+</div>
+
+<!-- FEATURES (customize cards) -->
+<div class="features">
+  <div class="feature-card">
+    <div class="feature-icon">1</div>
+    <h3>Feature One</h3>
+    <p>Description of this feature and the value it provides to your users.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">2</div>
+    <h3>Feature Two</h3>
+    <p>Description of this feature and the value it provides to your users.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">3</div>
+    <h3>Feature Three</h3>
+    <p>Description of this feature and the value it provides to your users.</p>
+  </div>
+</div>
+
+<div class="footer">
+  &copy; 2026 {{COMPANY_NAME}}. All rights reserved.
+</div>
+
+</body>
+</html>

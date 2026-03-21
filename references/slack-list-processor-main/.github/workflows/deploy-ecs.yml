@@ -1,0 +1,157 @@
+name: Reusable ECS Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: 'GitHub Environment name (staging or production)'
+      ecr-repo:
+        required: true
+        type: string
+        description: 'ECR repository name'
+      ecs-cluster:
+        required: true
+        type: string
+        description: 'ECS cluster name'
+      ecs-service:
+        required: true
+        type: string
+        description: 'ECS service name'
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: false
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    name: Build & Deploy (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ECR_REPO: ${{ inputs.ecr-repo }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build --platform linux/amd64 -t $ECR_REPO .
+          docker tag $ECR_REPO:latest $ECR_REGISTRY/$ECR_REPO:latest
+          docker tag $ECR_REPO:latest $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPO:latest
+          docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+
+      - name: Force new ECS deployment
+        env:
+          ECS_CLUSTER: ${{ inputs.ecs-cluster }}
+          ECS_SERVICE: ${{ inputs.ecs-service }}
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE \
+            --force-new-deployment \
+            --region $AWS_REGION
+
+      - name: Wait for service stability
+        env:
+          ECS_CLUSTER: ${{ inputs.ecs-cluster }}
+          ECS_SERVICE: ${{ inputs.ecs-service }}
+        run: |
+          echo "Waiting for ECS service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster $ECS_CLUSTER \
+            --services $ECS_SERVICE \
+            --region $AWS_REGION
+
+      - name: Run Prisma migrations
+        env:
+          ECS_CLUSTER: ${{ inputs.ecs-cluster }}
+          ECS_SERVICE: ${{ inputs.ecs-service }}
+        run: |
+          echo "Running Prisma migrations via one-off ECS task..."
+
+          # Get the current task definition ARN from the service
+          TASK_DEF=$(aws ecs describe-services \
+            --cluster $ECS_CLUSTER \
+            --services $ECS_SERVICE \
+            --query 'services[0].taskDefinition' \
+            --output text)
+
+          # Get network configuration from the running service
+          NETWORK_CONFIG=$(aws ecs describe-services \
+            --cluster $ECS_CLUSTER \
+            --services $ECS_SERVICE \
+            --query 'services[0].networkConfiguration' \
+            --output json)
+
+          # Run migration as a one-off task
+          TASK_ARN=$(aws ecs run-task \
+            --cluster $ECS_CLUSTER \
+            --task-definition "$TASK_DEF" \
+            --launch-type FARGATE \
+            --network-configuration "$NETWORK_CONFIG" \
+            --overrides '{"containerOverrides":[{"name":"app","command":["npx","prisma","migrate","deploy"]}]}' \
+            --query 'tasks[0].taskArn' \
+            --output text)
+
+          echo "Migration task started: $TASK_ARN"
+
+          # Wait for the task to complete
+          aws ecs wait tasks-stopped \
+            --cluster $ECS_CLUSTER \
+            --tasks "$TASK_ARN"
+
+          # Check exit code
+          EXIT_CODE=$(aws ecs describe-tasks \
+            --cluster $ECS_CLUSTER \
+            --tasks "$TASK_ARN" \
+            --query 'tasks[0].containers[0].exitCode' \
+            --output text)
+
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Migration failed with exit code: $EXIT_CODE"
+            # Fetch logs for debugging
+            aws ecs describe-tasks \
+              --cluster $ECS_CLUSTER \
+              --tasks "$TASK_ARN" \
+              --query 'tasks[0].stoppedReason' \
+              --output text
+            exit 1
+          fi
+
+          echo "Prisma migrations completed successfully."
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: failure
+          notification_title: "Deploy to ${{ inputs.environment }} failed"
+          message_format: "Deploy to *${{ inputs.environment }}* failed for commit `${{ github.sha }}` by ${{ github.actor }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

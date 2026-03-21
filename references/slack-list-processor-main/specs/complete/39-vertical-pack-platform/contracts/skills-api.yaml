@@ -1,0 +1,402 @@
+openapi: 3.0.3
+info:
+  title: Skills API
+  version: 1.0.0
+  description: Admin CRUD for skills and client-facing skill invocation.
+
+paths:
+  /api/admin/skills:
+    get:
+      summary: List all skills
+      tags: [Skills - Admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [DRAFT, TESTING, PUBLISHED, DEPRECATED]
+        - name: triggerType
+          in: query
+          schema:
+            type: string
+            enum: [SLACK_COMMAND, API_CALL, SCHEDULED, EVENT, MANUAL]
+      responses:
+        '200':
+          description: Skill list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SkillSummary'
+                  total:
+                    type: integer
+
+    post:
+      summary: Create a new skill
+      tags: [Skills - Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSkillRequest'
+      responses:
+        '201':
+          description: Skill created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+
+  /api/admin/skills/{skillId}:
+    get:
+      summary: Get skill details with execution stats
+      tags: [Skills - Admin]
+      parameters:
+        - name: skillId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Skill with stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillWithStats'
+
+    put:
+      summary: Update skill
+      tags: [Skills - Admin]
+      parameters:
+        - name: skillId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSkillRequest'
+      responses:
+        '200':
+          description: Skill updated
+
+  /api/admin/skills/{skillId}/test:
+    post:
+      summary: Test skill end-to-end in sandbox
+      tags: [Skills - Admin]
+      parameters:
+        - name: skillId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [input]
+              properties:
+                input:
+                  type: object
+      responses:
+        '200':
+          description: Test execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillExecutionResult'
+
+  /api/admin/skills/{skillId}/publish:
+    post:
+      summary: Publish skill
+      tags: [Skills - Admin]
+      parameters:
+        - name: skillId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Skill published
+
+  /api/admin/skills/{skillId}/version-check:
+    get:
+      summary: Check if skill's agent has a newer published version
+      tags: [Skills - Admin]
+      parameters:
+        - name: skillId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Version check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentVersion:
+                    type: integer
+                  latestPublishedVersion:
+                    type: integer
+                  updateAvailable:
+                    type: boolean
+
+  /api/client/skills/{skillId}/invoke:
+    post:
+      summary: Invoke a skill (client-facing)
+      tags: [Skills - Client]
+      parameters:
+        - name: skillId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [input]
+              properties:
+                input:
+                  type: object
+      responses:
+        '202':
+          description: Skill execution queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  executionId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    default: QUEUED
+        '402':
+          description: Insufficient credits
+        '429':
+          description: Daily spend limit reached
+
+components:
+  schemas:
+    CreateSkillRequest:
+      type: object
+      required: [name, slug, agentId, agentVersionId, triggerType, creditCost]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        agentId:
+          type: string
+          format: uuid
+        agentVersionId:
+          type: string
+          format: uuid
+        triggerType:
+          type: string
+          enum: [SLACK_COMMAND, API_CALL, SCHEDULED, EVENT, MANUAL]
+        triggerConfig:
+          type: object
+        deliveryChannels:
+          type: array
+          items:
+            type: string
+            enum: [SLACK_THREAD, EMAIL, CRM_SYNC, FILE_DOWNLOAD, WEBHOOK]
+        deliveryConfig:
+          type: object
+        mcpToolIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        inputMapping:
+          type: object
+        outputMapping:
+          type: object
+        creditCost:
+          type: number
+        retryPolicy:
+          type: object
+          properties:
+            maxRetries:
+              type: integer
+            backoffMs:
+              type: integer
+        chainEventName:
+          type: string
+
+    UpdateSkillRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        agentVersionId:
+          type: string
+          format: uuid
+        triggerConfig:
+          type: object
+        deliveryChannels:
+          type: array
+          items:
+            type: string
+        deliveryConfig:
+          type: object
+        mcpToolIds:
+          type: array
+          items:
+            type: string
+        creditCost:
+          type: number
+        retryPolicy:
+          type: object
+
+    SkillSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        status:
+          type: string
+        triggerType:
+          type: string
+        agentName:
+          type: string
+        agentVersion:
+          type: integer
+        creditCost:
+          type: number
+        totalExecutions:
+          type: integer
+        successRate:
+          type: number
+
+    Skill:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        agentId:
+          type: string
+        agentVersionId:
+          type: string
+        triggerType:
+          type: string
+        deliveryChannels:
+          type: array
+          items:
+            type: string
+        creditCost:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    SkillWithStats:
+      allOf:
+        - $ref: '#/components/schemas/Skill'
+        - type: object
+          properties:
+            agent:
+              $ref: '#/components/schemas/AgentRef'
+            stats:
+              type: object
+              properties:
+                totalExecutions:
+                  type: integer
+                successRate:
+                  type: number
+                avgDurationMs:
+                  type: integer
+                totalCreditsConsumed:
+                  type: number
+                last7DaysExecutions:
+                  type: integer
+            versionCheck:
+              type: object
+              properties:
+                currentVersion:
+                  type: integer
+                latestPublishedVersion:
+                  type: integer
+                updateAvailable:
+                  type: boolean
+
+    AgentRef:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: integer
+
+    SkillExecutionResult:
+      type: object
+      properties:
+        executionId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [COMPLETED, FAILED]
+        output:
+          type: object
+        creditsCost:
+          type: number
+        durationMs:
+          type: integer
+        trace:
+          type: object
+          properties:
+            agentInvocations:
+              type: array
+              items:
+                type: object
+            toolCalls:
+              type: array
+              items:
+                type: object

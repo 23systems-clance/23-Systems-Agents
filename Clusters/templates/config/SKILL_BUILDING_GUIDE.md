@@ -68,7 +68,7 @@ curl -s -X POST "https://api.groq.com/openai/v1/audio/transcriptions" \
 
 ## Example: Skill with Node.js dependencies
 
-The built-in `brave-search` skill uses Node.js for HTML parsing (jsdom, readability, turndown). It has a `package.json` and `.js` scripts. Dependencies are installed automatically in Docker. Use this pattern only when bash + curl isn't sufficient.
+The built-in `search-web` skill uses Node.js for HTML parsing (jsdom, readability, turndown). It has a `package.json` and `.js` scripts. Dependencies are installed automatically in Docker. Use this pattern only when bash + curl isn't sufficient.
 
 ## Activation
 

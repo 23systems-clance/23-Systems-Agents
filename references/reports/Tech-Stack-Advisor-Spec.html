@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech Stack Advisor &mdash; Lead Capture System Spec</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy: #1a1a2e;
+    --navy-light: #252542;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-bg: #eef0ff;
+    --accent-border: #c7ceff;
+    --white: #ffffff;
+    --light-bg: #f3f4f8;
+    --dark-text: #1e1e32;
+    --mid-text: #50506e;
+    --light-text: #8889a0;
+    --border: #c8cde0;
+    --success: #22c55e;
+    --success-bg: #ecfdf5;
+    --warn: #eab308;
+    --warn-bg: #fefce8;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--dark-text);
+    background: var(--light-bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--navy);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0;
+  }
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .sidebar-logo img {
+    flex-shrink: 0;
+  }
+  .sidebar-header .doc-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .sidebar-header .doc-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .sidebar-nav {
+    padding: 16px 0;
+  }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: var(--navy-light);
+    border-left-color: var(--accent);
+  }
+  .sidebar-nav a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .sidebar-nav .nav-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 10px 24px;
+  }
+  .sidebar-nav .nav-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 8px 24px 4px;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 280px;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(243,244,248,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--light-text);
+  }
+  .topbar .meta {
+    display: flex;
+    gap: 24px;
+  }
+  .topbar .meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--navy);
+    padding: 64px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  }
+  .cover .doc-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+  .cover h1 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .cover .subtitle {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 400;
+    max-width: 600px;
+  }
+
+  /* ── SECTIONS ── */
+  .content {
+    padding: 40px 48px 80px;
+    max-width: 960px;
+  }
+
+  .section {
+    margin-bottom: 48px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--accent-bg);
+  }
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .sub-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 28px 0 12px;
+    padding-left: 14px;
+    border-left: 3px solid var(--accent);
+  }
+
+  p {
+    color: var(--mid-text);
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── LISTS ── */
+  ul {
+    list-style: none;
+    margin: 12px 0 20px;
+    padding: 0;
+  }
+  ul li {
+    position: relative;
+    padding: 6px 0 6px 24px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 13px;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 16px 0 20px;
+    padding: 0;
+  }
+  ol.steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 8px 0 8px 44px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 4px;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  thead th {
+    background: var(--navy);
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #eef0f4;
+    color: var(--mid-text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #f8f9fc; }
+  tbody tr:hover { background: var(--accent-bg); }
+
+  /* ── INFO BOXES ── */
+  .info-box {
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+  .info-box.info {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .info-box.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+    color: #166534;
+  }
+  .info-box.warning {
+    background: var(--warn-bg);
+    border-color: var(--warn);
+    color: #854d0e;
+  }
+  .info-box.danger {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+    color: #991b1b;
+  }
+
+  /* ── CODE ── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--navy);
+    color: #e0e0e0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 12px 0 20px;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+
+  /* ── STRONG / BOLD ── */
+  strong { color: var(--dark-text); font-weight: 600; }
+
+  /* ── PHASE TIMELINE ── */
+  .phase-block {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0;
+    background: var(--white);
+    position: relative;
+  }
+  .phase-block::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 12px 0 0 12px;
+    background: var(--accent);
+  }
+  .phase-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .phase-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 8px;
+  }
+  .phase-meta {
+    font-size: 12px;
+    color: var(--light-text);
+    margin-bottom: 12px;
+  }
+
+  /* ── FLOW CARDS ── */
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .flow-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    background: var(--white);
+    text-align: center;
+    position: relative;
+  }
+  .flow-card .flow-step {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .flow-card .flow-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 6px;
+  }
+  .flow-card .flow-desc {
+    font-size: 12px;
+    color: var(--mid-text);
+    line-height: 1.5;
+  }
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 24px;
+    font-weight: 300;
+  }
+
+  /* ── ROLE CARDS ── */
+  .role-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 16px 0 24px;
+  }
+  .role-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    background: var(--white);
+  }
+  .role-card .role-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .role-card .role-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 4px;
+  }
+  .role-card .role-desc {
+    font-size: 13px;
+    color: var(--mid-text);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .role-card .role-output {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* ── STAT CARDS ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .stat-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    background: var(--white);
+    text-align: center;
+  }
+  .stat-card .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--light-text);
+    font-weight: 500;
+  }
+
+  /* ── QUESTION BLOCK ── */
+  .question-block {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 8px 0;
+    background: var(--white);
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .question-block .q-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-bg);
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .question-block .q-text {
+    font-size: 14px;
+    color: var(--dark-text);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .question-block .q-note {
+    font-size: 12px;
+    color: var(--light-text);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .topbar { display: none; }
+    .cover { padding: 40px 32px; }
+    .content { padding: 24px 32px; }
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .topbar { padding: 12px 20px; }
+    .cover { padding: 40px 20px; }
+    .content { padding: 24px 20px; }
+    .role-grid, .stat-grid { grid-template-columns: 1fr; }
+    .flow-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <img src="../uploads/23 Systems Logo.png" alt="23 Systems" width="32" height="32">
+    </div>
+    <div class="doc-type">Product Spec</div>
+    <div class="doc-title">Tech Stack Advisor<br>Lead Capture System</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-label">Overview</div>
+    <a href="#s1"><span class="num">1</span> Vision &amp; Strategy</a>
+    <a href="#s2"><span class="num">2</span> User Flow</a>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Conversation Engine</div>
+    <a href="#s3"><span class="num">3</span> Question Architecture</a>
+    <a href="#s4"><span class="num">4</span> Recommendation Engine</a>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Infrastructure</div>
+    <a href="#s5"><span class="num">5</span> System Architecture</a>
+    <a href="#s6"><span class="num">6</span> Team Pipeline</a>
+    <a href="#s7"><span class="num">7</span> Public Landing Page</a>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Growth</div>
+    <a href="#s8"><span class="num">8</span> Lead Capture &amp; CRM</a>
+    <a href="#s9"><span class="num">9</span> Partner Ecosystem</a>
+    <a href="#s10"><span class="num">10</span> Report Template</a>
+    <a href="#s11"><span class="num">11</span> Build Phases</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="meta">
+      <span>23 Systems</span>
+      <span>March 2026</span>
+      <span>v1.0</span>
+    </div>
+    <div>CONFIDENTIAL</div>
+  </div>
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="doc-badge">Product Specification</div>
+    <h1>Tech Stack Advisor</h1>
+    <div class="subtitle">An AI-powered lead capture system that delivers real value upfront &mdash; helping prospects choose the right tech stack while converting them into warm, high-intent leads for 23 Systems.</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ SECTION 1: VISION ═══ -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>Vision &amp; Strategy</h2>
+      </div>
+
+      <p>Traditional lead capture is a dead form on a landing page. Nobody wants to fill out "Tell us about your project" into a textarea and wait for a sales email. The Tech Stack Advisor flips this &mdash; prospects get an <strong>immediate, personalized consultation</strong> from an AI solutions architect, and 23 Systems gets a <strong>qualified lead with full project context</strong>.</p>
+
+      <div class="sub-header">Why This Works</div>
+      <ul>
+        <li><strong>Value-first exchange</strong> &mdash; the prospect gets a genuinely useful tech stack recommendation before we ask for anything</li>
+        <li><strong>Natural qualification</strong> &mdash; the conversation itself reveals budget, timeline, team size, and technical maturity</li>
+        <li><strong>High-intent leads</strong> &mdash; someone who completes a 5-minute AI consultation is far more engaged than someone who fills out a form</li>
+        <li><strong>Conversation as data</strong> &mdash; the full chat history gives our sales team complete context before the first human call</li>
+        <li><strong>Partner revenue</strong> &mdash; matching prospects with cloud credits, startup programs, and implementation partners creates a referral revenue channel</li>
+      </ul>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">5</div>
+          <div class="stat-label">Conversation Phases</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">3</div>
+          <div class="stat-label">Agent Roles</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">8</div>
+          <div class="stat-label">Stack Categories</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">2</div>
+          <div class="stat-label">Depth Modes</div>
+        </div>
+      </div>
+
+      <div class="info-box success"><strong>Competitive Advantage:</strong> Most agencies use static "request a quote" forms. This system makes 23 Systems the company that <em>already helped you</em> before the first sales call. The consultation builds trust, demonstrates expertise, and creates a natural transition to paid services.</div>
+    </div>
+
+    <!-- ═══ SECTION 2: USER FLOW ═══ -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>User Flow</h2>
+      </div>
+
+      <p>The end-to-end journey from landing page visit to booked consultation call.</p>
+
+      <div class="flow-grid">
+        <div class="flow-card">
+          <div class="flow-step">Step 1</div>
+          <div class="flow-title">Land</div>
+          <div class="flow-desc">Prospect visits <code>/consult</code> &mdash; sees hero, value prop, and embedded chat</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-step">Step 2</div>
+          <div class="flow-title">Converse</div>
+          <div class="flow-desc">AI asks adaptive questions &mdash; prospect chooses high-level or deep dive</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-step">Step 3</div>
+          <div class="flow-title">Preview</div>
+          <div class="flow-desc">AI delivers recommendation summary + asks about partner resources</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-step">Step 4</div>
+          <div class="flow-title">Capture</div>
+          <div class="flow-desc">Lead gate: name + email to unlock full branded report</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-step">Step 5</div>
+          <div class="flow-title">Report</div>
+          <div class="flow-desc">Research Agent validates stack, Report Agent generates branded HTML</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-step">Step 6</div>
+          <div class="flow-title">Book</div>
+          <div class="flow-desc">Calendar embed &mdash; schedule consultation with pre-filled context</div>
+        </div>
+      </div>
+
+      <div class="info-box info"><strong>Gating Strategy:</strong> The high-level recommendation is free &mdash; the prospect sees bullet points of what we'd recommend. The <em>full report</em> (detailed reasoning, architecture diagram, alternatives, partner resources) requires name + email. This creates a natural value exchange without feeling like a paywall.</div>
+    </div>
+
+    <!-- ═══ SECTION 3: QUESTION ARCHITECTURE ═══ -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>Question Architecture</h2>
+      </div>
+
+      <p>The conversation engine uses an <strong>adaptive flow</strong> &mdash; the agent picks the next best question based on what it's already learned. No fixed sequence. Questions are skipped if the answer was already revealed in a prior response.</p>
+
+      <div class="sub-header">Tone: Consultative Expert</div>
+      <p>Like talking to a senior solutions architect having a real conversation. Professional, insightful, occasionally drops quick tips between questions. Example: <em>"Good call on wanting real-time &mdash; that narrows things down significantly."</em></p>
+
+      <div class="sub-header">Phase 1: Opening (Always)</div>
+      <div class="question-block">
+        <div class="q-num">1</div>
+        <div>
+          <div class="q-text">"Tell me about your project &mdash; what are you building and what problem does it solve?"</div>
+          <div class="q-note">This single open-ended question often reveals 2-3 dimensions at once (type, audience, complexity)</div>
+        </div>
+      </div>
+
+      <div class="sub-header">Phase 2: Depth Selection (Always, asked 2nd)</div>
+      <div class="question-block">
+        <div class="q-num">2</div>
+        <div>
+          <div class="q-text">"Would you prefer a high-level recommendation (3-4 more questions, ~2 minutes) or a deep dive (8-10 more questions, ~5 minutes)? The deep dive covers team dynamics, integrations, compliance, and budget."</div>
+          <div class="q-note">Agent adapts remaining flow based on this choice &mdash; respects the prospect's time</div>
+        </div>
+      </div>
+
+      <div class="sub-header">Phase 3: Core Discovery (Adaptive)</div>
+      <p><strong>High-Level Path</strong> &mdash; 3-4 questions from this pool:</p>
+      <div class="question-block">
+        <div class="q-num">3</div>
+        <div>
+          <div class="q-text">"Is this an MVP/proof of concept, or are you building for production scale?"</div>
+        </div>
+      </div>
+      <div class="question-block">
+        <div class="q-num">4</div>
+        <div>
+          <div class="q-text">"What's your team look like &mdash; solo dev, small team, or enterprise?"</div>
+        </div>
+      </div>
+      <div class="question-block">
+        <div class="q-num">5</div>
+        <div>
+          <div class="q-text">"Any hard constraints? (existing infra, language preferences, compliance needs)"</div>
+        </div>
+      </div>
+      <div class="question-block">
+        <div class="q-num">6</div>
+        <div>
+          <div class="q-text">"What's your timeline &mdash; weeks, months, or ongoing?"</div>
+        </div>
+      </div>
+
+      <p><strong>Deep Dive Path</strong> &mdash; all of the above, plus adaptive selections from:</p>
+      <div class="question-block">
+        <div class="q-num">+</div>
+        <div>
+          <div class="q-text">"What does your current tech stack look like, if any?"</div>
+        </div>
+      </div>
+      <div class="question-block">
+        <div class="q-num">+</div>
+        <div>
+          <div class="q-text">"Do you need real-time features (chat, live updates, collaboration)?"</div>
+        </div>
+      </div>
+      <div class="question-block">
+        <div class="q-num">+</div>
+        <div>
+          <div class="q-text">"What's your expected user load at launch? In 12 months?"</div>
+        </div>
+      </div>
+      <div class="question-block">
+        <div class="q-num">+</div>
+        <div>
+          <div class="q-text">"Any third-party integrations you already know you'll need? (payments, auth, APIs)"</div>
+        </div>
+      </div>
+      <div class="question-block">
+        <div class="q-num">+</div>
+        <div>
+          <div class="q-text">"What's your budget range for infrastructure? (bootstrapped, seed-funded, enterprise)"</div>
+        </div>
+      </div>
+      <div class="question-block">
+        <div class="q-num">+</div>
+        <div>
+          <div class="q-text">"Does your industry have compliance requirements? (HIPAA, SOC2, PCI, GDPR)"</div>
+        </div>
+      </div>
+      <div class="question-block">
+        <div class="q-num">+</div>
+        <div>
+          <div class="q-text">"How important is developer experience vs. raw performance?"</div>
+        </div>
+      </div>
+      <div class="question-block">
+        <div class="q-num">+</div>
+        <div>
+          <div class="q-text">"Do you have a preference between managed services (Vercel, Supabase) vs. self-hosted?"</div>
+        </div>
+      </div>
+
+      <div class="info-box info"><strong>Adaptive Probing:</strong> The agent can also ask follow-up probes based on answers. For example, if the prospect mentions "real-time," the agent might ask about expected concurrent connections. If they mention "compliance," it digs into which specific regulations.</div>
+
+      <div class="sub-header">Phase 4: Summary &amp; Confirmation (Always)</div>
+      <p>Before generating recommendations, the agent summarizes everything it's learned in a structured recap and asks the prospect to confirm or correct:</p>
+      <div class="question-block">
+        <div class="q-num">S</div>
+        <div>
+          <div class="q-text">"Based on everything you've shared, here's what I'm working with: [structured summary]. Sound right before I build your recommendation?"</div>
+          <div class="q-note">User confirms or corrects &mdash; agent proceeds to recommendation</div>
+        </div>
+      </div>
+
+      <div class="sub-header">Phase 5: Recommendation + Partner Question (Always)</div>
+      <p>Agent delivers the high-level stack recommendation (free preview), then asks:</p>
+      <div class="question-block">
+        <div class="q-num">P</div>
+        <div>
+          <div class="q-text">"Based on your recommended stack, there are companies that offer free credits, startup programs, and implementation partners that could help bring this to life. Would you like me to include those in your full report?"</div>
+          <div class="q-note">Natural conversational question, not a modal or CTA. Yes &rarr; partners included in report. No &rarr; report without partner section. Either way, lead gate follows.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 4: RECOMMENDATION ENGINE ═══ -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <h2>Recommendation Engine</h2>
+      </div>
+
+      <p>Recommendations are structured across <strong>8 categories</strong>, each with a primary recommendation, confidence score, reasoning, alternatives, and tradeoffs.</p>
+
+      <div class="sub-header">Recommendation Categories</div>
+      <table>
+        <thead>
+          <tr><th>Category</th><th>What It Covers</th><th>Example Output</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Frontend</strong></td><td>UI framework, rendering strategy, styling</td><td>Next.js + Tailwind CSS (SSR for SEO)</td></tr>
+          <tr><td><strong>Backend</strong></td><td>Server framework, API architecture</td><td>Node.js + Express (REST API)</td></tr>
+          <tr><td><strong>Database</strong></td><td>Primary datastore, caching layer</td><td>PostgreSQL + Redis</td></tr>
+          <tr><td><strong>Hosting / Infra</strong></td><td>Cloud provider, deployment strategy</td><td>Vercel (frontend) + Railway (backend)</td></tr>
+          <tr><td><strong>Auth</strong></td><td>Authentication, authorization</td><td>NextAuth.js with OAuth providers</td></tr>
+          <tr><td><strong>Payments</strong></td><td>Payment processing, subscriptions</td><td>Stripe Checkout + Billing Portal</td></tr>
+          <tr><td><strong>DevOps / CI</strong></td><td>CI/CD, testing, deployment pipeline</td><td>GitHub Actions + Preview Deploys</td></tr>
+          <tr><td><strong>Monitoring</strong></td><td>Observability, error tracking, analytics</td><td>Sentry + Posthog</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Output Format</div>
+      <pre>{
+  "category": "Frontend",
+  "recommendation": "Next.js 14 with App Router",
+  "confidence": 0.92,
+  "why": "SSR for SEO, React ecosystem, Vercel deployment",
+  "alternatives": ["Remix", "SvelteKit", "Astro"],
+  "tradeoffs": "Heavier than Astro for static sites",
+  "matchedPartners": ["Vercel Pro Partner"]
+}</pre>
+
+      <div class="info-box success"><strong>Research Validation:</strong> The Research Agent uses <code>brave-search</code> to validate each recommendation against real-world adoption, community health, and ecosystem maturity. This prevents the AI from recommending trendy-but-unstable technologies.</div>
+    </div>
+
+    <!-- ═══ SECTION 5: SYSTEM ARCHITECTURE ═══ -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <h2>System Architecture</h2>
+      </div>
+
+      <p>The Tech Stack Advisor is built as a <strong>Skill + Team Template + Public Page</strong> &mdash; three layers that leverage existing 23WF infrastructure.</p>
+
+      <table>
+        <thead>
+          <tr><th>Layer</th><th>Type</th><th>Role</th><th>Location</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Skill</strong></td><td><code>tech-stack-advisor</code></td><td>Question framework, knowledge base, report generation</td><td><code>skills/tech-stack-advisor/</code></td></tr>
+          <tr><td><strong>Template</strong></td><td><code>tech-consultation</code></td><td>Multi-role pipeline: Discovery &rarr; Research &rarr; Report</td><td><code>config/templates/tech-consultation.json</code></td></tr>
+          <tr><td><strong>Public Page</strong></td><td>Next.js route</td><td>Unauthenticated landing page with embedded chat</td><td><code>app/consult/page.js</code></td></tr>
+          <tr><td><strong>API</strong></td><td>Streaming endpoint</td><td>Public SSE endpoint for chat, rate-limited</td><td><code>app/api/consult/route.js</code></td></tr>
+          <tr><td><strong>Report</strong></td><td>HTML template</td><td>Branded output using existing design system</td><td><code>references/SOP Templates/tech-stack-report.html</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Data Flow</div>
+      <pre>
+Prospect visits /consult (public, no auth)
+    |
+    v
+Chat UI streams to /api/consult (SSE, rate-limited)
+    |
+    v
+Discovery conversation (5-12 questions, adaptive)
+    |
+    v
+High-level recommendation preview (FREE)
+    |
+    v
+Partner question: "Want resources included?"
+    |
+    v
+Lead gate: name + email
+    |
+    +---> SQLite: leads table
+    +---> CRM webhook: contact + project summary
+    |
+    v
+Team Pipeline triggers:
+    Role 1: Research Agent (brave-search validation)
+    Role 2: Report Agent (branded HTML generation)
+    |
+    v
+Report delivered via email + download link
+    |
+    v
+Calendar embed: "Book a consultation"
+      </pre>
+
+      <div class="sub-header">Key Files</div>
+      <table>
+        <thead>
+          <tr><th>File</th><th>Action</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>skills/tech-stack-advisor/SKILL.md</code></td><td>Create</td><td>Skill definition + question framework</td></tr>
+          <tr><td><code>skills/tech-stack-advisor/generate-report.js</code></td><td>Create</td><td>Report generation script</td></tr>
+          <tr><td><code>skills/tech-stack-advisor/partners.json</code></td><td>Create</td><td>Curated partner/credits list</td></tr>
+          <tr><td><code>references/SOP Templates/tech-stack-report.html</code></td><td>Create</td><td>Branded report template</td></tr>
+          <tr><td><code>config/templates/tech-consultation.json</code></td><td>Create</td><td>Team template definition</td></tr>
+          <tr><td><code>app/consult/page.js</code></td><td>Create</td><td>Public landing page</td></tr>
+          <tr><td><code>app/api/consult/route.js</code></td><td>Create</td><td>Public chat API endpoint</td></tr>
+          <tr><td><code>middleware.js</code></td><td>Modify</td><td>Exclude <code>/consult</code> from auth</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ SECTION 6: TEAM PIPELINE ═══ -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <h2>Team Pipeline</h2>
+      </div>
+
+      <p>After the lead gate, the full team pipeline fires. Three specialized agents work sequentially through a shared workspace.</p>
+
+      <div class="role-grid">
+        <div class="role-card">
+          <div class="role-icon">&#x1F50D;</div>
+          <div class="role-name">Discovery Agent</div>
+          <div class="role-desc">Handles the real-time conversation. Asks qualifying questions adaptively, summarizes findings, and writes the project profile to shared workspace.</div>
+          <div class="role-output">discovery.json</div>
+        </div>
+        <div class="role-card">
+          <div class="role-icon">&#x1F9EA;</div>
+          <div class="role-name">Research Agent</div>
+          <div class="role-desc">Reads the discovery profile and uses <code>brave-search</code> to validate each tech recommendation against real-world adoption and ecosystem health.</div>
+          <div class="role-output">recommendations.json</div>
+        </div>
+        <div class="role-card">
+          <div class="role-icon">&#x1F4C4;</div>
+          <div class="role-name">Report Agent</div>
+          <div class="role-desc">Reads both JSON files, populates the branded HTML template, and generates the final deliverable for email delivery.</div>
+          <div class="role-output">tech-stack-report.html</div>
+        </div>
+      </div>
+
+      <div class="sub-header">Template Configuration</div>
+      <pre>{
+  "id": "tech-consultation",
+  "name": "Tech Stack Consultation",
+  "description": "AI-powered tech stack advisory pipeline",
+  "category": "sales",
+  "inputs": [
+    { "id": "project_description", "label": "Project description", "type": "textarea" },
+    { "id": "contact_name", "label": "Name", "type": "text" },
+    { "id": "contact_email", "label": "Email", "type": "text" }
+  ],
+  "cluster": {
+    "systemPrompt": "You are a 23 Systems tech advisory team...",
+    "roles": [
+      { "roleName": "Discovery", "role": "Consultative interviewer", "prompt": "..." },
+      { "roleName": "Research", "role": "Solutions architect", "prompt": "..." },
+      { "roleName": "Report", "role": "Technical writer", "prompt": "..." }
+    ]
+  }
+}</pre>
+    </div>
+
+    <!-- ═══ SECTION 7: LANDING PAGE ═══ -->
+    <div class="section" id="s7">
+      <div class="section-header">
+        <div class="section-number">7</div>
+        <h2>Public Landing Page</h2>
+      </div>
+
+      <p>A new <code>/consult</code> route that is <strong>fully public</strong> (no authentication required). This is the only net-new frontend work &mdash; everything else builds on existing components.</p>
+
+      <div class="sub-header">Adaptive Persona System</div>
+      <p>The landing page adapts to the visitor's persona. On first load, a brief selector asks who they are, then the entire experience &mdash; visual design, chat tone, and question focus &mdash; shifts accordingly.</p>
+
+      <table>
+        <thead>
+          <tr><th>Element</th><th>Simple Mode (Founders, PMs)</th><th>Dev Mode (Developers, CTOs)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Visual design</strong></td><td>V2: Dark Hero + Split (<code>landing-page-v2-dark-hero.html</code>)</td><td>V4: Terminal / Dev-Forward (<code>landing-page-v4-terminal.html</code>)</td></tr>
+          <tr><td><strong>Left panel</strong></td><td>Feature bullets + icons</td><td>JSON output preview + metrics cards</td></tr>
+          <tr><td><strong>Chat tone</strong></td><td>Conversational, uses analogies</td><td>Technical, names specific libraries</td></tr>
+          <tr><td><strong>Question focus</strong></td><td>Budget, timeline, team size, goals</td><td>Architecture, scaling, protocols, DX</td></tr>
+          <tr><td><strong>Report emphasis</strong></td><td>Business value, partner resources</td><td>Architecture diagrams, benchmarks, code</td></tr>
+        </tbody>
+      </table>
+
+      <p>Selection stored in <code>sessionStorage</code> and also settable via URL param: <code>/consult?mode=simple</code> or <code>/consult?mode=dev</code>.</p>
+
+      <div class="sub-header">Simple Mode: V2 Dark Hero + Split</div>
+      <ul>
+        <li><strong>Left panel</strong> &mdash; Badge ("Free AI Consultation"), headline ("Find your perfect tech stack"), subtitle, 4 feature items with icons</li>
+        <li><strong>Right panel</strong> &mdash; Floating chat window with avatar, agent name, online status</li>
+        <li><strong>Background</strong> &mdash; Dark navy with radial gradient glow effects</li>
+        <li><strong>Social proof bar</strong> &mdash; Consultations completed, categories, avg duration, free</li>
+      </ul>
+
+      <div class="sub-header">Dev Mode: V4 Terminal / Dev-Forward</div>
+      <ul>
+        <li><strong>Left panel</strong> &mdash; JSON preview of sample recommendation output, monospace typography, metrics cards</li>
+        <li><strong>Right panel</strong> &mdash; Chat with message avatars and structured responses</li>
+        <li><strong>Full dark mode</strong> &mdash; Terminal aesthetic with code-level detail</li>
+        <li><strong>Agent adapts</strong> &mdash; Asks about CRDT choices, WebSocket architecture, specific framework versions</li>
+      </ul>
+
+      <div class="info-box info"><strong>Shared infrastructure:</strong> Both modes use the same API endpoint, same skill, same team pipeline. The persona only changes the system prompt modifier and the React component rendered. No code duplication.</div>
+
+      <div class="sub-header">Hybrid Architecture: State Machine + LLM</div>
+      <p>The discovery phase uses a <strong>zero-cost client-side state machine</strong>. The LLM is only called once &mdash; after lead capture. This makes the system nearly free to operate and immune to bot abuse.</p>
+
+      <table>
+        <thead>
+          <tr><th>Phase</th><th>Engine</th><th>LLM Calls</th><th>Cost</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Phases 1-4</strong> (Questions + Summary)</td><td>Client-side state machine</td><td>0</td><td>$0.00</td></tr>
+          <tr><td><strong>Phase 5</strong> (Recommendation)</td><td>Single LLM call</td><td>1</td><td>~$0.01-0.05</td></tr>
+          <tr><td><strong>Research validation</strong></td><td>brave-search</td><td>0</td><td>~$0.003</td></tr>
+          <tr><td><strong>Report generation</strong></td><td>Template population</td><td>0-1</td><td>~$0.02-0.05</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box success"><strong>Cost per qualified lead: ~$0.03-0.10.</strong> At 1,000 leads/month, total LLM cost is $30-100/month. The LLM only fires after email capture, so bots that don't submit a real email cost exactly $0.</div>
+
+      <div class="sub-header">Client-Side State Machine (Phases 1-4)</div>
+      <p>All discovery questions are pre-written and served from a <code>conversation-tree.json</code> file. The browser handles:</p>
+      <ul>
+        <li><strong>Conversation tree</strong> &mdash; each node has a message, expected input type, branching logic, and next-node mapping</li>
+        <li><strong>Simulated typing</strong> &mdash; 500-1500ms delay before showing each message (feels like AI)</li>
+        <li><strong>Conditional skipping</strong> &mdash; if an answer was already revealed in a prior response, skip that question</li>
+        <li><strong>Structured data capture</strong> &mdash; free-text answers stored in a <code>projectProfile</code> object</li>
+        <li><strong>Two variants</strong> &mdash; simple (business language) and dev (technical language) question sets</li>
+        <li><strong>Zero server calls</strong> &mdash; runs entirely in the browser during discovery</li>
+      </ul>
+      <p>Adapted from <code>Clusters/lib/chat/components/</code> &mdash; stripped down: no sidebar, no history, no file uploads. Auto-scrolling + typing indicators reused from existing <code>messages.jsx</code>.</p>
+
+      <div class="sub-header">Bot Protection Stack</div>
+      <table>
+        <thead>
+          <tr><th>Layer</th><th>What It Does</th><th>Cost</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Cloudflare Turnstile</strong></td><td>Invisible CAPTCHA on the lead gate form</td><td>Free</td></tr>
+          <tr><td><strong>IP rate limiting</strong></td><td>3 sessions per IP per day</td><td>Free</td></tr>
+          <tr><td><strong>Honeypot field</strong></td><td>Hidden form field that bots fill but humans don't</td><td>Free</td></tr>
+          <tr><td><strong>Session token</strong></td><td>Server-generated token required for recommendation endpoint</td><td>Free</td></tr>
+          <tr><td><strong>Lead gate before LLM</strong></td><td>LLM only fires after email is submitted &mdash; no email = no cost</td><td>Free</td></tr>
+          <tr><td><strong>Email validation</strong></td><td>Format check + disposable email domain blocklist</td><td>Free</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">API Endpoint (Recommendation Only)</div>
+      <table>
+        <thead>
+          <tr><th>Attribute</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Route</strong></td><td><code>app/api/consult/route.js</code></td></tr>
+          <tr><td><strong>Method</strong></td><td>POST</td></tr>
+          <tr><td><strong>Auth</strong></td><td>None (public) + Turnstile + session token + rate limit</td></tr>
+          <tr><td><strong>Input</strong></td><td><code>{ projectProfile, sessionToken, contactName, contactEmail, turnstileToken }</code></td></tr>
+          <tr><td><strong>Output</strong></td><td>JSON recommendations (single response, not streaming)</td></tr>
+          <tr><td><strong>LLM calls</strong></td><td>1 per submission (structured prompt + project profile)</td></tr>
+          <tr><td><strong>Rate Limit</strong></td><td>3 submissions/IP/day</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Cost Projections</div>
+      <table>
+        <thead>
+          <tr><th>Volume</th><th>LLM Cost</th><th>Brave Search</th><th>Total / Month</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>100 leads/mo</td><td>$1-5</td><td>$0.30</td><td><strong>~$5</strong></td></tr>
+          <tr><td>1,000 leads/mo</td><td>$10-50</td><td>$3</td><td><strong>~$50</strong></td></tr>
+          <tr><td>10,000 leads/mo</td><td>$100-500</td><td>$30</td><td><strong>~$500</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Lead Gate Modal</div>
+      <p>After the state machine completes Phase 4 (summary confirmation):</p>
+      <ol class="steps">
+        <li>Show a preview based on collected answers (no LLM &mdash; template-based summary)</li>
+        <li>Modal overlay: "Enter your name and email to get your full Tech Stack Report"</li>
+        <li>Form includes: Cloudflare Turnstile + honeypot field + email validation</li>
+        <li>On submit: single LLM call for recommendations + store lead + fire CRM webhook</li>
+        <li>Confirmation: "Your report is being generated. Check your email in ~5 minutes."</li>
+        <li>Calendar widget appears: "Want to discuss this with our team?"</li>
+      </ol>
+
+      <div class="info-box warning"><strong>Middleware Update Required:</strong> The <code>middleware.js</code> auth check must be updated to exclude <code>/consult</code> and <code>/api/consult</code> from authentication. These routes must be fully public.</div>
+    </div>
+
+    <!-- ═══ SECTION 8: LEAD CAPTURE ═══ -->
+    <div class="section" id="s8">
+      <div class="section-header">
+        <div class="section-number">8</div>
+        <h2>Lead Capture &amp; CRM</h2>
+      </div>
+
+      <p>Dual storage strategy: every lead is stored locally in SQLite <strong>and</strong> pushed to an external CRM via webhook for redundancy and workflow automation.</p>
+
+      <div class="sub-header">SQLite Schema</div>
+      <p>New <code>leads</code> table in the existing <code>data/23wf.sqlite</code> database:</p>
+      <table>
+        <thead>
+          <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>integer, PK</td><td>Auto-incrementing ID</td></tr>
+          <tr><td><code>name</code></td><td>text</td><td>Prospect's name</td></tr>
+          <tr><td><code>email</code></td><td>text</td><td>Prospect's email</td></tr>
+          <tr><td><code>project_summary</code></td><td>text</td><td>AI-generated summary from conversation</td></tr>
+          <tr><td><code>conversation_json</code></td><td>text</td><td>Full chat history</td></tr>
+          <tr><td><code>recommendations_json</code></td><td>text</td><td>Structured stack recommendations</td></tr>
+          <tr><td><code>report_path</code></td><td>text</td><td>Path to generated HTML report</td></tr>
+          <tr><td><code>wants_partners</code></td><td>boolean</td><td>Whether prospect opted into partner resources</td></tr>
+          <tr><td><code>depth_mode</code></td><td>text</td><td>"high-level" or "deep-dive"</td></tr>
+          <tr><td><code>source</code></td><td>text</td><td>"consult-page"</td></tr>
+          <tr><td><code>created_at</code></td><td>timestamp</td><td>When the lead was captured</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">CRM Webhook Payload</div>
+      <pre>{
+  "contact": {
+    "name": "Jane Doe",
+    "email": "jane@startup.com"
+  },
+  "project": {
+    "summary": "AI-generated project summary",
+    "type": "MVP",
+    "team_size": "small_team",
+    "timeline": "3_months",
+    "budget": "seed_funded"
+  },
+  "engagement": {
+    "depth_mode": "deep-dive",
+    "questions_answered": 9,
+    "conversation_duration_seconds": 312,
+    "wants_partners": true
+  },
+  "recommendation": {
+    "primary_stack": ["Next.js", "Node.js", "PostgreSQL", "Vercel"],
+    "matched_partners": ["Vercel Pro Partner", "AWS Activate"]
+  },
+  "source": "consult-page",
+  "timestamp": "2026-03-20T14:30:00Z"
+}</pre>
+
+      <div class="sub-header">Email Delivery</div>
+      <ul>
+        <li>Report sent as HTML email attachment or hosted download link</li>
+        <li>Integration via webhook to email service (SendGrid, Resend, or similar)</li>
+        <li>Email includes: report attachment + "Book a call" CTA + 23 Systems branding</li>
+      </ul>
+    </div>
+
+    <!-- ═══ SECTION 9: PARTNER ECOSYSTEM ═══ -->
+    <div class="section" id="s9">
+      <div class="section-header">
+        <div class="section-number">9</div>
+        <h2>Partner Ecosystem</h2>
+      </div>
+
+      <p>A curated list of partner programs, cloud credits, and implementation resources that the agent matches to the prospect's recommended stack. This creates value for the prospect and a <strong>referral revenue channel</strong> for 23 Systems.</p>
+
+      <div class="sub-header">Partners Data Structure</div>
+      <p>Located at <code>skills/tech-stack-advisor/partners.json</code> &mdash; easy to update as relationships evolve.</p>
+      <pre>[
+  {
+    "name": "AWS Activate",
+    "type": "cloud_credits",
+    "matchStacks": ["aws", "serverless", "lambda"],
+    "value": "$10k-$100k in credits",
+    "description": "Startup program for early-stage companies"
+  },
+  {
+    "name": "Vercel Pro Partner",
+    "type": "implementation",
+    "matchStacks": ["nextjs", "react", "vercel"],
+    "referral": true,
+    "description": "Preferred implementation partner for Next.js projects"
+  },
+  {
+    "name": "Google Cloud for Startups",
+    "type": "cloud_credits",
+    "matchStacks": ["gcp", "firebase", "google"],
+    "value": "$100k in credits over 2 years",
+    "description": "For startups backed by participating VCs or accelerators"
+  },
+  {
+    "name": "Supabase Launch Week Partner",
+    "type": "platform_credits",
+    "matchStacks": ["supabase", "postgresql", "realtime"],
+    "value": "Pro plan credits",
+    "description": "Extended trial and credits for new projects"
+  }
+]</pre>
+
+      <div class="sub-header">Partner Types</div>
+      <table>
+        <thead>
+          <tr><th>Type</th><th>What It Offers</th><th>Revenue Model</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Cloud Credits</strong></td><td>Free hosting/compute credits from cloud providers</td><td>Referral fees from activated accounts</td></tr>
+          <tr><td><strong>Implementation</strong></td><td>Preferred partners who can help build the project</td><td>Referral commission on signed contracts</td></tr>
+          <tr><td><strong>Platform Credits</strong></td><td>Extended trials or credits on SaaS tools</td><td>Affiliate commissions on conversions</td></tr>
+          <tr><td><strong>Accelerators</strong></td><td>Startup programs with mentorship + funding</td><td>Portfolio referral relationships</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box success"><strong>Revenue Opportunity:</strong> Cloud provider referral programs typically pay $500-5,000+ per activated startup account. Implementation partner referrals can yield 10-20% of project value. Even a modest conversion rate creates meaningful recurring revenue from the lead capture system itself.</div>
+    </div>
+
+    <!-- ═══ SECTION 10: REPORT TEMPLATE ═══ -->
+    <div class="section" id="s10">
+      <div class="section-header">
+        <div class="section-number">10</div>
+        <h2>Report Template</h2>
+      </div>
+
+      <p>The deliverable that makes this system premium. A branded, professional HTML report generated from the conversation data, using the existing 23 Systems design system.</p>
+
+      <div class="sub-header">Report Sections</div>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Section</th><th>Content</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><strong>Cover</strong></td><td>"Your Custom Tech Stack Report" + project name + generation date</td></tr>
+          <tr><td>2</td><td><strong>Project Profile</strong></td><td>Parsed from conversation: type, scale, timeline, team, constraints</td></tr>
+          <tr><td>3</td><td><strong>Recommended Stack</strong></td><td>Card per category with recommendation, confidence score, and reasoning</td></tr>
+          <tr><td>4</td><td><strong>Architecture Diagram</strong></td><td>Text-based suggested architecture flow showing how components connect</td></tr>
+          <tr><td>5</td><td><strong>Alternative Options</strong></td><td>Table of alternatives considered per category with tradeoff analysis</td></tr>
+          <tr><td>6</td><td><strong>Partners &amp; Resources</strong></td><td><em>(Conditional)</em> Matched cloud credits, startup programs, implementation partners</td></tr>
+          <tr><td>7</td><td><strong>Next Steps</strong></td><td>CTA to schedule consultation + how 23 Systems can help implement</td></tr>
+          <tr><td>8</td><td><strong>Footer</strong></td><td>23 Systems branding + contact info</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Design System</div>
+      <ul>
+        <li><strong>Brand:</strong> <code>data-brand="devlabs"</code> preset via <code>brand-config.css</code></li>
+        <li><strong>Fonts:</strong> Inter (headings + body) + JetBrains Mono (labels/code)</li>
+        <li><strong>Layout:</strong> Sidebar navigation with numbered sections (matching existing SOP template pattern)</li>
+        <li><strong>Components:</strong> Stat cards, info boxes, tables, gradient headers, callout boxes</li>
+        <li><strong>Logo:</strong> 23 Systems logo in sidebar + cover</li>
+        <li><strong>Print-optimized:</strong> Clean output when printed or saved as PDF</li>
+      </ul>
+
+      <div class="sub-header">Generation Script</div>
+      <p>Located at <code>skills/tech-stack-advisor/generate-report.js</code>:</p>
+      <ul>
+        <li>Takes conversation JSON + recommendations JSON as input</li>
+        <li>Populates <code>{{PLACEHOLDER}}</code> tokens in the HTML template</li>
+        <li>Conditionally includes Partners section based on prospect's choice</li>
+        <li>Outputs final HTML to <code>references/reports/</code></li>
+      </ul>
+    </div>
+
+    <!-- ═══ SECTION 11: BUILD PHASES ═══ -->
+    <div class="section" id="s11">
+      <div class="section-header">
+        <div class="section-number">11</div>
+        <h2>Build Phases</h2>
+      </div>
+
+      <p>Four phases, each independently testable. The skill is the foundation &mdash; everything else builds on it.</p>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 1 &mdash; Foundation</div>
+        <div class="phase-title">Skill + Report Template</div>
+        <div class="phase-meta">Deliverables: tech-stack-advisor skill, branded HTML report template, partners.json</div>
+        <p>Build the core intelligence: question framework, recommendation logic, report generation. Testable immediately from internal chat.</p>
+        <ul>
+          <li>Create <code>skills/tech-stack-advisor/SKILL.md</code> with full question architecture</li>
+          <li>Create <code>skills/tech-stack-advisor/partners.json</code> with initial partner list</li>
+          <li>Create <code>references/SOP Templates/tech-stack-report.html</code> branded template</li>
+          <li>Create <code>skills/tech-stack-advisor/generate-report.js</code> report generation</li>
+          <li>Activate skill: symlink into <code>skills/active/</code></li>
+          <li>Test: run full conversation from internal chat, verify report output</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 2 &mdash; Pipeline</div>
+        <div class="phase-title">Team Template + Multi-Agent Workflow</div>
+        <div class="phase-meta">Deliverables: tech-consultation.json template, 3-role cluster pipeline</div>
+        <p>Wire up the Discovery &rarr; Research &rarr; Report pipeline as a team template. Testable via the portal UI.</p>
+        <ul>
+          <li>Create <code>config/templates/tech-consultation.json</code> with 3 roles</li>
+          <li>Configure shared workspace data flow between roles</li>
+          <li>Test: deploy template from portal, verify all 3 roles execute and produce output</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 3 &mdash; Public Experience</div>
+        <div class="phase-title">Landing Page + Public Chat + Lead Gate</div>
+        <div class="phase-meta">Deliverables: /consult page, /api/consult endpoint, lead gate modal</div>
+        <p>The net-new frontend work. Build the public-facing experience that turns visitors into leads.</p>
+        <ul>
+          <li>Create <code>app/consult/page.js</code> &mdash; public landing page with hero + chat</li>
+          <li>Create <code>app/api/consult/route.js</code> &mdash; public streaming endpoint with rate limiting</li>
+          <li>Update <code>middleware.js</code> &mdash; exclude <code>/consult</code> from auth</li>
+          <li>Build lead gate modal component</li>
+          <li>Add Calendly/Cal.com embed for consultation booking</li>
+          <li>Test: visit <code>/consult</code> without login, complete full flow</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 4 &mdash; Growth</div>
+        <div class="phase-title">Lead Storage + CRM + Email Delivery</div>
+        <div class="phase-meta">Deliverables: leads table, CRM webhook, email integration</div>
+        <p>Connect the lead capture to storage and sales workflows.</p>
+        <ul>
+          <li>Add <code>leads</code> table to Drizzle schema + auto-migration</li>
+          <li>Configure CRM webhook in <code>config/TRIGGERS.json</code></li>
+          <li>Set up email delivery (SendGrid/Resend webhook for report delivery)</li>
+          <li>Test: submit lead, verify SQLite + CRM + email all fire correctly</li>
+        </ul>
+      </div>
+
+      <div class="sub-header">Verification Checklist</div>
+      <ol class="steps">
+        <li><strong>Skill test:</strong> Run <code>tech-stack-advisor</code> from internal chat &mdash; verify question flow and report generation</li>
+        <li><strong>Template test:</strong> Create team from <code>tech-consultation</code> template via portal &mdash; verify all 3 roles execute</li>
+        <li><strong>Public page test:</strong> Visit <code>/consult</code> without logging in &mdash; verify chat loads, streams, and lead gate triggers</li>
+        <li><strong>Lead capture test:</strong> Submit lead form &mdash; verify SQLite entry AND CRM webhook fire</li>
+        <li><strong>Report test:</strong> Confirm branded HTML report generates with all sections populated</li>
+        <li><strong>Rate limiting test:</strong> Verify public endpoint respects rate limits</li>
+        <li><strong>End-to-end:</strong> Full flow from landing &rarr; conversation &rarr; gate &rarr; report delivery &rarr; calendar booking</li>
+      </ol>
+
+      <div class="info-box info"><strong>Existing Infrastructure Leveraged:</strong> Chat streaming (SSE), brand-config.css theming, SOP template patterns, cluster orchestration, brave-search skill, Drizzle ORM + SQLite, webhook triggers. The only truly new code is the public page, the public API endpoint, and the lead gate modal.</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

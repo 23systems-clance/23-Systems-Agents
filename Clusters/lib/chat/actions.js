@@ -633,6 +633,90 @@ await server.connect(transport);
   return { success: true };
 }
 
+// ── Model Inventory ──────────────────────────────────────
+
+/**
+ * Get model inventory — all configured LLM models across env, crons, and triggers.
+ * @returns {Promise<object>}
+ */
+export async function getModelInventory() {
+  await requireAuth();
+  const { cronsFile, triggersFile } = await import('../paths.js');
+  const fs = await import('fs');
+
+  // 1. Event handler config (from env)
+  const provider = process.env.LLM_PROVIDER || 'anthropic';
+  const defaultModels = {
+    anthropic: 'claude-sonnet-4-20250514',
+    openai: 'gpt-4o',
+    google: 'gemini-2.5-pro',
+  };
+  const model = process.env.LLM_MODEL || defaultModels[provider] || defaultModels.anthropic;
+  const maxTokens = Number(process.env.LLM_MAX_TOKENS) || 4096;
+
+  const eventHandler = {
+    provider,
+    model,
+    maxTokens,
+    hasApiKey: !!(
+      (provider === 'anthropic' && process.env.ANTHROPIC_API_KEY) ||
+      (provider === 'openai' && process.env.OPENAI_API_KEY) ||
+      (provider === 'google' && process.env.GOOGLE_API_KEY) ||
+      (provider === 'custom' && (process.env.CUSTOM_API_KEY || process.env.OPENAI_BASE_URL))
+    ),
+    baseUrl: process.env.OPENAI_BASE_URL || null,
+  };
+
+  // 2. Cron overrides
+  let crons = [];
+  try { crons = JSON.parse(fs.readFileSync(cronsFile, 'utf8')); } catch {}
+  const cronOverrides = crons
+    .filter((c) => c.llm_provider || c.llm_model)
+    .map((c) => ({
+      name: c.name,
+      provider: c.llm_provider || null,
+      model: c.llm_model || null,
+      enabled: c.enabled !== false,
+      source: 'cron',
+    }));
+
+  // 3. Trigger overrides
+  let triggers = [];
+  try { triggers = JSON.parse(fs.readFileSync(triggersFile, 'utf8')); } catch {}
+  const triggerOverrides = [];
+  for (const trigger of triggers) {
+    if (!trigger.actions) continue;
+    for (const action of trigger.actions) {
+      if (action.llm_provider || action.llm_model) {
+        triggerOverrides.push({
+          name: `${trigger.name} > ${action.type || 'agent'}`,
+          provider: action.llm_provider || null,
+          model: action.llm_model || null,
+          enabled: trigger.enabled !== false,
+          source: 'trigger',
+        });
+      }
+    }
+  }
+
+  // 4. Collect all unique models
+  const allModels = new Set();
+  allModels.add(`${provider}/${model}`);
+  for (const o of [...cronOverrides, ...triggerOverrides]) {
+    const p = o.provider || provider;
+    const m = o.model || defaultModels[p] || model;
+    allModels.add(`${p}/${m}`);
+  }
+
+  return {
+    eventHandler,
+    cronOverrides,
+    triggerOverrides,
+    defaultModels,
+    uniqueModels: [...allModels],
+  };
+}
+
 export async function deleteMCPServer(name) {
   await requireAuth();
   const { mcpServersDir, mcpServersConfig } = await import('../paths.js');
@@ -660,5 +744,86 @@ export async function deleteMCPServer(name) {
     resetAgent();
   } catch {}
 
+  return { success: true };
+}
+
+// ── Public Skills Management ──
+
+export async function getPublicSkillsList() {
+  await requireAuth();
+  const { readdirSync, readFileSync, existsSync, statSync } = await import('fs');
+  const { resolve } = await import('path');
+
+  const skillsDir = resolve(process.cwd(), 'skills');
+  if (!existsSync(skillsDir)) return [];
+
+  const entries = readdirSync(skillsDir);
+  const skills = [];
+
+  for (const entry of entries) {
+    if (entry === 'active') continue;
+    const entryPath = resolve(skillsDir, entry);
+    if (!statSync(entryPath).isDirectory()) continue;
+
+    const skillMdPath = resolve(entryPath, 'SKILL.md');
+    if (!existsSync(skillMdPath)) continue;
+
+    const content = readFileSync(skillMdPath, 'utf-8');
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!fmMatch) continue;
+
+    const meta = {};
+    for (const line of fmMatch[1].split('\n')) {
+      const m = line.match(/^(\w+):\s*"?(.+?)"?\s*$/);
+      if (m) {
+        const val = m[2];
+        meta[m[1]] = val === 'true' ? true : val === 'false' ? false : val;
+      }
+    }
+
+    const hasTree = existsSync(resolve(entryPath, 'conversation-tree.json'));
+    const hasConfig = existsSync(resolve(entryPath, 'public-config.json'));
+    let config = {};
+    if (hasConfig) {
+      try { config = JSON.parse(readFileSync(resolve(entryPath, 'public-config.json'), 'utf-8')); } catch {}
+    }
+
+    skills.push({
+      skillId: entry,
+      name: meta.name || entry,
+      description: meta.description || '',
+      isPublic: !!meta.public,
+      hasTree,
+      hasConfig,
+      title: config.title || '',
+      accent: config.accent || '#4361ee',
+    });
+  }
+
+  return skills;
+}
+
+export async function toggleSkillPublic(skillId, makePublic) {
+  await requireAuth();
+  const { readFileSync, writeFileSync, existsSync } = await import('fs');
+  const { resolve } = await import('path');
+
+  const skillMdPath = resolve(process.cwd(), 'skills', skillId, 'SKILL.md');
+  if (!existsSync(skillMdPath)) return { error: 'Skill not found' };
+
+  let content = readFileSync(skillMdPath, 'utf-8');
+
+  if (makePublic) {
+    // Add public: true before the closing ---
+    if (!content.includes('public:')) {
+      content = content.replace(/\n---/, '\npublic: true\n---');
+    } else {
+      content = content.replace(/public:\s*false/, 'public: true');
+    }
+  } else {
+    content = content.replace(/public:\s*true/, 'public: false');
+  }
+
+  writeFileSync(skillMdPath, content, 'utf-8');
   return { success: true };
 }

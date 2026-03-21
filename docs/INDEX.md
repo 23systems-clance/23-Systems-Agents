@@ -11,7 +11,7 @@
 | 3 | [Database Schema](./03-database-schema.md) | All tables, columns, relationships, migration workflow | Modifying the database or understanding data models |
 | 4 | [AI Agents & LLM Integration](./04-ai-agents.md) | LangGraph agents, LLM providers, tool definitions, MCP bridge | Modifying agent behavior, adding tools, changing LLM providers |
 | 5 | [Specialties System](./05-skills.md) | Specialty structure, activation, SKILL.md format, building new specialties | Creating or modifying agent specialties |
-| 6 | [Clusters & Workers](./06-clusters.md) | Cluster roles, triggers, Docker execution, concurrency control | Working with worker clusters or adding trigger types |
+| 6 | [Clusters & Agents](./06-clusters.md) | Cluster roles, triggers, Docker execution, concurrency control | Working with agent clusters or adding trigger types |
 | 7 | [Configuration Files](./07-configuration.md) | All config/ files, template variables, markdown includes | Editing prompts, crons, triggers, or personality |
 | 8 | [API & Authentication](./08-api-auth.md) | API endpoints, auth flow, API keys, WebSocket auth | Working with API routes or authentication |
 | 9 | [Docker & Deployment](./09-docker-deployment.md) | Docker images, compose config, GitHub Actions workflows | Deployment, CI/CD, or container issues |

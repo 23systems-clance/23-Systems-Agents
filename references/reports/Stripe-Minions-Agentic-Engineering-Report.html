@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stripe Minions &mdash; Agentic Engineering Analysis</title>
+<link rel="stylesheet" href="../SOP Templates/brand-config.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy: #1a1a2e;
+    --navy-light: #252542;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-bg: #eef0ff;
+    --accent-border: #c7ceff;
+    --white: #ffffff;
+    --light-bg: #f3f4f8;
+    --dark-text: #1e1e32;
+    --mid-text: #50506e;
+    --light-text: #8889a0;
+    --border: #c8cde0;
+    --success: #22c55e;
+    --success-bg: #ecfdf5;
+    --warn: #eab308;
+    --warn-bg: #fefce8;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+    --teal: #0d9488;
+    --teal-bg: #f0fdfa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--dark-text);
+    background: var(--light-bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--navy);
+    overflow-y: auto;
+    z-index: 100;
+  }
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .sidebar-logo img { flex-shrink: 0; }
+  .sidebar-header .doc-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .sidebar-header .doc-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .sidebar-nav { padding: 16px 0; }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: var(--navy-light);
+    border-left-color: var(--accent);
+  }
+  .sidebar-nav a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main { margin-left: 280px; min-height: 100vh; }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(243,244,248,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--light-text);
+  }
+  .topbar .meta { display: flex; gap: 24px; }
+  .topbar .meta span { display: flex; align-items: center; gap: 6px; }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--navy);
+    padding: 64px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  }
+  .cover .doc-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+  .cover h1 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .cover .subtitle {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    max-width: 600px;
+  }
+
+  /* ── SECTIONS ── */
+  .content { padding: 40px 48px 80px; max-width: 960px; }
+  .section { margin-bottom: 48px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--accent-bg);
+  }
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .sub-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 28px 0 12px;
+    padding-left: 14px;
+    border-left: 3px solid var(--accent);
+  }
+  p { color: var(--mid-text); margin-bottom: 12px; font-size: 14px; line-height: 1.7; }
+  strong { color: var(--dark-text); font-weight: 600; }
+
+  /* ── LISTS ── */
+  ul { list-style: none; margin: 12px 0 20px; padding: 0; }
+  ul li {
+    position: relative;
+    padding: 6px 0 6px 24px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 4px; top: 13px;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  thead th {
+    background: var(--navy);
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #eef0f4;
+    color: var(--mid-text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #f8f9fc; }
+  tbody tr:hover { background: var(--accent-bg); }
+
+  /* ── INFO BOXES ── */
+  .info-box {
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+  .info-box.info { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+  .info-box.success { background: var(--success-bg); border-color: var(--success); color: #166534; }
+  .info-box.warning { background: var(--warn-bg); border-color: var(--warn); color: #854d0e; }
+  .info-box.teal { background: var(--teal-bg); border-color: var(--teal); color: #115e59; }
+
+  /* ── CODE ── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--navy);
+    color: #e0e0e0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 12px 0 20px;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+
+  /* ── STACK CARDS ── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .stack-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    background: var(--white);
+    transition: box-shadow 0.15s;
+  }
+  .stack-card:hover { box-shadow: 0 4px 20px rgba(67, 97, 238, 0.08); }
+  .stack-card .card-category {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .stack-card .card-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 4px;
+  }
+  .stack-card .card-desc {
+    font-size: 13px;
+    color: var(--mid-text);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .stack-card .card-detail {
+    font-size: 12px;
+    color: var(--light-text);
+    line-height: 1.5;
+  }
+  .stack-card .card-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--teal);
+    background: var(--teal-bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  /* ── STAT CARDS ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .stat-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    background: var(--white);
+    text-align: center;
+  }
+  .stat-card .stat-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--light-text);
+    font-weight: 500;
+  }
+
+  /* ── ARCHITECTURE DIAGRAM ── */
+  .arch-diagram {
+    background: var(--navy);
+    color: #e0e0e0;
+    padding: 24px;
+    border-radius: 12px;
+    margin: 16px 0 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .arch-diagram .hl { color: var(--accent-light); }
+  .arch-diagram .tl { color: #0d9488; }
+  .arch-diagram .wn { color: #eab308; }
+  .arch-diagram .dm { color: #8889a0; }
+
+  /* ── FLOW CARDS (for architecture section) ── */
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .flow-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    background: var(--white);
+    position: relative;
+  }
+  .flow-card .flow-step {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .flow-card .flow-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 6px;
+  }
+  .flow-card .flow-desc {
+    font-size: 12px;
+    color: var(--mid-text);
+    line-height: 1.5;
+  }
+
+  /* ── PRINCIPLE CARDS ── */
+  .principle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .principle-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    background: var(--white);
+    border-top: 3px solid var(--accent);
+  }
+  .principle-card .principle-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 8px;
+  }
+  .principle-card .principle-desc {
+    font-size: 13px;
+    color: var(--mid-text);
+    line-height: 1.6;
+  }
+
+  /* ── BLOCKQUOTE ── */
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 12px 20px;
+    margin: 16px 0 20px;
+    background: var(--accent-bg);
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--mid-text);
+    line-height: 1.7;
+  }
+
+  /* ── CTA SECTION ── */
+  .cta-section {
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    margin: 32px 0;
+  }
+  .cta-section h3 {
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 12px;
+  }
+  .cta-section p {
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 24px;
+    font-size: 15px;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .topbar { display: none; }
+    .cover { padding: 40px 32px; }
+    .content { padding: 24px 32px; }
+    .cta-section { display: none; }
+  }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .topbar { padding: 12px 20px; }
+    .cover { padding: 40px 20px; }
+    .content { padding: 24px 20px; }
+    .stack-grid, .stat-grid, .flow-grid, .principle-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <img src="../uploads/23 Systems Logo.png" alt="23 Systems" width="32" height="32">
+    </div>
+    <div class="doc-type">Engineering Analysis</div>
+    <div class="doc-title">Stripe Minions: Agentic Engineering at Scale</div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="#s1"><span class="num">1</span> Executive Summary</a>
+    <a href="#s2"><span class="num">2</span> The Problem</a>
+    <a href="#s3"><span class="num">3</span> Architecture Overview</a>
+    <a href="#s4"><span class="num">4</span> Key Components</a>
+    <a href="#s5"><span class="num">5</span> Results &amp; Metrics</a>
+    <a href="#s6"><span class="num">6</span> Design Principles</a>
+    <a href="#s7"><span class="num">7</span> Implications</a>
+    <a href="#s8"><span class="num">8</span> Sources</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="meta">
+      <span>Prepared by 23 Systems</span>
+      <span>March 2026</span>
+    </div>
+    <div>RESEARCH ANALYSIS</div>
+  </div>
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="doc-badge">Agentic Engineering Case Study</div>
+    <h1>Stripe Minions</h1>
+    <div class="subtitle">How Stripe built an in-house fleet of coding agents that generate 1,300+ production PRs per week &mdash; and what it means for the future of software engineering.</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ SECTION 1: EXECUTIVE SUMMARY ═══ -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>Executive Summary</h2>
+      </div>
+
+      <p>Stripe's <strong>Minions</strong> are a fleet of homegrown, fully autonomous coding agents that handle end-to-end code generation &mdash; from task intake to PR creation &mdash; without human supervision during execution. They now produce over <strong>1,300 merged pull requests per week</strong>, all reviewed by human engineers before merging. Built on a fork of Block's open-source Goose agent and running inside isolated cloud-based development environments called "Devboxes," Minions represent the most mature enterprise deployment of agentic coding at scale made public to date.</p>
+
+      <p>What makes Minions significant is not just the volume of code they produce, but the engineering philosophy behind them: <strong>deterministic workflows (Blueprints) interleaved with agentic decision-making</strong>, a curated ecosystem of 500+ MCP tools, and a conviction that investments in human developer infrastructure pay compounding dividends when agents inherit that same infrastructure.</p>
+
+      <div class="info-box teal"><strong>Key takeaway:</strong> Stripe proves that production-grade agentic coding requires specialization, isolation, and a hybrid architecture that constrains agent freedom to well-defined subtasks &mdash; not unbounded autonomy.</div>
+    </div>
+
+    <!-- ═══ SECTION 2: THE PROBLEM ═══ -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>The Problem</h2>
+      </div>
+
+      <p>Off-the-shelf coding assistants like Copilot, Cursor, and Claude Code are powerful for general-purpose development. But Stripe's codebase presents challenges that make generic tools insufficient.</p>
+
+      <div class="sub-header">Codebase Complexity</div>
+      <ul>
+        <li><strong>Hundreds of millions of lines of code</strong> &mdash; primarily Ruby with Sorbet typing, along with proprietary libraries and frameworks that no public LLM has been trained on</li>
+        <li><strong>Deep institutional knowledge</strong> required &mdash; "Humans must build sophisticated mental models to make effective changes in our repos"</li>
+        <li><strong>Proprietary tooling</strong> &mdash; internal systems for feature flags, documentation, ticketing, and deployment that have no public equivalents</li>
+      </ul>
+
+      <div class="sub-header">Operational Stakes</div>
+      <ul>
+        <li><strong>Over $1 trillion in annual payment volume</strong> &mdash; bugs in payment processing code have immediate, measurable financial consequences</li>
+        <li><strong>Regulatory and compliance obligations</strong> &mdash; PCI DSS, financial regulations, and audit requirements demand rigorous change management</li>
+        <li><strong>Zero-downtime expectations</strong> &mdash; serving millions of businesses means no room for agent-introduced regressions</li>
+      </ul>
+
+      <div class="info-box warning"><strong>Why not use off-the-shelf?</strong> Generic coding agents lack context on Stripe's proprietary stack, cannot access internal tools, and provide no guarantees about the safety or compliance of generated code in a payments-critical environment.</div>
+    </div>
+
+    <!-- ═══ SECTION 3: ARCHITECTURE OVERVIEW ═══ -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>Architecture Overview</h2>
+      </div>
+
+      <p>The Minions system follows a layered architecture: multiple entry points feed tasks into isolated execution environments, where a customized agent harness orchestrates work through hybrid deterministic-agentic workflows, iterates against CI, and produces review-ready pull requests.</p>
+
+      <div class="arch-diagram"><span class="dm">                         ENTRY POINTS</span>
+  <span class="hl">Slack</span>  |  <span class="hl">CLI</span>  |  <span class="hl">Web UI</span>  |  <span class="hl">Internal Apps</span>
+  (docs platforms, feature flags, ticketing)
+                            <span class="dm">|</span>
+                            <span class="dm">v</span>
+                  <span class="wn">┌─────────────────────┐</span>
+                  <span class="wn">│    TASK DISPATCH     │</span>
+                  <span class="wn">└──────────┬──────────┘</span>
+                            <span class="dm">|</span>
+                            <span class="dm">v</span>
+           <span class="tl">┌───────────────────────────────┐</span>
+           <span class="tl">│          DEVBOX (EC2)          │</span>
+           <span class="tl">│  Isolated env, full codebase   │</span>
+           <span class="tl">│  Hot-provisioned in ~10 sec    │</span>
+           <span class="tl">│                                │</span>
+           <span class="tl">│  ┌──────────────────────────┐  │</span>
+           <span class="tl">│  │   AGENT HARNESS (Goose)  │  │</span>
+           <span class="tl">│  │   + Stripe LLM Infra     │  │</span>
+           <span class="tl">│  └────────────┬─────────────┘  │</span>
+           <span class="tl">│               |                 │</span>
+           <span class="tl">│               v                 │</span>
+           <span class="tl">│  ┌──────────────────────────┐  │</span>
+           <span class="tl">│  │      BLUEPRINTS           │  │</span>
+           <span class="tl">│  │  Deterministic + Agentic  │  │</span>
+           <span class="tl">│  │  Nodes (State Machine)    │  │</span>
+           <span class="tl">│  └────────────┬─────────────┘  │</span>
+           <span class="tl">│               |                 │</span>
+           <span class="tl">│    <span class="hl">MCP Toolshed (~500 tools)</span>    │</span>
+           <span class="tl">│    <span class="hl">Rule Files (Cursor format)</span>   │</span>
+           <span class="tl">└───────────────┬───────────────┘</span>
+                            <span class="dm">|</span>
+                            <span class="dm">v</span>
+              <span class="wn">┌──────────────────────────┐</span>
+              <span class="wn">│    CI / ITERATION LOOP    │</span>
+              <span class="wn">│  Lint (&lt;5s) -> CI Tests   │</span>
+              <span class="wn">│  Autofix -> Retry (max 2) │</span>
+              <span class="wn">└─────────────┬────────────┘</span>
+                            <span class="dm">|</span>
+                            <span class="dm">v</span>
+                  <span class="hl">┌─────────────────────┐</span>
+                  <span class="hl">│   PR FOR HUMAN       │</span>
+                  <span class="hl">│   CODE REVIEW        │</span>
+                  <span class="hl">└─────────────────────┘</span></div>
+
+      <div class="flow-grid">
+        <div class="flow-card">
+          <div class="flow-step">Step 1</div>
+          <div class="flow-title">Task Intake</div>
+          <div class="flow-desc">Engineers submit tasks via Slack, CLI, web UI, or directly from internal tools like docs platforms and ticketing systems.</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-step">Step 2</div>
+          <div class="flow-title">Devbox Provisioning</div>
+          <div class="flow-desc">An isolated EC2 instance is allocated from a pre-warmed pool. Full codebase, caches, and services ready in ~10 seconds.</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-step">Step 3</div>
+          <div class="flow-title">Agent Execution</div>
+          <div class="flow-desc">The Goose-based agent harness runs Blueprints &mdash; hybrid workflows mixing deterministic and agentic nodes &mdash; with access to 500 MCP tools.</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-step">Step 4</div>
+          <div class="flow-title">Local Lint</div>
+          <div class="flow-desc">Heuristic-based linting runs as a deterministic Blueprint node. Takes under 5 seconds. Catches formatting and type errors early.</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-step">Step 5</div>
+          <div class="flow-title">CI + Autofix</div>
+          <div class="flow-desc">Selective CI runs drawn from 3M+ tests. Tests with known autofixes apply them automatically. Maximum two CI iteration rounds.</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-step">Step 6</div>
+          <div class="flow-title">PR Delivery</div>
+          <div class="flow-desc">A feature branch with CI-passing code is opened as a pull request. A human engineer reviews and merges &mdash; always.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 4: KEY COMPONENTS DEEP DIVE ═══ -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <h2>Key Components Deep Dive</h2>
+      </div>
+
+      <!-- Devboxes -->
+      <div class="sub-header">Devboxes</div>
+      <p>Devboxes are the foundational infrastructure that makes unattended agent execution possible. Each one is a standardized, disposable AWS EC2 instance that provides complete isolation for agent work.</p>
+
+      <div class="stack-grid">
+        <div class="stack-card">
+          <div class="card-category">Infrastructure</div>
+          <div class="card-title">Hot Provisioning</div>
+          <div class="card-tag">~10 seconds</div>
+          <div class="card-desc">Pre-warmed pools of EC2 instances with cloned repositories, warmed caches, and running code generation services. No cold-start penalty.</div>
+        </div>
+        <div class="stack-card">
+          <div class="card-category">Infrastructure</div>
+          <div class="card-title">Full Isolation</div>
+          <div class="card-tag">Zero prod access</div>
+          <div class="card-desc">Each agent gets its own machine with no production access. Enables parallelization, predictability, and safe unattended execution.</div>
+        </div>
+      </div>
+
+      <p>The key insight: Devboxes were originally built for human developers. The investment in fast, reproducible, isolated development environments translated directly into agent infrastructure. Agents inherit the same tooling, dependencies, and environment that human engineers use daily.</p>
+
+      <!-- Agent Harness -->
+      <div class="sub-header">Agent Harness (Goose Fork)</div>
+      <p>Stripe's agent loop is a customized fork of <strong>Block's open-source Goose</strong> coding agent, modified to integrate with Stripe's internal LLM infrastructure and to support fully unattended execution.</p>
+
+      <ul>
+        <li><strong>Fully unattended</strong> &mdash; no interruptibility features, no confirmation prompts, no human-in-the-loop during execution</li>
+        <li><strong>Full permissions</strong> &mdash; agents have unrestricted access within their Devbox sandbox (but no production access)</li>
+        <li><strong>Deterministic interleaving</strong> &mdash; the harness alternates between free-form agent nodes and deterministic operations (git, lint, test)</li>
+        <li><strong>Custom LLM integration</strong> &mdash; connected to Stripe's own model infrastructure rather than direct API calls</li>
+      </ul>
+
+      <div class="info-box info"><strong>Why fork Goose?</strong> Consumer coding tools are designed for interactive use with human supervision. Unattended agents need different primitives: no pause/resume, no approval gates, and tight integration with enterprise infrastructure.</div>
+
+      <!-- Blueprints -->
+      <div class="sub-header">Blueprints (Core Innovation)</div>
+      <p>Blueprints are Stripe's most distinctive contribution &mdash; <strong>hybrid workflows that combine deterministic code nodes with agentic decision-making nodes</strong>, structured as a state machine.</p>
+
+      <blockquote>"A state machine that intermixes deterministic code nodes and free-flowing agent nodes."</blockquote>
+
+      <table>
+        <thead>
+          <tr><th>Node Type</th><th>Description</th><th>Example</th><th>Why It Matters</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Deterministic</strong></td>
+            <td>Fixed code operations that always produce the same output for a given input</td>
+            <td>Git checkout, linting, file scaffolding, test selection</td>
+            <td>No LLM tokens consumed; predictable; fast</td>
+          </tr>
+          <tr>
+            <td><strong>Agentic</strong></td>
+            <td>LLM-powered nodes with freedom to reason, plan, and generate code</td>
+            <td>Writing implementation logic, diagnosing test failures, code review prep</td>
+            <td>Handles ambiguity and novel problems</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>Benefits of the Blueprint pattern:</strong></p>
+      <ul>
+        <li><strong>Reduced token consumption</strong> &mdash; deterministic tasks don't burn LLM calls</li>
+        <li><strong>Constrained agent freedom</strong> &mdash; each agentic node has a scoped subtask, not free reign over the entire problem</li>
+        <li><strong>Lower CI costs</strong> &mdash; deterministic validation catches errors before expensive test runs</li>
+        <li><strong>Team-specific customizations</strong> &mdash; teams can author Blueprints tailored to their domain (e.g., API migrations, schema changes, test generation)</li>
+      </ul>
+
+      <!-- Rule Files -->
+      <div class="sub-header">Context Engineering: Rule Files</div>
+      <p>Minions use Cursor's <code>.cursorrules</code> format for directory-scoped guidance. These rule files provide the agent with context about conventions, patterns, and constraints specific to each part of the codebase.</p>
+
+      <ul>
+        <li><strong>Same rules, everywhere</strong> &mdash; the exact same rule files are synchronized across Minions, Cursor, and Claude Code</li>
+        <li><strong>Directory-scoped</strong> &mdash; different parts of the monorepo can have different conventions without global config pollution</li>
+        <li><strong>Human-maintained</strong> &mdash; engineers write and update rule files as they would documentation, ensuring agents always have current guidance</li>
+      </ul>
+
+      <div class="info-box success"><strong>Reuse pattern:</strong> By adopting the same rule file format across all tools (human and agent), Stripe ensures that improvements to documentation benefit both human developers and automated agents simultaneously.</div>
+
+      <!-- MCP Toolshed -->
+      <div class="sub-header">MCP Toolshed</div>
+      <p>Toolshed is Stripe's internal MCP (Model Context Protocol) server hosting approximately <strong>500 tools</strong> that span internal systems and SaaS integrations. Agents connect to Toolshed to interact with Stripe's internal ecosystem.</p>
+
+      <ul>
+        <li><strong>Curated tool subsets per task</strong> &mdash; not all 500 tools are available for every task; tool sets are scoped to relevance</li>
+        <li><strong>Security controls</strong> &mdash; destructive actions are gated; agents cannot delete production resources or bypass safety checks</li>
+        <li><strong>Spanning internal + external</strong> &mdash; tools cover everything from internal feature flags and docs platforms to external SaaS APIs</li>
+      </ul>
+
+      <!-- CI Loop -->
+      <div class="sub-header">CI / Iteration Loop</div>
+      <p>The iteration loop is a carefully constrained feedback cycle designed to catch and fix errors without burning excessive compute.</p>
+
+      <table>
+        <thead>
+          <tr><th>Stage</th><th>Execution</th><th>Duration</th><th>Details</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Local Lint</strong></td>
+            <td>Deterministic (Blueprint node)</td>
+            <td>&lt; 5 seconds</td>
+            <td>Heuristic-based linting catches formatting, typing, and structural issues</td>
+          </tr>
+          <tr>
+            <td><strong>2. CI Test Run</strong></td>
+            <td>Selective from test battery</td>
+            <td>Minutes</td>
+            <td>Relevant subset selected from 3+ million available tests</td>
+          </tr>
+          <tr>
+            <td><strong>3. Autofix</strong></td>
+            <td>Deterministic</td>
+            <td>Seconds</td>
+            <td>Tests with known autofixes apply corrections automatically</td>
+          </tr>
+          <tr>
+            <td><strong>4. Second Iteration</strong></td>
+            <td>Agentic</td>
+            <td>Minutes</td>
+            <td>If failures remain, agent gets one more attempt to diagnose and fix</td>
+          </tr>
+          <tr>
+            <td><strong>5. Escalation</strong></td>
+            <td>Human</td>
+            <td>&mdash;</td>
+            <td>If second iteration fails, task escalates to a human engineer</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box warning"><strong>Two-round limit:</strong> Stripe caps CI iterations at two rounds. This prevents runaway compute costs and recognizes that some tasks genuinely require human judgment. The agent admits what it cannot solve rather than flailing.</div>
+    </div>
+
+    <!-- ═══ SECTION 5: RESULTS & METRICS ═══ -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <h2>Results &amp; Metrics</h2>
+      </div>
+
+      <p>The numbers tell a story of rapid scaling and significant engineering leverage.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">1,300+</div>
+          <div class="stat-label">PRs Merged / Week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">~10s</div>
+          <div class="stat-label">Devbox Spin-Up</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">~500</div>
+          <div class="stat-label">MCP Tools</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">3M+</div>
+          <div class="stat-label">Tests in Battery</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>Value</th><th>Context</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Weekly merged PRs</strong></td>
+            <td>1,300+ (up from 1,000)</td>
+            <td>30% growth reported between blog posts; trajectory suggests continued acceleration</td>
+          </tr>
+          <tr>
+            <td><strong>Devbox provisioning</strong></td>
+            <td>~10 seconds to "hot and ready"</td>
+            <td>Pre-warmed EC2 pools with cloned repos, warm caches, and running services</td>
+          </tr>
+          <tr>
+            <td><strong>MCP tools available</strong></td>
+            <td>~500 via Toolshed</td>
+            <td>Spanning internal systems (feature flags, docs, ticketing) and external SaaS</td>
+          </tr>
+          <tr>
+            <td><strong>Test battery</strong></td>
+            <td>3+ million tests</td>
+            <td>Selective runs prevent full-battery cost; autofix reduces iteration cycles</td>
+          </tr>
+          <tr>
+            <td><strong>Local lint speed</strong></td>
+            <td>&lt; 5 seconds</td>
+            <td>Heuristic-based, runs as deterministic Blueprint node (no LLM cost)</td>
+          </tr>
+          <tr>
+            <td><strong>CI iteration limit</strong></td>
+            <td>Maximum 2 rounds</td>
+            <td>Prevents runaway compute; unresolved tasks escalate to humans</td>
+          </tr>
+          <tr>
+            <td><strong>Entry points</strong></td>
+            <td>Slack, CLI, Web UI, Internal Apps</td>
+            <td>Agents are accessible from wherever engineers already work</td>
+          </tr>
+          <tr>
+            <td><strong>Codebase size</strong></td>
+            <td>Hundreds of millions of LOC</td>
+            <td>Primarily Ruby + Sorbet; proprietary frameworks unfamiliar to public LLMs</td>
+          </tr>
+          <tr>
+            <td><strong>Payment volume protected</strong></td>
+            <td>$1T+ annually</td>
+            <td>Stakes that justify the investment in custom agent infrastructure</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box success"><strong>Growth trajectory:</strong> The jump from 1,000 to 1,300+ PRs/week between blog posts (a ~30% increase) suggests the system is still in a rapid scaling phase, likely driven by more teams adopting custom Blueprints.</div>
+    </div>
+
+    <!-- ═══ SECTION 6: DESIGN PRINCIPLES ═══ -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <h2>Design Principles</h2>
+      </div>
+
+      <p>Beneath the technical architecture, Stripe's approach rests on a set of philosophical pillars that other engineering organizations can learn from regardless of their scale.</p>
+
+      <div class="principle-grid">
+        <div class="principle-card">
+          <div class="principle-title">Human Infrastructure Pays Dividends for Agents</div>
+          <div class="principle-desc">"Investments in human developer productivity over time have returned to pay dividends in the world of agents." Devboxes, rule files, linting, CI &mdash; all built for humans &mdash; became the foundation for agent execution. The lesson: build excellent developer infrastructure and agents will inherit it.</div>
+        </div>
+        <div class="principle-card">
+          <div class="principle-title">Code + Agents > Either Alone</div>
+          <div class="principle-desc">Blueprints represent the conviction that mixing deterministic code with agentic reasoning produces better outcomes than pure code automation or pure LLM generation. Deterministic nodes handle what code does best (speed, predictability). Agentic nodes handle what LLMs do best (ambiguity, reasoning).</div>
+        </div>
+        <div class="principle-card">
+          <div class="principle-title">Specialization Over Generality</div>
+          <div class="principle-desc">Rather than deploying one general-purpose agent, Stripe built a system where Blueprints can be customized per team and per task type. An API migration Blueprint differs fundamentally from a test generation Blueprint. Specialization yields higher quality and lower cost.</div>
+        </div>
+        <div class="principle-card">
+          <div class="principle-title">Constrained Autonomy</div>
+          <div class="principle-desc">Agents have full autonomy within their Devbox sandbox, but their freedom is constrained at every level: scoped tool subsets, Blueprint-defined subtasks, CI iteration limits, and mandatory human review. Autonomy without constraint is liability. Autonomy with constraint is leverage.</div>
+        </div>
+        <div class="principle-card">
+          <div class="principle-title">Humans Stay in the Loop (at the Right Point)</div>
+          <div class="principle-desc">Despite full agent autonomy during execution, human code review remains mandatory for every PR. Stripe removes humans from the tedious middle (writing boilerplate, running tests, iterating on lint) but keeps them at the critical gate: reviewing what ships.</div>
+        </div>
+        <div class="principle-card">
+          <div class="principle-title">Meta-Agentics: Tooling for the Tools</div>
+          <div class="principle-desc">Stripe invested in infrastructure to manage agents themselves &mdash; Toolshed, Blueprints, rule file synchronization, devbox pools. The meta-layer (tooling that serves agents, not humans directly) is what enables scale. Without it, each agent is a one-off experiment.</div>
+        </div>
+      </div>
+
+      <blockquote>"Investments in human developer productivity over time have returned to pay dividends in the world of agents."</blockquote>
+    </div>
+
+    <!-- ═══ SECTION 7: IMPLICATIONS FOR ENGINEERING TEAMS ═══ -->
+    <div class="section" id="s7">
+      <div class="section-header">
+        <div class="section-number">7</div>
+        <h2>Implications for Engineering Teams</h2>
+      </div>
+
+      <p>You do not need to be Stripe-sized to apply these lessons. The following principles are scale-independent.</p>
+
+      <div class="sub-header">What to Adopt Now</div>
+      <ul>
+        <li><strong>Invest in reproducible environments</strong> &mdash; containerized, fast-provisioning dev environments benefit humans today and agents tomorrow. Docker, Devcontainers, and cloud dev environments (Gitpod, Codespaces) are all stepping stones.</li>
+        <li><strong>Adopt rule files</strong> &mdash; start writing <code>.cursorrules</code> or <code>CLAUDE.md</code> files for your codebase. They help human developers and AI tools simultaneously. This is the highest-leverage, lowest-cost action available.</li>
+        <li><strong>Build deterministic-first workflows</strong> &mdash; before giving an agent a task, ask: "What parts of this can be solved with a shell script?" Wrap the deterministic parts in code; use the LLM only for the genuinely ambiguous parts.</li>
+        <li><strong>Cap iteration cycles</strong> &mdash; set explicit limits on how many times an agent can retry before escalating. Open-ended retry loops waste compute and mask fundamental issues.</li>
+        <li><strong>Curate your tool surface</strong> &mdash; if using MCP or similar tool protocols, do not expose every tool to every task. Scope tool access to relevance. Fewer tools = better tool selection by the LLM.</li>
+      </ul>
+
+      <div class="sub-header">What to Watch For</div>
+      <ul>
+        <li><strong>Blueprint-style frameworks</strong> &mdash; expect open-source projects to emerge that offer deterministic + agentic workflow orchestration. This pattern will become a standard architecture.</li>
+        <li><strong>MCP ecosystem maturity</strong> &mdash; the Model Context Protocol is still early. As more tools publish MCP servers, the "Toolshed" pattern will become accessible to smaller teams.</li>
+        <li><strong>Agent-aware CI/CD</strong> &mdash; CI systems optimized for agent workflows (selective test runs, auto-fix pipelines, iteration budgets) will become a competitive differentiator for CI platforms.</li>
+        <li><strong>In-house vs. off-the-shelf convergence</strong> &mdash; as commercial tools incorporate Blueprint-like patterns and enterprise context management, the gap between custom and commercial will narrow.</li>
+      </ul>
+
+      <div class="sub-header">What to Be Cautious About</div>
+      <ul>
+        <li><strong>Do not skip human review</strong> &mdash; Stripe, processing $1T+ in payments, still requires human review for every agent PR. If they are not comfortable with fully autonomous merging, neither should your team be.</li>
+        <li><strong>Do not over-index on PR volume</strong> &mdash; 1,300 PRs/week is impressive, but the metric that matters is "correct PRs merged that would not have been written by humans." Volume without quality is technical debt at scale.</li>
+        <li><strong>Do not ignore the investment required</strong> &mdash; Stripe's system works because of years of prior infrastructure investment (Devboxes, Toolshed, comprehensive test suites). The agent layer is the capstone, not the foundation.</li>
+      </ul>
+
+      <div class="cta-section">
+        <h3>Building your own agent infrastructure?</h3>
+        <p>23 Systems helps engineering teams design and deploy agentic workflows &mdash; from rule files to Blueprint-style orchestration. Let's talk about what this looks like for your stack.</p>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 8: SOURCES ═══ -->
+    <div class="section" id="s8">
+      <div class="section-header">
+        <div class="section-number">8</div>
+        <h2>Sources</h2>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Source</th><th>Published</th><th>URL</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Minions: Stripe's One-Shot End-to-End Coding Agents</strong></td>
+            <td>2025</td>
+            <td><a href="https://stripe.com/blog/minions-one-shot-end-to-end-coding-agents" style="color: var(--accent);">stripe.com/blog/minions-one-shot-end-to-end-coding-agents</a></td>
+          </tr>
+          <tr>
+            <td><strong>Minions Part 2 &mdash; Technical Deep Dive</strong></td>
+            <td>2025</td>
+            <td><a href="https://stripe.com/blog/minions-part-2-technical-deep-dive" style="color: var(--accent);">stripe.com/blog/minions-part-2-technical-deep-dive</a></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box info"><strong>About this report:</strong> This analysis was prepared by 23 Systems, synthesizing both Stripe Minions blog posts into a single reference document for engineering leaders evaluating agentic coding strategies. All metrics and quotes are attributed to the original source material.</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

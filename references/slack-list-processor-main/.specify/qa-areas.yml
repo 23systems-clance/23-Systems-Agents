@@ -1,0 +1,54 @@
+# QA Functional Areas Configuration
+# Maps functional areas to their associated spec numbers for grouped test execution
+# Usage: /qa.run --area auth
+
+areas:
+  auth:
+    description: Authentication, permissions, and impersonation
+    specs:
+      - 3   # User authentication
+      - 5   # Role-based access control
+      - 41  # Act as impersonation
+
+  contacts:
+    description: Contact and account management
+    specs:
+      - 7   # Contact management
+      - 10  # Account hierarchy
+      - 15  # Contact enrichment
+
+  campaigns:
+    description: Campaign sequences and outreach
+    specs:
+      - 8   # Campaign management
+      - 12  # Sequence automation
+      - 16  # Multi-channel campaigns
+
+  unibox:
+    description: Unified inbox and messaging
+    specs:
+      - 2   # Unibox core
+      - 6   # Message threading
+
+  admin:
+    description: Admin panel and platform management
+    specs:
+      - 4   # Admin dashboard
+      - 11  # Cost tracking
+      - 14  # Audit logging
+
+  plugins:
+    description: Plugin ecosystem and integrations
+    specs:
+      - 9   # Plugin architecture
+      - 13  # Instantly integration
+      - 17  # HeyReach integration
+
+# Default test execution order (by priority)
+priority_order:
+  - auth      # P1: Security first
+  - admin     # P1: Core platform
+  - contacts  # P2: CRM foundation
+  - campaigns # P2: Business logic
+  - unibox    # P3: Communication
+  - plugins   # P4: Integrations

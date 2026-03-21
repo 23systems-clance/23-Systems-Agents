@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { PageLayout } from './page-layout.js';
-import { ClockIcon, ZapIcon, KeyIcon } from './icons.js';
+import { ClockIcon, ZapIcon, KeyIcon, WrenchIcon, GlobeIcon } from './icons.js';
 
 const TABS = [
   { id: 'crons', label: 'Crons', href: '/settings/crons', icon: ClockIcon },
   { id: 'triggers', label: 'Triggers', href: '/settings/triggers', icon: ZapIcon },
   { id: 'secrets', label: 'Secrets', href: '/settings/secrets', icon: KeyIcon },
+  { id: 'models', label: 'Models', href: '/settings/models', icon: WrenchIcon },
+  { id: 'public', label: 'Public Pages', href: '/settings/public', icon: GlobeIcon },
 ];
 
 export function SettingsLayout({ session, children }) {

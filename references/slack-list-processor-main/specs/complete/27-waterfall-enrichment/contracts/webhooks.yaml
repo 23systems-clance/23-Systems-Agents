@@ -1,0 +1,433 @@
+openapi: 3.0.3
+info:
+  title: Multi-Provider Waterfall Enrichment Webhook API
+  description: |
+    Webhook endpoints for async phone enrichment results from Wiza and AI Ark providers.
+    These endpoints receive callbacks when phone enrichment completes.
+  version: 1.0.0
+  contact:
+    name: Developer Labs AI
+    url: https://github.com/developerlabsai/slack-list-processor
+
+servers:
+  - url: https://prod-slp-alb-2025872532.us-east-1.elb.amazonaws.com
+    description: Production ALB (ECS Fargate)
+
+security:
+  - WizaSignature: []
+  - AIArkSignature: []
+
+paths:
+  /api/webhooks/wiza/enrichment-results:
+    post:
+      summary: Wiza enrichment webhook
+      description: |
+        Receives async phone/email enrichment results from Wiza.co API.
+        Webhook is triggered when individual reveal completes (status: "finished" or "failed").
+      operationId: wizaEnrichmentWebhook
+      tags:
+        - Webhooks
+        - Wiza
+      security:
+        - WizaSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WizaWebhookPayload'
+            examples:
+              success:
+                $ref: '#/components/examples/WizaSuccessPayload'
+              failed:
+                $ref: '#/components/examples/WizaFailedPayload'
+      responses:
+        '200':
+          description: Webhook acknowledged successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+                  webhookId:
+                    type: string
+                    example: "abc123"
+        '401':
+          description: Invalid signature or unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Invalid payload format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/webhooks/aiark/enrichment-results:
+    post:
+      summary: AI Ark enrichment webhook
+      description: |
+        Receives async phone/email enrichment results from AI Ark API.
+        Webhook is triggered when mobile phone finder or email export completes.
+      operationId: aiArkEnrichmentWebhook
+      tags:
+        - Webhooks
+        - AI Ark
+      security:
+        - AIArkSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AIArkWebhookPayload'
+            examples:
+              success:
+                $ref: '#/components/examples/AIArkSuccessPayload'
+      responses:
+        '200':
+          description: Webhook acknowledged successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+                  webhookId:
+                    type: string
+                    example: "xyz789"
+        '401':
+          description: Invalid signature or unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Invalid payload format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    WizaSignature:
+      type: apiKey
+      in: header
+      name: x-auth-key
+      description: |
+        SHA256 hash of Wiza API key for webhook verification.
+        Calculate as: SHA256(API_KEY).hexdigest()
+
+    AIArkSignature:
+      type: apiKey
+      in: header
+      name: x-webhook-signature
+      description: |
+        HMAC-SHA256 signature for webhook verification.
+        Calculate as: HMAC-SHA256(timestamp.payload, secret).hexdigest()
+
+  schemas:
+    WizaWebhookPayload:
+      type: object
+      required:
+        - status
+        - type
+        - data
+      properties:
+        status:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: "Success"
+        type:
+          type: string
+          enum:
+            - individual_reveal
+          example: "individual_reveal"
+        data:
+          $ref: '#/components/schemas/WizaRevealData'
+        credits:
+          type: object
+          properties:
+            email_credits:
+              type: integer
+              example: 2
+            phone_credits:
+              type: integer
+              example: 5
+            total:
+              type: integer
+              example: 7
+
+    WizaRevealData:
+      type: object
+      required:
+        - id
+        - status
+        - is_complete
+      properties:
+        id:
+          type: integer
+          description: Wiza reveal ID (correlates with ProviderAttempt.requestId)
+          example: 32
+        status:
+          type: string
+          enum:
+            - finished
+            - failed
+          example: "finished"
+        is_complete:
+          type: boolean
+          example: true
+        name:
+          type: string
+          example: "Stephen Hakami"
+        title:
+          type: string
+          example: "CEO"
+        location:
+          type: string
+          example: "San Francisco, CA"
+        linkedin_profile_url:
+          type: string
+          example: "https://www.linkedin.com/in/stephen-hakami/"
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: "stephen@wiza.co"
+        email_type:
+          type: string
+          enum:
+            - work
+            - personal
+          nullable: true
+          example: "work"
+        email_status:
+          type: string
+          enum:
+            - valid
+            - risky
+            - unfound
+          nullable: true
+          example: "valid"
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+                format: email
+              type:
+                type: string
+                enum:
+                  - work
+                  - personal
+              status:
+                type: string
+                enum:
+                  - valid
+                  - risky
+                  - unfound
+        mobile_phone:
+          type: string
+          nullable: true
+          example: "+1 (555) 123-4567"
+        phone_number:
+          type: string
+          nullable: true
+          example: "+1 (555) 123-4567"
+        phone_status:
+          type: string
+          enum:
+            - found
+            - unfound
+          nullable: true
+          example: "found"
+        phones:
+          type: array
+          items:
+            type: object
+            properties:
+              number:
+                type: string
+                example: "15551234567"
+              pretty_number:
+                type: string
+                example: "+1 (555) 123-4567"
+              type:
+                type: string
+                enum:
+                  - mobile
+                  - work
+                  - home
+        company:
+          type: string
+          nullable: true
+          example: "Wiza"
+        company_domain:
+          type: string
+          nullable: true
+          example: "wiza.co"
+        fail_error:
+          type: string
+          nullable: true
+          description: Error reason if status is "failed"
+          example: "billing_issue"
+
+    AIArkWebhookPayload:
+      type: object
+      required:
+        - request_id
+        - person_id
+      properties:
+        request_id:
+          type: string
+          description: AI Ark request ID (correlates with ProviderAttempt.requestId)
+          example: "req_abc123"
+        person_id:
+          type: string
+          description: Person identifier
+          example: "person_xyz789"
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: "john@company.com"
+        phone_numbers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhoneNumber'
+        metadata:
+          type: object
+          properties:
+            webhookId:
+              type: string
+              example: "webhook_456"
+            timestamp:
+              type: integer
+              description: Unix timestamp
+              example: 1710412800
+
+    PhoneNumber:
+      type: object
+      required:
+        - type
+        - number
+      properties:
+        type:
+          type: string
+          enum:
+            - mobile
+            - work
+            - home
+          example: "mobile"
+        number:
+          type: string
+          description: E.164 formatted phone number
+          example: "+15551234567"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: "Invalid signature"
+        details:
+          type: array
+          items:
+            type: object
+        webhookId:
+          type: string
+          example: "abc123"
+
+  examples:
+    WizaSuccessPayload:
+      summary: Successful Wiza enrichment
+      value:
+        status:
+          code: 200
+          message: "Success"
+        type: "individual_reveal"
+        data:
+          id: 32
+          status: "finished"
+          is_complete: true
+          name: "Stephen Hakami"
+          title: "CEO"
+          email: "stephen@wiza.co"
+          email_status: "valid"
+          mobile_phone: "+1 (555) 123-4567"
+          phone_status: "found"
+          company: "Wiza"
+          company_domain: "wiza.co"
+        credits:
+          email_credits: 2
+          phone_credits: 5
+          total: 7
+
+    WizaFailedPayload:
+      summary: Failed Wiza enrichment
+      value:
+        status:
+          code: 400
+          message: "Failed"
+        type: "individual_reveal"
+        data:
+          id: 32
+          status: "failed"
+          is_complete: true
+          fail_error: "billing_issue"
+
+    AIArkSuccessPayload:
+      summary: Successful AI Ark phone enrichment
+      value:
+        request_id: "req_abc123"
+        person_id: "person_xyz789"
+        email: "john@company.com"
+        phone_numbers:
+          - type: "mobile"
+            number: "+15551234567"
+          - type: "work"
+            number: "+15559876543"
+        metadata:
+          webhookId: "webhook_456"
+          timestamp: 1710412800
+
+tags:
+  - name: Webhooks
+    description: Async webhook endpoints for enrichment results
+  - name: Wiza
+    description: Wiza.co enrichment provider
+  - name: AI Ark
+    description: AI Ark enrichment provider

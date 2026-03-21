@@ -1,0 +1,106 @@
+[
+  {
+    "name": "AWS Activate",
+    "type": "cloud_credits",
+    "matchStacks": ["aws", "serverless", "lambda", "dynamodb", "s3", "ec2", "ecs", "amplify"],
+    "value": "$10k-$100k in credits",
+    "description": "Startup program for early-stage companies building on AWS",
+    "url": "https://aws.amazon.com/activate/"
+  },
+  {
+    "name": "Google Cloud for Startups",
+    "type": "cloud_credits",
+    "matchStacks": ["gcp", "firebase", "google", "cloud run", "bigquery", "vertex ai"],
+    "value": "Up to $100k in credits over 2 years",
+    "description": "For startups backed by participating VCs or accelerators",
+    "url": "https://cloud.google.com/startup"
+  },
+  {
+    "name": "Microsoft for Startups",
+    "type": "cloud_credits",
+    "matchStacks": ["azure", "microsoft", ".net", "cosmos db", "sql server"],
+    "value": "Up to $150k in Azure credits",
+    "description": "Azure credits, GitHub Enterprise, and technical support for startups",
+    "url": "https://www.microsoft.com/en-us/startups"
+  },
+  {
+    "name": "Vercel Pro Partner",
+    "type": "implementation",
+    "matchStacks": ["nextjs", "next.js", "react", "vercel"],
+    "value": "Preferred implementation partner",
+    "description": "Expert Next.js deployment and optimization partner",
+    "referral": true
+  },
+  {
+    "name": "Supabase Startup Program",
+    "type": "platform_credits",
+    "matchStacks": ["supabase", "postgresql", "realtime", "postgres"],
+    "value": "Pro plan credits for 12 months",
+    "description": "Extended credits for startups building on Supabase",
+    "url": "https://supabase.com/partners/experts"
+  },
+  {
+    "name": "PlanetScale Startup Program",
+    "type": "platform_credits",
+    "matchStacks": ["planetscale", "mysql", "vitess"],
+    "value": "Pro plan credits",
+    "description": "Serverless MySQL with branching, generous startup credits",
+    "url": "https://planetscale.com/startups"
+  },
+  {
+    "name": "Stripe Atlas",
+    "type": "startup_program",
+    "matchStacks": ["stripe", "payments", "subscriptions", "billing"],
+    "value": "Business incorporation + $5k in partner credits",
+    "description": "Incorporate your startup and get credits across the Stripe ecosystem",
+    "url": "https://stripe.com/atlas"
+  },
+  {
+    "name": "Cloudflare Startup Plan",
+    "type": "platform_credits",
+    "matchStacks": ["cloudflare", "workers", "cdn", "edge"],
+    "value": "Pro plan free for 1 year",
+    "description": "CDN, DDoS protection, Workers, and edge computing for startups",
+    "url": "https://www.cloudflare.com/forstartups/"
+  },
+  {
+    "name": "MongoDB for Startups",
+    "type": "platform_credits",
+    "matchStacks": ["mongodb", "mongo", "nosql", "atlas"],
+    "value": "$500-$5,000 in Atlas credits",
+    "description": "MongoDB Atlas credits and technical advisory for startups",
+    "url": "https://www.mongodb.com/startups"
+  },
+  {
+    "name": "Auth0 Startup Program",
+    "type": "platform_credits",
+    "matchStacks": ["auth0", "okta", "oauth", "identity"],
+    "value": "Free tier extension + enterprise features",
+    "description": "Identity management credits for startups needing robust authentication",
+    "url": "https://auth0.com/startups"
+  },
+  {
+    "name": "Sentry for Startups",
+    "type": "platform_credits",
+    "matchStacks": ["sentry", "monitoring", "error tracking", "observability"],
+    "value": "Team plan free for 12 months",
+    "description": "Error tracking and performance monitoring for early-stage teams",
+    "url": "https://sentry.io/for/startups/"
+  },
+  {
+    "name": "Railway Startup Plan",
+    "type": "platform_credits",
+    "matchStacks": ["railway", "node", "python", "docker", "postgresql"],
+    "value": "$500 in credits",
+    "description": "Simple cloud hosting with generous startup credits",
+    "url": "https://railway.app"
+  },
+  {
+    "name": "Render Startup Program",
+    "type": "platform_credits",
+    "matchStacks": ["render", "docker", "node", "python", "go"],
+    "value": "Credits for team plan",
+    "description": "Cloud hosting with auto-deploys, managed databases, and startup pricing",
+    "url": "https://render.com"
+  }
+]

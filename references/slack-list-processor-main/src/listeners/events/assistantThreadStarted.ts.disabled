@@ -1,0 +1,101 @@
+/**
+ * Assistant Thread Started Event Handler
+ * Feature 23: Dynamic Suggested Prompts - T022-T024
+ */
+
+import { App } from '@slack/bolt';
+import { logger } from '../../lib/logger';
+import { promptGenerator } from '../../services/agent/promptGenerator';
+import { promptContextBuilder } from '../../services/agent/promptContext';
+import { DEFAULT_PROMPTS } from '../../constants/defaultPrompts';
+import { promptMetrics } from '../../utils/promptMetrics';
+
+export function registerAssistantThreadStartedHandler(app: App): void {
+  app.assistant({
+    threadStarted: async ({ event, setSuggestedPrompts }): Promise<void> => {
+      const startTime = Date.now();
+
+      try {
+        logger.info('Assistant thread started', {
+          userId: event.assistant_thread.user_id,
+          teamId: event.assistant_thread.team_id,
+          channelId: event.assistant_thread.channel_id,
+          threadTs: event.assistant_thread.thread_ts,
+        });
+
+        const slackContext = {
+          userId: event.assistant_thread.user_id,
+          teamId: event.assistant_thread.team_id,
+          channelId: event.assistant_thread.channel_id,
+          threadTs: event.assistant_thread.thread_ts,
+        };
+
+        // Build context (with caching)
+        const context = await promptContextBuilder.build(slackContext);
+
+        // T022: Generate prompts
+        const prompts = await promptGenerator.generate(context);
+
+        // Set suggested prompts in Slack
+        await setSuggestedPrompts({
+          prompts,
+          title: 'How can I help?',
+        });
+
+        // T024: Performance logging (<500ms target)
+        const totalDuration = Date.now() - startTime;
+        logger.info('Suggested prompts set successfully', {
+          userId: slackContext.userId,
+          teamId: slackContext.teamId,
+          duration: totalDuration,
+          promptTitles: prompts.map(p => p.title),
+        });
+
+        promptMetrics.recordGenerationLatency(totalDuration, slackContext.teamId, false);
+
+        if (totalDuration > 500) {
+          logger.warn('Prompt generation exceeded performance target', {
+            duration: totalDuration,
+            target: 500,
+            teamId: slackContext.teamId,
+          });
+        }
+      } catch (error) {
+        const duration = Date.now() - startTime;
+
+        logger.error('Failed to generate suggested prompts', {
+          error,
+          userId: event.assistant_thread.user_id,
+          teamId: event.assistant_thread.team_id,
+          duration,
+        });
+
+        // T023: Fallback to default prompts on error
+        try {
+          await setSuggestedPrompts({
+            prompts: DEFAULT_PROMPTS,
+            title: 'How can I help?',
+          });
+
+          promptMetrics.recordFallback(
+            event.assistant_thread.team_id,
+            error instanceof Error ? error.name : 'Unknown'
+          );
+
+          logger.info('Fallback to default prompts succeeded', {
+            userId: event.assistant_thread.user_id,
+            teamId: event.assistant_thread.team_id,
+          });
+        } catch (fallbackError) {
+          logger.error('Fallback to default prompts also failed', {
+            error: fallbackError,
+            userId: event.assistant_thread.user_id,
+            teamId: event.assistant_thread.team_id,
+          });
+        }
+      }
+    },
+  });
+
+  logger.info('Assistant thread started handler registered');
+}

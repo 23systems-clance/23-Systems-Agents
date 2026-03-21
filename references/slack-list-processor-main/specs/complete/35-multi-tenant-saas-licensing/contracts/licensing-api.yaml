@@ -1,0 +1,259 @@
+openapi: "3.0.3"
+info:
+  title: License Key Management API
+  description: Platform owner endpoints for managing license keys
+  version: "1.0.0"
+
+paths:
+  /api/v1/admin/licenses:
+    get:
+      summary: List all license keys
+      operationId: listLicenseKeys
+      tags: [Licensing]
+      security:
+        - adminAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, activated, expired, revoked, all]
+          description: Filter by key status
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 25
+      responses:
+        "200":
+          description: List of license keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LicenseKey"
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+
+    post:
+      summary: Create a new license key
+      operationId: createLicenseKey
+      tags: [Licensing]
+      security:
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [featureFlags, initialCredits, subscriptionTier]
+              properties:
+                featureFlags:
+                  $ref: "#/components/schemas/FeatureFlags"
+                initialCredits:
+                  type: integer
+                  minimum: 0
+                  description: Credits allocated on activation
+                subscriptionTier:
+                  type: string
+                  enum: [starter, professional, enterprise]
+                expiresAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                notes:
+                  type: string
+                  nullable: true
+      responses:
+        "201":
+          description: License key created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LicenseKey"
+
+  /api/v1/admin/licenses/{id}:
+    get:
+      summary: Get license key details
+      operationId: getLicenseKey
+      tags: [Licensing]
+      security:
+        - adminAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: License key details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LicenseKey"
+
+  /api/v1/admin/licenses/{id}/revoke:
+    post:
+      summary: Revoke a license key
+      operationId: revokeLicenseKey
+      tags: [Licensing]
+      security:
+        - adminAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Key revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  revokedAt:
+                    type: string
+                    format: date-time
+
+  /api/v1/license/validate:
+    post:
+      summary: Validate and activate a license key (called by client during onboarding)
+      operationId: validateLicenseKey
+      tags: [Licensing]
+      description: >
+        Called from the Slack onboarding flow when a client enters their license key.
+        Validates the key, marks it as activated, and returns the assigned feature flags.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key, slackTeamId]
+              properties:
+                key:
+                  type: string
+                  description: "License key entered by user (e.g., SLKP-XXXX-XXXX-XXXX-XXXX)"
+                slackTeamId:
+                  type: string
+                  description: "Workspace being activated"
+      responses:
+        "200":
+          description: Key validated and workspace activated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  featureFlags:
+                    $ref: "#/components/schemas/FeatureFlags"
+                  initialCredits:
+                    type: integer
+                  subscriptionTier:
+                    type: string
+        "400":
+          description: Invalid, expired, already-used, or revoked key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    enum: [false]
+                  error:
+                    type: string
+                    enum:
+                      - KEY_NOT_FOUND
+                      - KEY_EXPIRED
+                      - KEY_ALREADY_USED
+                      - KEY_REVOKED
+
+components:
+  securitySchemes:
+    adminAuth:
+      type: apiKey
+      in: header
+      name: X-Admin-Key
+
+  schemas:
+    LicenseKey:
+      type: object
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+          description: "Full key (SLKP-XXXX-XXXX-XXXX-XXXX)"
+        featureFlags:
+          $ref: "#/components/schemas/FeatureFlags"
+        initialCredits:
+          type: integer
+        subscriptionTier:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        singleUse:
+          type: boolean
+        activatedWorkspaceId:
+          type: string
+          nullable: true
+        activatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        revokedAt:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdByAdminId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    FeatureFlags:
+      type: object
+      properties:
+        enrichment:
+          type: boolean
+        campaigns:
+          type: boolean
+        workflows:
+          type: boolean
+        onboarding:
+          type: boolean
+        dialer:
+          type: boolean
+        analytics:
+          type: boolean
+        icpAnalysis:
+          type: boolean
+        personalityAnalysis:
+          type: boolean
+        aiAgent:
+          type: boolean

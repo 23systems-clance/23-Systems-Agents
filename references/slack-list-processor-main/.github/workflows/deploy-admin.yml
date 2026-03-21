@@ -1,0 +1,111 @@
+name: Deploy Admin Dashboard
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'admin-dashboard/**'
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy-staging-admin:
+    name: Deploy Staging Admin Dashboard
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: admin-dashboard
+        run: npm ci
+
+      - name: Build
+        working-directory: admin-dashboard
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync admin-dashboard/dist/ s3://staging-slkadmin-developerlabs-ai/ --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.STAGING_CLOUDFRONT_DIST_ID }} \
+            --paths "/*"
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: failure
+          notification_title: "Staging admin dashboard deploy failed"
+          message_format: "Staging admin dashboard deploy failed for commit `${{ github.sha }}` by ${{ github.actor }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-production-admin:
+    name: Deploy Production Admin Dashboard
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: admin-dashboard
+        run: npm ci
+
+      - name: Build
+        working-directory: admin-dashboard
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync admin-dashboard/dist/ s3://slkadmin-developerlabs-ai/ --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E30ZVBVU06GFUV \
+            --paths "/*"
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: failure
+          notification_title: "Production admin dashboard deploy failed"
+          message_format: "Production admin dashboard deploy failed for commit `${{ github.sha }}` by ${{ github.actor }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

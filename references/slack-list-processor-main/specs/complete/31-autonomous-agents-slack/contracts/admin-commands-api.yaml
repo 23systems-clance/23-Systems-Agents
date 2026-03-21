@@ -1,0 +1,791 @@
+openapi: 3.0.3
+info:
+  title: Slack Admin Commands API
+  description: |
+    Internal REST API endpoints that back the Slack `/admin` command handler.
+    These endpoints are called by the Slack bolt command handler to retrieve
+    data and execute administrative actions. Not exposed publicly.
+  version: 1.0.0
+  contact:
+    name: Dev Labs AI
+
+servers:
+  - url: /api/v1/admin
+    description: Internal admin API (behind ECS/ALB)
+
+paths:
+  /jobs:
+    get:
+      operationId: listJobs
+      summary: List enrichment jobs
+      description: Returns a paginated list of enrichment jobs filtered by status. Backs FR-006.
+      tags: [Jobs]
+      parameters:
+        - name: status
+          in: query
+          description: Filter jobs by status
+          schema:
+            type: string
+            enum: [pending, processing, completed, failed, cancelled]
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Results per page
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated list of jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobListResponse'
+              example:
+                jobs:
+                  - id: "job_abc123"
+                    slackUserId: "U04ABCD1234"
+                    slackUserName: "john.doe"
+                    fileName: "target_accounts.csv"
+                    status: "completed"
+                    totalRows: 250
+                    processedRows: 250
+                    failedRows: 3
+                    createdAt: "2025-03-15T10:30:00Z"
+                    completedAt: "2025-03-15T10:45:12Z"
+                  - id: "job_def456"
+                    slackUserId: "U04EFGH5678"
+                    slackUserName: "jane.smith"
+                    fileName: "q2_prospects.xlsx"
+                    status: "processing"
+                    totalRows: 1000
+                    processedRows: 412
+                    failedRows: 0
+                    createdAt: "2025-03-15T11:00:00Z"
+                    completedAt: null
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 47
+                  totalPages: 3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /jobs/{jobId}:
+    get:
+      operationId: getJobDetails
+      summary: Get job details
+      description: Returns full details for a specific enrichment job including row-level stats. Backs FR-007.
+      tags: [Jobs]
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDetail'
+              example:
+                id: "job_abc123"
+                slackUserId: "U04ABCD1234"
+                slackUserName: "john.doe"
+                fileName: "target_accounts.csv"
+                status: "completed"
+                totalRows: 250
+                processedRows: 250
+                failedRows: 3
+                apolloCreditsUsed: 497
+                builtWithCreditsUsed: 250
+                createdAt: "2025-03-15T10:30:00Z"
+                completedAt: "2025-03-15T10:45:12Z"
+                errorSummary:
+                  - row: 42
+                    error: "Apollo rate limit exceeded"
+                  - row: 108
+                    error: "No BuiltWith data found"
+                  - row: 199
+                    error: "Invalid domain format"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /jobs/{jobId}/cancel:
+    post:
+      operationId: cancelJob
+      summary: Cancel a running job
+      description: Cancels a job that is currently pending or processing. Backs FR-008.
+      tags: [Jobs]
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Job cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                success: true
+                message: "Job job_def456 cancelled. 412 of 1000 rows were processed."
+                jobId: "job_def456"
+                processedBeforeCancel: 412
+        '400':
+          description: Job cannot be cancelled (already completed or cancelled)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Job job_abc123 is already completed and cannot be cancelled."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /usage:
+    get:
+      operationId: getUsageStats
+      summary: Get API usage statistics
+      description: Returns API credit usage broken down by service and time period. Backs FR-009.
+      tags: [Usage]
+      parameters:
+        - name: period
+          in: query
+          required: true
+          description: Time period for usage aggregation
+          schema:
+            type: string
+            enum: [daily, weekly]
+      responses:
+        '200':
+          description: Usage statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageResponse'
+              example:
+                period: "daily"
+                date: "2025-03-15"
+                apollo:
+                  creditsUsed: 1240
+                  creditLimit: 10000
+                  percentUsed: 12.4
+                  emailLookups: 980
+                  phoneLookups: 260
+                builtWith:
+                  creditsUsed: 620
+                  creditLimit: 5000
+                  percentUsed: 12.4
+                claude:
+                  tokensUsed: 45200
+                  estimatedCost: 0.23
+                totalJobsRun: 8
+                totalRowsProcessed: 3100
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /errors:
+    get:
+      operationId: getRecentErrors
+      summary: Get recent errors
+      description: Returns the most recent system errors and failures. Backs FR-010.
+      tags: [Monitoring]
+      parameters:
+        - name: count
+          in: query
+          description: Number of recent errors to return
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 50
+      responses:
+        '200':
+          description: List of recent errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorListResponse'
+              example:
+                errors:
+                  - id: "err_001"
+                    timestamp: "2025-03-15T11:22:33Z"
+                    severity: "error"
+                    source: "apollo-worker"
+                    message: "Rate limit exceeded for Apollo API"
+                    jobId: "job_def456"
+                    context:
+                      endpoint: "/v1/people/match"
+                      httpStatus: 429
+                      retryAfter: 60
+                  - id: "err_002"
+                    timestamp: "2025-03-15T10:15:00Z"
+                    severity: "warning"
+                    source: "file-parser"
+                    message: "Skipped 3 rows with missing domain column"
+                    jobId: "job_abc123"
+                    context:
+                      skippedRows: [12, 45, 88]
+                totalErrors: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /workflows:
+    get:
+      operationId: getActiveWorkflows
+      summary: Get active workflows
+      description: Returns currently active enrichment workflows and their progress. Backs FR-011.
+      tags: [Monitoring]
+      responses:
+        '200':
+          description: Active workflow list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowListResponse'
+              example:
+                workflows:
+                  - jobId: "job_def456"
+                    slackUserName: "jane.smith"
+                    fileName: "q2_prospects.xlsx"
+                    status: "processing"
+                    currentStep: "apollo_enrichment"
+                    progress:
+                      totalRows: 1000
+                      processedRows: 412
+                      percentComplete: 41.2
+                    startedAt: "2025-03-15T11:00:00Z"
+                    estimatedCompletion: "2025-03-15T11:25:00Z"
+                activeCount: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /cache/purge:
+    post:
+      operationId: purgeCache
+      summary: Purge cache
+      description: Clears the Redis cache (BuiltWith/Apollo cached results). Backs FR-012.
+      tags: [System]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                scope:
+                  type: string
+                  enum: [all, builtwith, apollo]
+                  default: all
+                  description: Which cache to purge
+            example:
+              scope: "all"
+      responses:
+        '200':
+          description: Cache purged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                success: true
+                message: "Cache purged successfully. 1,247 keys removed."
+                keysRemoved: 1247
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /config/{section}:
+    get:
+      operationId: getConfig
+      summary: Get configuration section
+      description: Returns current configuration values for a given section. Backs FR-013.
+      tags: [Config]
+      parameters:
+        - $ref: '#/components/parameters/ConfigSection'
+      responses:
+        '200':
+          description: Configuration values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+              example:
+                section: "enrichment"
+                values:
+                  defaultRowLimit: 1000
+                  maxRowLimit: 5000
+                  decisionMakersPerCompany: 2
+                  builtWithCacheTtlHours: 168
+                  apolloCacheTtlHours: 24
+                  concurrentWorkers: 3
+                updatedAt: "2025-03-10T08:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      operationId: updateConfig
+      summary: Update configuration section
+      description: Updates configuration values for a given section. Backs FR-013.
+      tags: [Config]
+      parameters:
+        - $ref: '#/components/parameters/ConfigSection'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: Key-value pairs to update
+            example:
+              defaultRowLimit: 500
+              concurrentWorkers: 5
+      responses:
+        '200':
+          description: Configuration updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                success: true
+                message: "Configuration section 'enrichment' updated."
+                updatedKeys: ["defaultRowLimit", "concurrentWorkers"]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /workers:
+    get:
+      operationId: getWorkerStatus
+      summary: Get worker status
+      description: Returns status of BullMQ workers and queue depth. Backs FR-014.
+      tags: [Monitoring]
+      responses:
+        '200':
+          description: Worker status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerStatusResponse'
+              example:
+                workers:
+                  - name: "enrichment-worker-1"
+                    status: "active"
+                    currentJob: "job_def456"
+                    processedToday: 2340
+                    failedToday: 12
+                    uptime: "14h 22m"
+                  - name: "enrichment-worker-2"
+                    status: "idle"
+                    currentJob: null
+                    processedToday: 1890
+                    failedToday: 5
+                    uptime: "14h 22m"
+                queue:
+                  waiting: 3
+                  active: 1
+                  completed: 47
+                  failed: 2
+                  delayed: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /audit:
+    get:
+      operationId: getAuditTrail
+      summary: Get audit trail
+      description: Returns recent admin actions and system events. Backs FR-015.
+      tags: [Audit]
+      parameters:
+        - name: hours
+          in: query
+          description: How many hours back to query
+          schema:
+            type: integer
+            default: 24
+            minimum: 1
+            maximum: 720
+      responses:
+        '200':
+          description: Audit trail entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditTrailResponse'
+              example:
+                entries:
+                  - id: "audit_001"
+                    timestamp: "2025-03-15T11:30:00Z"
+                    actor: "U04ABCD1234"
+                    actorName: "john.doe"
+                    action: "cancel_job"
+                    target: "job_def456"
+                    details: "Cancelled job with 412/1000 rows processed"
+                  - id: "audit_002"
+                    timestamp: "2025-03-15T10:00:00Z"
+                    actor: "system"
+                    actorName: "system"
+                    action: "config_update"
+                    target: "enrichment.concurrentWorkers"
+                    details: "Changed from 3 to 5"
+                hoursQueried: 24
+                totalEntries: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  parameters:
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      description: Unique job identifier
+      schema:
+        type: string
+        example: "job_abc123"
+
+    ConfigSection:
+      name: section
+      in: path
+      required: true
+      description: Configuration section name
+      schema:
+        type: string
+        enum: [enrichment, api_limits, slack, system]
+
+  schemas:
+    JobSummary:
+      type: object
+      required: [id, slackUserId, slackUserName, fileName, status, totalRows, processedRows, failedRows, createdAt]
+      properties:
+        id:
+          type: string
+        slackUserId:
+          type: string
+        slackUserName:
+          type: string
+        fileName:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, completed, failed, cancelled]
+        totalRows:
+          type: integer
+        processedRows:
+          type: integer
+        failedRows:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    JobDetail:
+      allOf:
+        - $ref: '#/components/schemas/JobSummary'
+        - type: object
+          properties:
+            apolloCreditsUsed:
+              type: integer
+            builtWithCreditsUsed:
+              type: integer
+            errorSummary:
+              type: array
+              items:
+                type: object
+                properties:
+                  row:
+                    type: integer
+                  error:
+                    type: string
+
+    JobListResponse:
+      type: object
+      required: [jobs, pagination]
+      properties:
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobSummary'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Pagination:
+      type: object
+      required: [page, limit, totalItems, totalPages]
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+
+    UsageResponse:
+      type: object
+      required: [period, date, apollo, builtWith, claude, totalJobsRun, totalRowsProcessed]
+      properties:
+        period:
+          type: string
+          enum: [daily, weekly]
+        date:
+          type: string
+          format: date
+        apollo:
+          type: object
+          properties:
+            creditsUsed:
+              type: integer
+            creditLimit:
+              type: integer
+            percentUsed:
+              type: number
+            emailLookups:
+              type: integer
+            phoneLookups:
+              type: integer
+        builtWith:
+          type: object
+          properties:
+            creditsUsed:
+              type: integer
+            creditLimit:
+              type: integer
+            percentUsed:
+              type: number
+        claude:
+          type: object
+          properties:
+            tokensUsed:
+              type: integer
+            estimatedCost:
+              type: number
+        totalJobsRun:
+          type: integer
+        totalRowsProcessed:
+          type: integer
+
+    ErrorListResponse:
+      type: object
+      required: [errors, totalErrors]
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            required: [id, timestamp, severity, source, message]
+            properties:
+              id:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              severity:
+                type: string
+                enum: [warning, error, critical]
+              source:
+                type: string
+              message:
+                type: string
+              jobId:
+                type: string
+                nullable: true
+              context:
+                type: object
+                additionalProperties: true
+        totalErrors:
+          type: integer
+
+    WorkflowListResponse:
+      type: object
+      required: [workflows, activeCount]
+      properties:
+        workflows:
+          type: array
+          items:
+            type: object
+            required: [jobId, slackUserName, fileName, status, currentStep, progress, startedAt]
+            properties:
+              jobId:
+                type: string
+              slackUserName:
+                type: string
+              fileName:
+                type: string
+              status:
+                type: string
+              currentStep:
+                type: string
+                enum: [file_parsing, builtwith_lookup, apollo_enrichment, persona_classification, file_generation]
+              progress:
+                type: object
+                properties:
+                  totalRows:
+                    type: integer
+                  processedRows:
+                    type: integer
+                  percentComplete:
+                    type: number
+              startedAt:
+                type: string
+                format: date-time
+              estimatedCompletion:
+                type: string
+                format: date-time
+                nullable: true
+        activeCount:
+          type: integer
+
+    WorkerStatusResponse:
+      type: object
+      required: [workers, queue]
+      properties:
+        workers:
+          type: array
+          items:
+            type: object
+            required: [name, status, processedToday, failedToday, uptime]
+            properties:
+              name:
+                type: string
+              status:
+                type: string
+                enum: [active, idle, paused, stalled]
+              currentJob:
+                type: string
+                nullable: true
+              processedToday:
+                type: integer
+              failedToday:
+                type: integer
+              uptime:
+                type: string
+        queue:
+          type: object
+          properties:
+            waiting:
+              type: integer
+            active:
+              type: integer
+            completed:
+              type: integer
+            failed:
+              type: integer
+            delayed:
+              type: integer
+
+    ConfigResponse:
+      type: object
+      required: [section, values, updatedAt]
+      properties:
+        section:
+          type: string
+        values:
+          type: object
+          additionalProperties: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    AuditTrailResponse:
+      type: object
+      required: [entries, hoursQueried, totalEntries]
+      properties:
+        entries:
+          type: array
+          items:
+            type: object
+            required: [id, timestamp, actor, actorName, action, target]
+            properties:
+              id:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              actor:
+                type: string
+              actorName:
+                type: string
+              action:
+                type: string
+              target:
+                type: string
+              details:
+                type: string
+        hoursQueried:
+          type: integer
+        totalEntries:
+          type: integer
+
+    SuccessMessage:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Invalid parameter"
+            details: "Parameter 'status' must be one of: pending, processing, completed, failed, cancelled"
+
+    Unauthorized:
+      description: Authentication required or insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Unauthorized"
+            details: "Valid admin authentication required"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Not found"
+            details: "The requested resource does not exist"

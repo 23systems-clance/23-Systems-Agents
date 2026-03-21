@@ -1,0 +1,154 @@
+# Smart Reply Assistant - API Contracts
+# Branch: 29-smart-reply-assistant
+# Date: 2026-03-17
+
+# ============================================================================
+# BDR UniBox Endpoints (existing router: src/routes/bdr/unibox.ts)
+# Base path: /api/v1/bdr/unibox
+# Auth: BDR session (getBdrIdentity)
+# ============================================================================
+
+# GET /api/v1/bdr/unibox (EXISTING - extended response)
+# Description: List UniBox replies (now includes draft fields)
+# Query params: campaignId, channel, isRead, page, limit
+# Response additions per reply:
+#   draftBody: string | null
+#   draftStatus: "GENERATING" | "READY" | "SENT" | "REJECTED" | "FAILED" | null
+#   draftIntent: string | null
+#   draftGeneratedAt: ISO8601 | null
+#   draftError: string | null
+
+# POST /api/v1/bdr/unibox/:replyId/respond (EXISTING - extended with attachments)
+# Description: Send manual reply (now supports file attachments)
+# Content-Type: multipart/form-data
+# Body:
+#   body: string (required) - reply text
+#   files: File[] (optional) - max 5 files, 10MB each, PDF/DOCX/XLSX/PNG/JPG/GIF
+# Response: { success: true, sentAt: ISO8601 }
+
+# PATCH /api/v1/bdr/unibox/:replyId/draft/accept (NEW)
+# Description: Accept AI draft and send reply (optionally with edits and attachments)
+# Content-Type: multipart/form-data
+# Body:
+#   body: string (optional) - edited draft text; if omitted, sends original draftBody
+#   files: File[] (optional) - max 5 files, 10MB each
+# Response: { success: true, sentAt: ISO8601 }
+# Side effects: Sets draftStatus=SENT
+
+# PATCH /api/v1/bdr/unibox/:replyId/draft/dismiss (NEW)
+# Description: Dismiss/reject the AI draft
+# Body: (empty)
+# Response: { success: true }
+# Side effects: Sets draftStatus=REJECTED
+
+# POST /api/v1/bdr/unibox/:replyId/draft/regenerate (NEW)
+# Description: Regenerate draft with a different tone
+# Body:
+#   tone: "professional" | "casual" | "assertive" | "empathetic" (required)
+# Response: { success: true, jobId: string }
+# Side effects: Sets draftStatus=GENERATING, enqueues regeneration job
+
+# ============================================================================
+# BDR Personality Endpoints (existing router: src/routes/bdr/personality.ts)
+# Base path: /api/v1/bdr/personality
+# Auth: BDR session (getBdrIdentity)
+# ============================================================================
+
+# GET /api/v1/bdr/personality/:contactId (EXISTING - no changes)
+# Description: On-demand personality enrichment, returns HTML page
+# Response: text/html (self-contained personality visualization)
+
+# POST /api/v1/bdr/personality/:contactId/enrich (NEW)
+# Description: Trigger on-demand personality enrichment, returns JSON
+# Query params:
+#   force: boolean (optional, default false) - if true, re-enriches even if data exists
+# Response:
+#   { success: true, archetype: string, enrichedAt: ISO8601 }
+#   OR { skipped: true, reason: "already_enriched", archetype: string }
+#   OR { error: string } (400 if no LinkedIn URL, 502 if API failure)
+# Side effects: Updates PersonalityAnalysis cache + CampaignContact.personalityData
+
+# ============================================================================
+# Contact Detail Endpoints (new router: src/routes/admin/contacts.ts)
+# Base path: /api/v1/admin/contacts
+# Auth: Admin session
+# ============================================================================
+
+# GET /api/v1/admin/contacts/:contactId (NEW)
+# Description: Full contact detail with personality data and conversation history
+# Response:
+#   {
+#     contact: {
+#       id, firstName, lastName, email, companyName, jobTitle, linkedinUrl,
+#       phone, status, createdAt
+#     },
+#     campaign: { id, name, clientName },
+#     personality: PersonalityProfile | null,
+#     conversationHistory: [
+#       {
+#         type: "reply" | "step_execution",
+#         timestamp: ISO8601,
+#         // for reply: subject, body, fromEmail, intent, draftStatus
+#         // for step_execution: stepNumber, channel, status, template
+#       }
+#     ]
+#   }
+
+# ============================================================================
+# Admin Campaign Export Endpoints (existing router: src/routes/admin/campaigns.ts)
+# Base path: /api/v1/admin/campaigns
+# Auth: Admin session
+# ============================================================================
+
+# POST /api/v1/admin/campaigns/:campaignId/personality/push-crm (NEW)
+# Description: Push personality data to HubSpot for all enriched contacts in campaign
+# Body: (empty)
+# Response:
+#   {
+#     success: true,
+#     total: number,
+#     synced: number,
+#     skipped: number,
+#     failed: number,
+#     errors: [{ contactId: string, error: string }]
+#   }
+# Side effects: Creates HubSpot custom properties (idempotent), writes contact values
+
+# GET /api/v1/admin/campaigns/:campaignId/personality/export-csv (NEW)
+# Description: Download personality data as CSV for all enriched contacts in campaign
+# Response: text/csv (Content-Disposition: attachment)
+# CSV columns: firstName, lastName, email, companyName, jobTitle, linkedinUrl,
+#   archetype, disc_dominance, disc_influence, disc_steadiness, disc_calculativeness,
+#   ocean_openness, ocean_conscientiousness, ocean_extraversion, ocean_agreeableness,
+#   ocean_emotional_stability, communication_types, communication_adjectives,
+#   what_to_say, what_to_avoid, key_traits_risk, key_traits_decision_drivers,
+#   email_tone, email_length
+
+# ============================================================================
+# Slack Command (existing: src/listeners/commands/enrich.ts)
+# ============================================================================
+
+# /enrich personality <contactId|searchTerm> (NEW subcommand)
+# Description: On-demand personality enrichment via Slack
+# Input: Contact ID (UUID) or search term (name/email)
+# Response:
+#   - If contact found + LinkedIn URL present: enriches and posts confirmation
+#     with archetype, communication style, and "View Contact Profile" button
+#   - If contact found but no LinkedIn URL: ephemeral error
+#   - If multiple matches: ephemeral list of matches for disambiguation
+#   - If no match: ephemeral "Contact not found" message
+
+# ============================================================================
+# Slack Notifications (triggered by webhook, not an endpoint)
+# ============================================================================
+
+# Reply Notification (triggered after reply_received webhook)
+# DM to each BDR in CampaignBdr:
+#   - Reply preview (first 200 chars)
+#   - Intent classification badge
+#   - Personality archetype + communication style (if available)
+#   - "View Contact Profile" button -> dashboard URL
+#   - "Open UniBox" button -> UniBox filtered to this reply
+#
+# Channel post to campaign.slackChannelId:
+#   - Same content as DM above

@@ -1,0 +1,146 @@
+/**
+ * Document type confirmation action handlers.
+ *
+ * Handles button clicks from the classification prompt posted after a
+ * document upload. Maps action IDs to DocumentType enum values, indexes
+ * the document, and updates the Slack message with confirmation.
+ *
+ * Implements contracts section 1.2 from api-contracts.md.
+ */
+
+import type { App } from '@slack/bolt';
+import type { DocumentType } from '@prisma/client';
+import { indexDocument } from '../../services/document/indexer.js';
+import redis from '../../lib/redis.js';
+import logger from '../../lib/logger.js';
+
+/** Redis key prefix matching fileSharedDocument.ts. */
+const CLASSIFY_STATE_PREFIX = 'doc-classify';
+
+/** Maps action IDs to DocumentType enum values. */
+const ACTION_TYPE_MAP: Record<string, DocumentType> = {
+  doc_type_icp: 'ICP',
+  doc_type_use_case: 'USE_CASE',
+  doc_type_settings: 'SETTINGS',
+  doc_type_one_pager: 'ONE_PAGER',
+  doc_type_unknown: 'UNKNOWN',
+};
+
+/** Human-readable labels for each document type. */
+const TYPE_LABELS: Record<DocumentType, string> = {
+  ICP: 'ICP',
+  USE_CASE: 'Use Case',
+  SETTINGS: 'Settings',
+  ONE_PAGER: 'One-Pager',
+  UNKNOWN: 'Unknown',
+};
+
+/**
+ * Registers action handlers for all document type confirmation buttons.
+ *
+ * @param app - The Slack Bolt application instance.
+ */
+export function registerDocumentTypeConfirmHandlers(app: App): void {
+  const actionIds = Object.keys(ACTION_TYPE_MAP);
+
+  for (const actionId of actionIds) {
+    app.action(actionId, async ({ ack, body, client }) => {
+      await ack();
+
+      try {
+        if (body.type !== 'block_actions' || !body.actions?.[0]) {
+          return;
+        }
+
+        const action = body.actions[0];
+        const blockId = action.block_id ?? '';
+        const channelId = body.channel?.id;
+        const messageTs = body.message?.ts;
+        const userId = body.user.id;
+        const teamId = body.user.team_id ?? '';
+
+        if (!channelId || !messageTs) {
+          logger.warn('Document type confirm missing channel or message ts');
+          return;
+        }
+
+        // Retrieve pending classification state from Redis.
+        const stateKey = `${CLASSIFY_STATE_PREFIX}:${channelId}:${messageTs}`;
+        const state = await redis.hgetall(stateKey);
+
+        if (!state || !state.slug) {
+          logger.warn('No pending classification state found', {
+            stateKey,
+            channelId,
+            messageTs,
+          });
+          await client.chat.postMessage({
+            channel: channelId,
+            thread_ts: messageTs,
+            text: 'Classification session expired. Please re-upload the document.',
+          });
+          return;
+        }
+
+        const documentType = ACTION_TYPE_MAP[actionId];
+        if (!documentType) {
+          return;
+        }
+
+        // Index the document with the confirmed type.
+        const document = await indexDocument({
+          teamId: state.teamId,
+          channelId: state.channelId,
+          userId: state.userId,
+          slug: state.slug,
+          label: state.label || state.slug,
+          summary: state.summary || '',
+          documentType,
+          s3Key: state.s3Key,
+          originalS3Key: state.originalS3Key || null,
+          originalFileName: state.originalFileName,
+          originalMimeType: state.originalMimeType,
+          contentSizeBytes: parseInt(state.contentSizeBytes || '0', 10),
+          threadTs: state.threadTs,
+          slackFileId: state.fileId,
+        });
+
+        // Update the original message to show confirmation (remove buttons).
+        const typeDisplay = TYPE_LABELS[documentType] ?? documentType;
+        const confirmText =
+          `Indexed *${state.slug}*\n` +
+          `Type: ${typeDisplay}\n` +
+          `Summary: ${state.summary || 'No summary available.'}\n\n` +
+          `Reference in enrichment commands:\n\`ENRICH this list using ${state.slug}\``;
+
+        await client.chat.update({
+          channel: channelId,
+          ts: messageTs,
+          blocks: [
+            {
+              type: 'section',
+              text: { type: 'mrkdwn', text: confirmText },
+            },
+          ],
+          text: `Indexed ${state.slug} as ${typeDisplay}`,
+        });
+
+        // Clean up Redis state.
+        await redis.del(stateKey);
+
+        logger.info('Document type confirmed and indexed', {
+          slug: state.slug,
+          documentType,
+          version: document.version,
+          confirmedBy: userId,
+          channelId,
+        });
+      } catch (error) {
+        logger.error('Error confirming document type', {
+          actionId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    });
+  }
+}

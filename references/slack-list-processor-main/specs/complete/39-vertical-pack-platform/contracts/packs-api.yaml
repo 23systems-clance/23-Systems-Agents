@@ -1,0 +1,387 @@
+openapi: 3.0.3
+info:
+  title: Vertical Packs API
+  version: 1.0.0
+  description: Admin CRUD for vertical packs and client-facing pack catalog + subscription.
+
+paths:
+  /api/admin/packs:
+    get:
+      summary: List all vertical packs
+      tags: [Packs - Admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [DRAFT, PUBLISHED, DEPRECATED]
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [SALES, OPERATIONS, RESEARCH, EXECUTIVE, CUSTOM]
+      responses:
+        '200':
+          description: Pack list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  packs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PackSummary'
+
+    post:
+      summary: Create a new vertical pack
+      tags: [Packs - Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePackRequest'
+      responses:
+        '201':
+          description: Pack created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pack'
+
+  /api/admin/packs/{packId}:
+    get:
+      summary: Get pack details with skills and analytics
+      tags: [Packs - Admin]
+      parameters:
+        - name: packId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pack with details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackWithDetails'
+
+    put:
+      summary: Update pack
+      tags: [Packs - Admin]
+      parameters:
+        - name: packId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePackRequest'
+      responses:
+        '200':
+          description: Pack updated
+
+  /api/admin/packs/{packId}/publish:
+    post:
+      summary: Publish pack
+      tags: [Packs - Admin]
+      parameters:
+        - name: packId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pack published
+
+  /api/admin/packs/{packId}/skills:
+    put:
+      summary: Set skills for a pack (replace all)
+      tags: [Packs - Admin]
+      parameters:
+        - name: packId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [skillIds]
+              properties:
+                skillIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Skills updated
+
+  /api/client/packs:
+    get:
+      summary: Browse pack catalog (client-facing)
+      tags: [Packs - Client]
+      responses:
+        '200':
+          description: Available packs for subscription
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  packs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CatalogPack'
+
+  /api/client/packs/{packId}/subscribe:
+    post:
+      summary: Subscribe to a pack
+      tags: [Packs - Client]
+      parameters:
+        - name: packId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackSubscription'
+        '402':
+          description: Payment required
+
+  /api/client/subscriptions:
+    get:
+      summary: List workspace's active subscriptions
+      tags: [Subscriptions - Client]
+      responses:
+        '200':
+          description: Active subscriptions with credit usage
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscriptions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PackSubscription'
+
+  /api/client/subscriptions/{subscriptionId}/cancel:
+    post:
+      summary: Cancel a pack subscription
+      tags: [Subscriptions - Client]
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Subscription cancelled
+
+components:
+  schemas:
+    CreatePackRequest:
+      type: object
+      required: [name, slug, category, tier, creditsIncluded]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [SALES, OPERATIONS, RESEARCH, EXECUTIVE, CUSTOM]
+        tier:
+          type: string
+          enum: [FREE, STARTER, GROWTH, AGENCY]
+        monthlyPriceUsd:
+          type: number
+        creditsIncluded:
+          type: integer
+        overageRateUsd:
+          type: number
+        skillIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    UpdatePackRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        tier:
+          type: string
+        monthlyPriceUsd:
+          type: number
+        creditsIncluded:
+          type: integer
+        overageRateUsd:
+          type: number
+
+    PackSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        category:
+          type: string
+        status:
+          type: string
+        tier:
+          type: string
+        monthlyPriceUsd:
+          type: number
+        skillCount:
+          type: integer
+        subscriberCount:
+          type: integer
+
+    Pack:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        status:
+          type: string
+        tier:
+          type: string
+        monthlyPriceUsd:
+          type: number
+        creditsIncluded:
+          type: integer
+        overageRateUsd:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    PackWithDetails:
+      allOf:
+        - $ref: '#/components/schemas/Pack'
+        - type: object
+          properties:
+            skills:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  creditCost:
+                    type: number
+            analytics:
+              type: object
+              properties:
+                subscriberCount:
+                  type: integer
+                activeUsers:
+                  type: integer
+                totalCreditsUsed:
+                  type: integer
+                totalRevenue:
+                  type: number
+                churnRate:
+                  type: number
+
+    CatalogPack:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        tier:
+          type: string
+        monthlyPriceUsd:
+          type: number
+        creditsIncluded:
+          type: integer
+        skills:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+        isSubscribed:
+          type: boolean
+
+    PackSubscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        packId:
+          type: string
+          format: uuid
+        packName:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, PAST_DUE, CANCELLED, EXPIRED]
+        creditsIncluded:
+          type: integer
+        creditsUsed:
+          type: integer
+        creditsRemaining:
+          type: integer
+        currentPeriodStart:
+          type: string
+          format: date-time
+        currentPeriodEnd:
+          type: string
+          format: date-time

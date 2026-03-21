@@ -1,0 +1,189 @@
+/**
+ * Document indexer service.
+ *
+ * Handles upserting document records in PostgreSQL and managing S3 version
+ * archival. When a document with the same slug is re-uploaded to the same
+ * channel, the previous version's S3 key is archived and the version is
+ * incremented.
+ */
+
+import type { ClientDocument, DocumentType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { prisma } from '../../models/index.js';
+import { uploadFile, downloadFile } from '../../lib/storage.js';
+import { logAudit } from '../../lib/auditLogger.js';
+import { generateTableOfContents } from './tocGenerator.js';
+import logger from '../../lib/logger.js';
+
+/** Parameters for indexing a document. */
+export interface IndexDocumentParams {
+  teamId: string;
+  channelId: string;
+  userId: string;
+  slug: string;
+  label: string;
+  summary: string;
+  documentType: DocumentType;
+  s3Key: string;
+  originalS3Key?: string | null;
+  originalFileName: string;
+  originalMimeType: string;
+  contentSizeBytes: number;
+  threadTs?: string;
+  slackFileId?: string;
+  parsedSettings?: Record<string, unknown>;
+}
+
+/**
+ * Indexes a document in PostgreSQL with S3 version archival.
+ *
+ * If a document with the same [teamId, channelId, slug] already exists,
+ * the previous version's markdown is archived to a versioned S3 key and
+ * the record is updated with incremented version.
+ *
+ * @param params - Document metadata and content location.
+ * @returns The created or updated ClientDocument record.
+ */
+export async function indexDocument(params: IndexDocumentParams): Promise<ClientDocument> {
+  const {
+    teamId,
+    channelId,
+    userId,
+    slug,
+    label,
+    summary,
+    documentType,
+    s3Key,
+    originalS3Key,
+    originalFileName,
+    originalMimeType,
+    contentSizeBytes,
+    threadTs,
+    slackFileId,
+    parsedSettings,
+  } = params;
+
+  // Use an interactive transaction to prevent race conditions on concurrent
+  // uploads with the same slug (find + archive + upsert must be atomic).
+  const document = await prisma.$transaction(async (tx) => {
+    // Check for existing document to handle version archival.
+    const existing = await tx.clientDocument.findUnique({
+      where: {
+        slackTeamId_slackChannelId_slug: {
+          slackTeamId: teamId,
+          slackChannelId: channelId,
+          slug,
+        },
+      },
+    });
+
+    let newVersion = 1;
+
+    if (existing) {
+      newVersion = existing.version + 1;
+
+      // Archive previous version's S3 content.
+      try {
+        const previousContent = await downloadFile(existing.s3Key);
+        const archiveKey = `docs/${teamId}/${channelId}/${slug}-v${existing.version}.md`;
+        await uploadFile(archiveKey, previousContent, 'text/markdown');
+        logger.info('Archived previous document version', {
+          slug,
+          previousVersion: existing.version,
+          archiveKey,
+        });
+      } catch (error) {
+        logger.warn('Failed to archive previous document version', {
+          slug,
+          previousVersion: existing.version,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    // Upsert the document record.
+    return tx.clientDocument.upsert({
+      where: {
+        slackTeamId_slackChannelId_slug: {
+          slackTeamId: teamId,
+          slackChannelId: channelId,
+          slug,
+        },
+      },
+      create: {
+        slackTeamId: teamId,
+        slackChannelId: channelId,
+        slackUserId: userId,
+        slackFileId: slackFileId ?? null,
+        slug,
+        label,
+        summary,
+        documentType,
+        status: 'ACTIVE',
+        version: 1,
+        s3Key,
+        originalS3Key: originalS3Key ?? null,
+        originalFileName,
+        originalMimeType,
+        contentSizeBytes,
+        slackThreadTs: threadTs ?? null,
+        parsedSettings: parsedSettings
+          ? (parsedSettings as unknown as Prisma.InputJsonValue)
+          : undefined,
+      },
+      update: {
+        slackUserId: userId,
+        slackFileId: slackFileId ?? null,
+        label,
+        summary,
+        documentType,
+        status: 'ACTIVE',
+        version: newVersion,
+        s3Key,
+        originalS3Key: originalS3Key ?? null,
+        originalFileName,
+        originalMimeType,
+        contentSizeBytes,
+        slackThreadTs: threadTs ?? null,
+        parsedSettings: parsedSettings
+          ? (parsedSettings as unknown as Prisma.InputJsonValue)
+          : undefined,
+        errorMessage: null as unknown as string,
+      },
+    });
+  });
+
+  // Log audit event.
+  logAudit({
+    action: 'doc_classify',
+    actorUserId: userId,
+    actorTeamId: teamId,
+    targetType: 'document',
+    targetId: document.id,
+    channelId,
+    metadata: {
+      slug,
+      documentType,
+      version: document.version,
+      isUpdate: document.version > 1,
+    },
+  });
+
+  logger.info('Document indexed', {
+    slug,
+    documentType,
+    version: document.version,
+    channelId,
+  });
+
+  // Regenerate table of contents for this channel (fire-and-forget).
+  generateTableOfContents(teamId, channelId).catch((err) => {
+    logger.warn('Failed to regenerate TOC after indexing', {
+      slug,
+      channelId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  });
+
+  return document;
+}

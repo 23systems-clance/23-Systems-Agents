@@ -45,18 +45,18 @@
     "folders": ["research", "brief"],
     "roles": [
       {
-        "roleName": "Researcher",
+        "roleName": "Research Agent",
         "role": "You are a background researcher. Find relevant information about the person, their company, recent news, and anything relevant to the meeting topic. Be thorough but factual — don't speculate.",
         "prompt": "Research for an upcoming meeting:\n\nMeeting with: {{input.meeting_with}}\nPurpose: {{input.purpose}}\nOur context: {{input.your_company}}\nDepth: {{input.prep_depth}}\n\nResearch:\n1. Person background (role, career, LinkedIn highlights, recent talks/posts)\n2. Company overview (what they do, size, recent news, funding)\n3. Relevant context for the meeting topic\n4. Any shared connections or common ground\n5. Recent news or events that might come up\n\nFor quick: 1-2 bullet points per section\nFor standard: 3-5 bullet points per section\nFor deep: Full paragraphs with source links\n\nSave to {{CLUSTER_SHARED_DIR}}research/background.md",
         "maxConcurrency": 1,
         "dependsOn": null
       },
       {
-        "roleName": "Briefer",
+        "roleName": "Briefer Agent",
         "role": "You are a briefing writer. Take raw research and produce a scannable, actionable meeting prep document. Include talking points, questions to ask, and things to avoid.",
         "prompt": "Read research from {{CLUSTER_SHARED_DIR}}research/background.md.\n\nMeeting with: {{input.meeting_with}}\nPurpose: {{input.purpose}}\nOur context: {{input.your_company}}\n\nCreate a meeting brief:\n\n1. **Quick Facts** — Name, title, company, 3 key things to know\n2. **Meeting Context** — Why we're meeting, what they likely want\n3. **Talking Points** — 3-5 topics to raise, with suggested framing\n4. **Questions to Ask** — 3-5 smart questions that show preparation\n5. **Watch Out For** — Topics to avoid, potential sensitivities\n6. **Desired Outcome** — What success looks like for this meeting\n\nFormat for scanning in 2 minutes before the meeting — bold key names, use bullets, keep it tight.\n\nSave to {{CLUSTER_SHARED_DIR}}brief/meeting-brief.md",
         "maxConcurrency": 1,
-        "dependsOn": "Researcher"
+        "dependsOn": "Research Agent"
       }
     ]
   }

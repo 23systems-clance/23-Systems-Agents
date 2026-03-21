@@ -1,0 +1,951 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Slack List Processor - Full AWS infrastructure.
+  VPC, RDS PostgreSQL, ElastiCache Redis, ECS Fargate, S3, ALB.
+
+# ---------------------------------------------------------------------------
+# Parameters
+# ---------------------------------------------------------------------------
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+    AllowedValues: [prod, staging]
+    Description: Environment name (used for resource naming)
+
+  # -- Networking --
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+
+  PublicSubnet1Cidr:
+    Type: String
+    Default: 10.0.1.0/24
+    Description: CIDR for public subnet 1 (must be within VpcCidr)
+
+  PublicSubnet2Cidr:
+    Type: String
+    Default: 10.0.2.0/24
+    Description: CIDR for public subnet 2 (must be within VpcCidr)
+
+  PrivateSubnet1Cidr:
+    Type: String
+    Default: 10.0.10.0/24
+    Description: CIDR for private subnet 1 (must be within VpcCidr)
+
+  PrivateSubnet2Cidr:
+    Type: String
+    Default: 10.0.11.0/24
+    Description: CIDR for private subnet 2 (must be within VpcCidr)
+
+  # -- Database --
+  DBInstanceClass:
+    Type: String
+    Default: db.t4g.small
+    AllowedValues: [db.t4g.micro, db.t4g.small, db.t4g.medium]
+    Description: RDS instance size
+
+  DBMasterUsername:
+    Type: String
+    Default: listprocessor
+    NoEcho: true
+
+  DBMasterPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 16
+    Description: >
+      RDS master password (min 16 chars). Store in Secrets Manager after stack creation.
+
+  DBName:
+    Type: String
+    Default: list_processor
+
+  # -- Redis --
+  RedisNodeType:
+    Type: String
+    Default: cache.t4g.micro
+    AllowedValues: [cache.t4g.micro, cache.t4g.small]
+
+  # -- ECS --
+  ContainerCpu:
+    Type: Number
+    Default: 512
+    AllowedValues: [256, 512, 1024]
+    Description: Fargate CPU units (256=0.25vCPU, 512=0.5vCPU)
+
+  ContainerMemory:
+    Type: Number
+    Default: 1024
+    AllowedValues: [512, 1024, 2048]
+
+  DockerImageUri:
+    Type: String
+    Description: >
+      ECR image URI (e.g. 123456789012.dkr.ecr.us-east-1.amazonaws.com/slack-list-processor:latest).
+      Leave default for initial stack creation; update after first docker push.
+    Default: 'PLACEHOLDER'
+
+  # -- Non-secret config passed as CloudFormation parameters --
+  SlackClientId:
+    Type: String
+    Default: ''
+    Description: Slack app client ID for OAuth install flow (not a secret)
+  OAuthRedirectUri:
+    Type: String
+    Default: ''
+    Description: OAuth redirect URI (e.g. https://yourdomain.com/slack/oauth_redirect)
+  CorsAllowedOrigins:
+    Type: String
+    Default: ''
+    Description: Comma-separated list of allowed CORS origins in production (empty = CORS disabled)
+  ACMCertificateArn:
+    Type: String
+    Default: ''
+    Description: ACM certificate ARN for HTTPS on ALB. Leave empty for HTTP-only.
+
+  # -- Platform Owner --
+  PlatformOwnerTeamId:
+    Type: String
+    Default: ''
+    Description: Slack team ID of the platform owner workspace (bypasses onboarding and billing)
+
+  # -- Cost Tracking --
+  BuiltWithCostPerCredit:
+    Type: String
+    Default: '0.05'
+    Description: Cost per BuiltWith API credit (USD)
+  ApolloCostPerCredit:
+    Type: String
+    Default: '0.05'
+    Description: Cost per Apollo API credit (USD)
+  AICostPer1kInputTokens:
+    Type: String
+    Default: '0.0008'
+    Description: Cost per 1k AI input tokens (USD)
+  AICostPer1kOutputTokens:
+    Type: String
+    Default: '0.004'
+    Description: Cost per 1k AI output tokens (USD)
+
+  # -- Secrets Manager ARN (looked up by deploy.sh) --
+  AppSecretArn:
+    Type: String
+    Default: ''
+    Description: >
+      Full ARN of the Secrets Manager secret (including random suffix).
+      Populated automatically by deploy.sh from the existing secret.
+
+# ---------------------------------------------------------------------------
+# Conditions
+# ---------------------------------------------------------------------------
+Conditions:
+  HasDockerImage: !Not [!Equals [!Ref DockerImageUri, 'PLACEHOLDER']]
+  HasCertificate: !Not [!Equals [!Ref ACMCertificateArn, '']]
+  IsProduction: !Equals [!Ref EnvironmentName, 'prod']
+  IsNotProduction: !Not [!Equals [!Ref EnvironmentName, 'prod']]
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+Resources:
+
+  # =========================================================================
+  # VPC & Networking
+  # =========================================================================
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-slack-list-processor-vpc'
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-igw'
+
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  # -- Public Subnets (ALB + NAT Gateway) --
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet1Cidr
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-public-1'
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet2Cidr
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-public-2'
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-public-rt'
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: IGWAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  # -- NAT Gateway (for ECS Fargate outbound internet) --
+  NATElasticIP:
+    Type: AWS::EC2::EIP
+    DependsOn: IGWAttachment
+    Properties:
+      Domain: vpc
+
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NATElasticIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-nat'
+
+  # -- Second NAT Gateway (AZ2 resilience - production only, saves ~$33/mo in staging) --
+  NATElasticIP2:
+    Type: AWS::EC2::EIP
+    Condition: IsProduction
+    DependsOn: IGWAttachment
+    Properties:
+      Domain: vpc
+
+  NATGateway2:
+    Type: AWS::EC2::NatGateway
+    Condition: IsProduction
+    Properties:
+      AllocationId: !GetAtt NATElasticIP2.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-nat-2'
+
+  # -- Private Subnets (ECS, RDS, Redis) --
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet1Cidr
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-private-1'
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet2Cidr
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-private-2'
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-private-rt'
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+
+  PrivateSubnet1RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  # -- Second private route table (production only - routes PrivateSubnet2 via NATGateway2) --
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Condition: IsProduction
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-private-rt-2'
+
+  PrivateRoute2:
+    Type: AWS::EC2::Route
+    Condition: IsProduction
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway2
+
+  # Production: PrivateSubnet2 routes via PrivateRouteTable2 (second NAT Gateway)
+  PrivateSubnet2RouteAssocProd:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsProduction
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable2
+
+  # Staging: PrivateSubnet2 routes via PrivateRouteTable (single NAT Gateway)
+  PrivateSubnet2RouteAssocStaging:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: IsNotProduction
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+  # =========================================================================
+  # Security Groups
+  # =========================================================================
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ALB - allows inbound HTTP/HTTPS from internet
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-alb-sg'
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ECS Fargate tasks - allows inbound from ALB only
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-ecs-sg'
+
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: RDS PostgreSQL - allows inbound from ECS tasks only
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-rds-sg'
+
+  RedisSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ElastiCache Redis - allows inbound from ECS tasks only
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-redis-sg'
+
+  # =========================================================================
+  # RDS PostgreSQL
+  # =========================================================================
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnets for RDS
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: !Sub '${EnvironmentName}-list-processor'
+      Engine: postgres
+      EngineVersion: '16.13'
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: 20
+      MaxAllocatedStorage: 100
+      StorageType: gp3
+      DBName: !Ref DBName
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterPassword
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 7
+      MultiAZ: false
+      StorageEncrypted: true
+      CopyTagsToSnapshot: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-list-processor-db'
+
+  # =========================================================================
+  # ElastiCache Redis (BullMQ + Conversation State)
+  # =========================================================================
+
+  RedisSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Private subnets for Redis
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+  RedisReplicationGroup:
+    Type: AWS::ElastiCache::ReplicationGroup
+    Properties:
+      ReplicationGroupDescription: !Sub '${EnvironmentName} Slack List Processor Redis'
+      ReplicationGroupId: !Sub '${EnvironmentName}-slp-redis'
+      Engine: redis
+      EngineVersion: '7.1'
+      CacheNodeType: !Ref RedisNodeType
+      AutomaticFailoverEnabled: false
+      NumNodeGroups: 1
+      ReplicasPerNodeGroup: 0
+      CacheSubnetGroupName: !Ref RedisSubnetGroup
+      SecurityGroupIds:
+        - !Ref RedisSecurityGroup
+      TransitEncryptionEnabled: true
+      AtRestEncryptionEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-list-processor-redis'
+
+  # =========================================================================
+  # S3 Bucket (Output Files)
+  # =========================================================================
+
+  OutputBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub '${EnvironmentName}-slack-list-processor-files-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldFiles
+            Status: Enabled
+            ExpirationInDays: 90
+
+  # =========================================================================
+  # Secrets Manager
+  # =========================================================================
+  # NOTE: The application secret is created and managed by deploy.sh
+  # (upsert_secrets_manager function). It is NOT a CF-managed resource
+  # because deploy.sh must populate it before the stack deploys, and
+  # creating the same named secret in CF causes CREATE_FAILED conflicts.
+  # All references below use the constructed ARN directly.
+  # Secret name: ${EnvironmentName}-slack-list-processor-secrets
+
+  # =========================================================================
+  # ECR Repository
+  # =========================================================================
+
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub '${EnvironmentName}-slack-list-processor'
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+
+  # =========================================================================
+  # Application Load Balancer (for Apollo webhook + health check)
+  # =========================================================================
+
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub '${EnvironmentName}-slp-alb'
+      Scheme: internet-facing
+      Type: application
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${EnvironmentName}-slp-tg'
+      Port: 3000
+      Protocol: HTTP
+      VpcId: !Ref VPC
+      TargetType: ip
+      HealthCheckPath: /api/v1/health
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: '60'
+
+  # HTTP listener: forwards when no cert, redirects to HTTPS when cert present.
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - !If
+          - HasCertificate
+          - Type: redirect
+            RedirectConfig:
+              Protocol: HTTPS
+              Port: '443'
+              StatusCode: HTTP_301
+          - Type: forward
+            TargetGroupArn: !Ref ALBTargetGroup
+
+  # HTTPS listener (only created when ACM certificate is provided).
+  ALBListenerHttps:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: HasCertificate
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      Certificates:
+        - CertificateArn: !Ref ACMCertificateArn
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+
+  # =========================================================================
+  # ECS Cluster + Fargate Service
+  # =========================================================================
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub '${EnvironmentName}-slack-list-processor'
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+
+  # -- IAM Roles --
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-slp-exec-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref AppSecretArn
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-slp-task-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: !Sub 'arn:aws:s3:::${OutputBucket}/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !Sub 'arn:aws:s3:::${OutputBucket}'
+        - PolicyName: ECSExecSSM
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssmmessages:CreateControlChannel
+                  - ssmmessages:CreateDataChannel
+                  - ssmmessages:OpenControlChannel
+                  - ssmmessages:OpenDataChannel
+                Resource: '*'
+
+  # -- CloudWatch Log Group --
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/ecs/${EnvironmentName}-slack-list-processor'
+      RetentionInDays: 30
+
+  # -- Task Definition --
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Condition: HasDockerImage
+    Properties:
+      Family: !Sub '${EnvironmentName}-slack-list-processor'
+      Cpu: !Ref ContainerCpu
+      Memory: !Ref ContainerMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: app
+          Image: !Ref DockerImageUri
+          Essential: true
+          StopTimeout: 25
+          PortMappings:
+            - ContainerPort: 3000
+              Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+          Environment:
+            - Name: NODE_ENV
+              Value: production
+            - Name: LOG_LEVEL
+              Value: info
+            - Name: HTTP_PORT
+              Value: '3000'
+            - Name: REDIS_URL
+              Value: !Sub 'rediss://${RedisReplicationGroup.PrimaryEndPoint.Address}:${RedisReplicationGroup.PrimaryEndPoint.Port}'
+            - Name: S3_BUCKET
+              Value: !Ref OutputBucket
+            - Name: S3_REGION
+              Value: !Ref AWS::Region
+            - Name: WEBHOOK_BASE_URL
+              Value: !If
+                - HasCertificate
+                - !Sub 'https://${ALB.DNSName}'
+                - !Sub 'http://${ALB.DNSName}'
+            - Name: SLACK_CLIENT_ID
+              Value: !Ref SlackClientId
+            - Name: OAUTH_REDIRECT_URI
+              Value: !Ref OAuthRedirectUri
+            - Name: CORS_ALLOWED_ORIGINS
+              Value: !Ref CorsAllowedOrigins
+            - Name: PLATFORM_OWNER_TEAM_ID
+              Value: !Ref PlatformOwnerTeamId
+            - Name: BUILTWITH_COST_PER_CREDIT
+              Value: !Ref BuiltWithCostPerCredit
+            - Name: APOLLO_COST_PER_CREDIT
+              Value: !Ref ApolloCostPerCredit
+            - Name: AI_COST_PER_1K_INPUT_TOKENS
+              Value: !Ref AICostPer1kInputTokens
+            - Name: AI_COST_PER_1K_OUTPUT_TOKENS
+              Value: !Ref AICostPer1kOutputTokens
+          Secrets:
+            - Name: SLACK_BOT_TOKEN
+              ValueFrom: !Sub '${AppSecretArn}:SLACK_BOT_TOKEN::'
+            - Name: SLACK_APP_TOKEN
+              ValueFrom: !Sub '${AppSecretArn}:SLACK_APP_TOKEN::'
+            - Name: SLACK_SIGNING_SECRET
+              ValueFrom: !Sub '${AppSecretArn}:SLACK_SIGNING_SECRET::'
+            - Name: BUILTWITH_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:BUILTWITH_API_KEY::'
+            - Name: APOLLO_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:APOLLO_API_KEY::'
+            - Name: APOLLO_WEBHOOK_SECRET
+              ValueFrom: !Sub '${AppSecretArn}:APOLLO_WEBHOOK_SECRET::'
+            - Name: ANTHROPIC_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:ANTHROPIC_API_KEY::'
+            - Name: API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:API_KEY::'
+            - Name: SESSION_SECRET
+              ValueFrom: !Sub '${AppSecretArn}:SESSION_SECRET::'
+            - Name: SLACK_CLIENT_SECRET
+              ValueFrom: !Sub '${AppSecretArn}:SLACK_CLIENT_SECRET::'
+            - Name: SLACK_STATE_SECRET
+              ValueFrom: !Sub '${AppSecretArn}:SLACK_STATE_SECRET::'
+            - Name: TOKEN_ENCRYPTION_KEY
+              ValueFrom: !Sub '${AppSecretArn}:TOKEN_ENCRYPTION_KEY::'
+            - Name: DATABASE_URL
+              ValueFrom: !Sub '${AppSecretArn}:DATABASE_URL::'
+            - Name: HUBSPOT_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:HUBSPOT_API_KEY::'
+            - Name: HUBSPOT_PORTAL_ID
+              ValueFrom: !Sub '${AppSecretArn}:HUBSPOT_PORTAL_ID::'
+            - Name: HUBSPOT_CLIENT_SECRET
+              ValueFrom: !Sub '${AppSecretArn}:HUBSPOT_CLIENT_SECRET::'
+            - Name: HUBSPOT_OAUTH_CLIENT_ID
+              ValueFrom: !Sub '${AppSecretArn}:HUBSPOT_OAUTH_CLIENT_ID::'
+            - Name: HUBSPOT_OAUTH_CLIENT_SECRET
+              ValueFrom: !Sub '${AppSecretArn}:HUBSPOT_OAUTH_CLIENT_SECRET::'
+            - Name: HUBSPOT_OAUTH_REDIRECT_URI
+              ValueFrom: !Sub '${AppSecretArn}:HUBSPOT_OAUTH_REDIRECT_URI::'
+            - Name: INSTANTLY_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:INSTANTLY_API_KEY::'
+            - Name: INSTANTLY_WEBHOOK_SECRET
+              ValueFrom: !Sub '${AppSecretArn}:INSTANTLY_WEBHOOK_SECRET::'
+            - Name: HEYREACH_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:HEYREACH_API_KEY::'
+            - Name: HEYREACH_WEBHOOK_SECRET
+              ValueFrom: !Sub '${AppSecretArn}:HEYREACH_WEBHOOK_SECRET::'
+            - Name: STRIPE_SECRET_KEY
+              ValueFrom: !Sub '${AppSecretArn}:STRIPE_SECRET_KEY::'
+            - Name: STRIPE_WEBHOOK_SECRET
+              ValueFrom: !Sub '${AppSecretArn}:STRIPE_WEBHOOK_SECRET::'
+            - Name: RESEND_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:RESEND_API_KEY::'
+            - Name: APP_BASE_URL
+              ValueFrom: !Sub '${AppSecretArn}:APP_BASE_URL::'
+            - Name: FINDYMAIL_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:FINDYMAIL_API_KEY::'
+            - Name: WIZA_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:WIZA::'
+            - Name: AI_ARK_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:AI_ARK::'
+            - Name: DNCSCRUB_API_KEY
+              ValueFrom: !Sub '${AppSecretArn}:DNCSCRUB_API_KEY::'
+
+  # -- ECS Service --
+  ECSService:
+    Type: AWS::ECS::Service
+    Condition: HasDockerImage
+    DependsOn: ALBListener
+    Properties:
+      ServiceName: !Sub '${EnvironmentName}-slack-list-processor'
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref TaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      EnableExecuteCommand: true
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+      LoadBalancers:
+        - ContainerName: app
+          ContainerPort: 3000
+          TargetGroupArn: !Ref ALBTargetGroup
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+
+  # =========================================================================
+  # Application Auto Scaling (T022-T023)
+  # =========================================================================
+
+  ECSScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: HasDockerImage
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 4
+      ResourceId: !Sub 'service/${ECSCluster}/${ECSService.Name}'
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
+
+  ECSScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: HasDockerImage
+    Properties:
+      PolicyName: !Sub '${EnvironmentName}-slp-cpu-scaling'
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ECSScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 70
+        ScaleOutCooldown: 60
+        ScaleInCooldown: 180
+
+  # =========================================================================
+  # WAFv2 - Rate Limiting (T027-T029)
+  # =========================================================================
+
+  WAFWebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: !Sub '${EnvironmentName}-slp-waf'
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub '${EnvironmentName}-slp-waf'
+      Rules:
+        - Name: RateLimitPerIP
+          Priority: 1
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: !Sub '${EnvironmentName}-slp-rate-limit'
+          Statement:
+            RateBasedStatement:
+              Limit: 2000
+              AggregateKeyType: IP
+
+  WAFWebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Ref ALB
+      WebACLArn: !GetAtt WAFWebACL.Arn
+
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
+Outputs:
+  VpcId:
+    Value: !Ref VPC
+
+  ALBDnsName:
+    Description: ALB URL for Apollo webhook configuration
+    Value: !If
+      - HasCertificate
+      - !Sub 'https://${ALB.DNSName}'
+      - !Sub 'http://${ALB.DNSName}'
+
+  WebhookUrl:
+    Description: Apollo webhook endpoint
+    Value: !If
+      - HasCertificate
+      - !Sub 'https://${ALB.DNSName}/api/webhooks/apollo'
+      - !Sub 'http://${ALB.DNSName}/api/webhooks/apollo'
+
+  HealthCheckUrl:
+    Description: Health check endpoint
+    Value: !If
+      - HasCertificate
+      - !Sub 'https://${ALB.DNSName}/api/v1/health'
+      - !Sub 'http://${ALB.DNSName}/api/v1/health'
+
+  ECRRepositoryUri:
+    Description: ECR repository URI for docker push
+    Value: !GetAtt ECRRepository.RepositoryUri
+
+  RDSEndpoint:
+    Description: PostgreSQL endpoint
+    Value: !GetAtt RDSInstance.Endpoint.Address
+
+  RedisEndpoint:
+    Description: Redis endpoint (TLS)
+    Value: !Sub '${RedisReplicationGroup.PrimaryEndPoint.Address}:${RedisReplicationGroup.PrimaryEndPoint.Port}'
+
+  S3BucketName:
+    Description: S3 bucket for output files
+    Value: !Ref OutputBucket
+
+  ECSClusterName:
+    Value: !Ref ECSCluster
+
+  LogGroupName:
+    Value: !Ref LogGroup
+
+  WAFWebACLArn:
+    Description: WAFv2 WebACL ARN for monitoring
+    Value: !GetAtt WAFWebACL.Arn

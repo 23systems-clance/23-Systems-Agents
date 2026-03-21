@@ -164,6 +164,17 @@ export function reorderClusterRoles(clusterId, orderedIds) {
   }
 }
 
+export function getNextRoleInCluster(clusterId, currentSortOrder) {
+  const db = getDb();
+  return db
+    .select()
+    .from(clusterRoles)
+    .where(and(eq(clusterRoles.clusterId, clusterId), sql`${clusterRoles.sortOrder} > ${currentSortOrder}`))
+    .orderBy(clusterRoles.sortOrder)
+    .limit(1)
+    .get() || null;
+}
+
 export function getRoleWithCluster(roleId) {
   const db = getDb();
   const role = db.select().from(clusterRoles).where(eq(clusterRoles.id, roleId)).get();

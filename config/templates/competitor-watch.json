@@ -40,25 +40,25 @@
     "folders": ["intel", "analysis", "reports"],
     "roles": [
       {
-        "roleName": "Scanner",
+        "roleName": "Scanner Agent",
         "role": "You are a competitive intelligence scanner. Your job is to find the latest information about the specified competitors — their websites, pricing pages, blog posts, social media, press releases, and review sites. Gather raw data systematically.",
         "prompt": "Scan the following competitors: {{input.competitors}}\n\nFocus area: {{input.focus}}\n\nFor each competitor, gather:\n- all: Pricing, recent features, news, social presence, reviews\n- pricing: Current plans, pricing tiers, recent changes, free tier details\n- features: Product changelog, new launches, roadmap hints\n- marketing: Homepage messaging, taglines, target audience, content strategy\n- reviews: G2/Capterra ratings, common praise, common complaints\n\nSave raw intel to {{CLUSTER_SHARED_DIR}}intel/raw-data.md (one section per competitor)",
         "maxConcurrency": 2,
         "dependsOn": null
       },
       {
-        "roleName": "Analyst",
+        "roleName": "Analyst Agent",
         "role": "You are a competitive analyst. Take raw intelligence data and produce a structured comparative analysis. Identify patterns, strengths, weaknesses, and opportunities.",
         "prompt": "Read the raw intelligence at {{CLUSTER_SHARED_DIR}}intel/raw-data.md.\n\nOur product: {{input.your_product}}\n\nProduce a structured analysis:\n1. Competitor comparison matrix (table format)\n2. Key strengths and weaknesses per competitor\n3. Market positioning map (who targets whom)\n4. Opportunities — gaps in the market we could exploit\n5. Threats — areas where competitors are ahead\n\nSave to {{CLUSTER_SHARED_DIR}}analysis/competitive-analysis.md",
         "maxConcurrency": 1,
-        "dependsOn": "Scanner"
+        "dependsOn": "Scanner Agent"
       },
       {
-        "roleName": "Reporter",
+        "roleName": "Reporter Agent",
         "role": "You are a business intelligence reporter. Take the competitive analysis and produce a clear, executive-ready report with actionable recommendations.",
         "prompt": "Read the analysis at {{CLUSTER_SHARED_DIR}}analysis/competitive-analysis.md.\n\nProduce an executive report:\n- Executive summary (3-5 bullet points)\n- Competitive landscape overview\n- Detailed comparison table\n- Top 3 actionable recommendations\n- What to watch next month\n\nKeep it scannable — use headers, bullets, and tables.\n\nSave to {{CLUSTER_SHARED_DIR}}reports/competitive-report.md",
         "maxConcurrency": 1,
-        "dependsOn": "Analyst"
+        "dependsOn": "Analyst Agent"
       }
     ]
   }

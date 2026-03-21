@@ -85,6 +85,19 @@ export const clusterRoles = sqliteTable('cluster_roles', {
   updatedAt: integer('updated_at').notNull(),
 });
 
+export const leads = sqliteTable('leads', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  projectSummary: text('project_summary'),
+  conversationJson: text('conversation_json'),
+  recommendationsJson: text('recommendations_json'),
+  reportPath: text('report_path'),
+  personaMode: text('persona_mode'),
+  source: text('source').notNull().default('consult-page'),
+  createdAt: integer('created_at').notNull(),
+});
+
 export const settings = sqliteTable('settings', {
   id: text('id').primaryKey(),
   type: text('type').notNull(),

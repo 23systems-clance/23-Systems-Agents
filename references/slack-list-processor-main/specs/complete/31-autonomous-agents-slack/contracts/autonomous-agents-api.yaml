@@ -1,0 +1,1259 @@
+openapi: 3.0.3
+info:
+  title: Autonomous Agents API
+  description: |
+    Admin dashboard REST API for managing autonomous agents, Teams (agent clusters),
+    and viewing agent activity, audit actions, and system events. Used by the
+    admin-dashboard React frontend.
+  version: 1.0.0
+  contact:
+    name: Dev Labs AI
+
+servers:
+  - url: /api/v1/admin
+    description: Admin API (behind ECS/ALB)
+
+paths:
+  /autonomous/agents:
+    get:
+      operationId: listAutonomousAgents
+      summary: List all autonomous agents
+      description: Returns all registered autonomous agents with current status and suggest-only progress.
+      tags: [Agents]
+      parameters:
+        - name: status
+          in: query
+          description: Filter agents by status
+          schema:
+            type: string
+            enum: [active, paused, error]
+        - name: mode
+          in: query
+          description: Filter agents by execution mode
+          schema:
+            type: string
+            enum: [suggest_only, auto_execute]
+      responses:
+        '200':
+          description: List of autonomous agents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentListResponse'
+              example:
+                agents:
+                  - id: "agent_enrichment_monitor"
+                    name: "Enrichment Monitor"
+                    description: "Monitors enrichment jobs and suggests interventions for stalled or failing jobs"
+                    status: "active"
+                    mode: "suggest_only"
+                    lastExecutionAt: "2025-03-15T11:30:00Z"
+                    pendingActions: 2
+                    totalExecutions: 148
+                    successRate: 96.5
+                    teamId: "team_ops"
+                  - id: "agent_credit_guardian"
+                    name: "Credit Guardian"
+                    description: "Tracks API credit usage and alerts when thresholds are approached"
+                    status: "active"
+                    mode: "auto_execute"
+                    lastExecutionAt: "2025-03-15T11:45:00Z"
+                    pendingActions: 0
+                    totalExecutions: 312
+                    successRate: 99.1
+                    teamId: "team_ops"
+                  - id: "agent_data_quality"
+                    name: "Data Quality Checker"
+                    description: "Validates enrichment output quality and flags anomalies"
+                    status: "paused"
+                    mode: "suggest_only"
+                    lastExecutionAt: "2025-03-14T22:00:00Z"
+                    pendingActions: 0
+                    totalExecutions: 87
+                    successRate: 94.2
+                    teamId: null
+                totalAgents: 3
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /autonomous/agents/{agentId}:
+    get:
+      operationId: getAgentDetails
+      summary: Get agent details
+      description: Returns full details for a specific agent including recent executions and pending audit actions.
+      tags: [Agents]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      responses:
+        '200':
+          description: Agent details with recent activity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDetailResponse'
+              example:
+                id: "agent_enrichment_monitor"
+                name: "Enrichment Monitor"
+                description: "Monitors enrichment jobs and suggests interventions for stalled or failing jobs"
+                status: "active"
+                mode: "suggest_only"
+                teamId: "team_ops"
+                config:
+                  checkIntervalMinutes: 5
+                  stallThresholdMinutes: 15
+                  failureRateAlertPercent: 10
+                stats:
+                  totalExecutions: 148
+                  successRate: 96.5
+                  avgExecutionMs: 320
+                  lastExecutionAt: "2025-03-15T11:30:00Z"
+                  last24hExecutions: 42
+                recentExecutions:
+                  - id: "exec_001"
+                    triggeredAt: "2025-03-15T11:30:00Z"
+                    trigger: "scheduled"
+                    outcome: "action_suggested"
+                    durationMs: 280
+                    summary: "Detected stalled job job_def456 at 41% - suggested restart"
+                  - id: "exec_002"
+                    triggeredAt: "2025-03-15T11:25:00Z"
+                    trigger: "scheduled"
+                    outcome: "no_action"
+                    durationMs: 150
+                    summary: "All jobs progressing normally"
+                pendingAuditActions:
+                  - id: "audit_act_001"
+                    createdAt: "2025-03-15T11:30:00Z"
+                    severity: "medium"
+                    proposedAction: "restart_job"
+                    description: "Restart stalled job job_def456 (stuck at 41% for 18 minutes)"
+                    context:
+                      jobId: "job_def456"
+                      stalledMinutes: 18
+                      lastProgress: "2025-03-15T11:12:00Z"
+                  - id: "audit_act_002"
+                    createdAt: "2025-03-15T11:30:00Z"
+                    severity: "low"
+                    proposedAction: "notify_user"
+                    description: "Notify jane.smith about job delay"
+                    context:
+                      slackUserId: "U04EFGH5678"
+                createdAt: "2025-03-01T09:00:00Z"
+                updatedAt: "2025-03-15T11:30:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /autonomous/agents/{agentId}/mode:
+    put:
+      operationId: updateAgentMode
+      summary: Toggle agent execution mode
+      description: Switches an agent between suggest-only (requires human approval) and auto-execute mode.
+      tags: [Agents]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode]
+              properties:
+                mode:
+                  type: string
+                  enum: [suggest_only, auto_execute]
+                  description: The execution mode to set
+            example:
+              mode: "auto_execute"
+      responses:
+        '200':
+          description: Mode updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                success: true
+                message: "Agent 'Enrichment Monitor' mode changed to auto_execute"
+                agentId: "agent_enrichment_monitor"
+                previousMode: "suggest_only"
+                newMode: "auto_execute"
+        '400':
+          description: Invalid mode value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Invalid mode"
+                details: "Mode must be one of: suggest_only, auto_execute"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /autonomous/agents/{agentId}/approve/{auditActionId}:
+    post:
+      operationId: approveAuditAction
+      summary: Approve a suggested action
+      description: Approves a pending audit action for execution. Only applicable when agent is in suggest-only mode.
+      tags: [Agents]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/AuditActionId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                  description: Optional approval comment
+            example:
+              comment: "Approved - job has been stuck for too long"
+      responses:
+        '200':
+          description: Action approved and queued for execution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionOutcomeResponse'
+              example:
+                success: true
+                message: "Action approved and queued for execution"
+                auditActionId: "audit_act_001"
+                outcome: "approved"
+                executedAt: "2025-03-15T11:35:00Z"
+                result:
+                  jobId: "job_def456"
+                  action: "restart_job"
+                  status: "restarted"
+        '400':
+          description: Action cannot be approved (already resolved or expired)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Action already resolved"
+                details: "Audit action audit_act_001 was already approved at 2025-03-15T11:33:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /autonomous/agents/{agentId}/reject/{auditActionId}:
+    post:
+      operationId: rejectAuditAction
+      summary: Reject a suggested action
+      description: Rejects a pending audit action. The agent will not execute the proposed action.
+      tags: [Agents]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/AuditActionId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Reason for rejection
+            example:
+              reason: "Job is processing slowly but not stalled - will monitor"
+      responses:
+        '200':
+          description: Action rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionOutcomeResponse'
+              example:
+                success: true
+                message: "Action rejected"
+                auditActionId: "audit_act_002"
+                outcome: "rejected"
+                rejectedAt: "2025-03-15T11:36:00Z"
+                reason: "Job is processing slowly but not stalled - will monitor"
+        '400':
+          description: Action cannot be rejected (already resolved)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Action already resolved"
+                details: "Audit action audit_act_002 was already rejected"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /autonomous/teams:
+    get:
+      operationId: listTeams
+      summary: List all Teams (agent clusters)
+      description: Returns all Teams with their member agents and aggregate status.
+      tags: [Teams]
+      responses:
+        '200':
+          description: List of Teams
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamListResponse'
+              example:
+                teams:
+                  - id: "team_ops"
+                    name: "Operations"
+                    description: "Agents responsible for monitoring and maintaining enrichment operations"
+                    agentCount: 2
+                    activeAgents: 2
+                    totalPendingActions: 2
+                    createdAt: "2025-03-01T09:00:00Z"
+                  - id: "team_quality"
+                    name: "Quality Assurance"
+                    description: "Agents that validate data quality and enrichment accuracy"
+                    agentCount: 1
+                    activeAgents: 0
+                    totalPendingActions: 0
+                    createdAt: "2025-03-05T14:00:00Z"
+                totalTeams: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      operationId: createTeam
+      summary: Create a new Team
+      description: Creates a new Team that agents can be assigned to.
+      tags: [Teams]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreateRequest'
+            example:
+              name: "Outreach"
+              description: "Agents that assist with outreach sequencing and follow-ups"
+              agentIds: []
+      responses:
+        '201':
+          description: Team created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDetail'
+              example:
+                id: "team_outreach"
+                name: "Outreach"
+                description: "Agents that assist with outreach sequencing and follow-ups"
+                agents: []
+                agentCount: 0
+                activeAgents: 0
+                totalPendingActions: 0
+                createdAt: "2025-03-15T12:00:00Z"
+                updatedAt: "2025-03-15T12:00:00Z"
+        '400':
+          description: Invalid request (missing name, duplicate name)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Validation error"
+                details: "Team name is required and must be unique"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /autonomous/teams/{teamId}:
+    get:
+      operationId: getTeamDetails
+      summary: Get Team details
+      description: Returns full Team details with member agents and their statuses.
+      tags: [Teams]
+      parameters:
+        - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: Team details with member agents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDetail'
+              example:
+                id: "team_ops"
+                name: "Operations"
+                description: "Agents responsible for monitoring and maintaining enrichment operations"
+                agents:
+                  - id: "agent_enrichment_monitor"
+                    name: "Enrichment Monitor"
+                    status: "active"
+                    mode: "suggest_only"
+                    pendingActions: 2
+                  - id: "agent_credit_guardian"
+                    name: "Credit Guardian"
+                    status: "active"
+                    mode: "auto_execute"
+                    pendingActions: 0
+                agentCount: 2
+                activeAgents: 2
+                totalPendingActions: 2
+                createdAt: "2025-03-01T09:00:00Z"
+                updatedAt: "2025-03-10T16:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      operationId: updateTeam
+      summary: Update a Team
+      description: Updates Team name, description, or member agent assignments.
+      tags: [Teams]
+      parameters:
+        - $ref: '#/components/parameters/TeamId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamUpdateRequest'
+            example:
+              name: "Operations & Monitoring"
+              agentIds: ["agent_enrichment_monitor", "agent_credit_guardian", "agent_data_quality"]
+      responses:
+        '200':
+          description: Team updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDetail'
+              example:
+                id: "team_ops"
+                name: "Operations & Monitoring"
+                description: "Agents responsible for monitoring and maintaining enrichment operations"
+                agents:
+                  - id: "agent_enrichment_monitor"
+                    name: "Enrichment Monitor"
+                    status: "active"
+                    mode: "suggest_only"
+                    pendingActions: 2
+                  - id: "agent_credit_guardian"
+                    name: "Credit Guardian"
+                    status: "active"
+                    mode: "auto_execute"
+                    pendingActions: 0
+                  - id: "agent_data_quality"
+                    name: "Data Quality Checker"
+                    status: "paused"
+                    mode: "suggest_only"
+                    pendingActions: 0
+                agentCount: 3
+                activeAgents: 2
+                totalPendingActions: 2
+                createdAt: "2025-03-01T09:00:00Z"
+                updatedAt: "2025-03-15T12:05:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /autonomous/audit:
+    get:
+      operationId: queryAuditActions
+      summary: Query audit action records
+      description: Returns AuditAction records with filtering by agent, severity, outcome, and date range.
+      tags: [Audit]
+      parameters:
+        - name: agentName
+          in: query
+          description: Filter by agent name (partial match)
+          schema:
+            type: string
+        - name: severity
+          in: query
+          description: Filter by severity level
+          schema:
+            type: string
+            enum: [info, warning, high, critical]
+        - name: outcome
+          in: query
+          description: Filter by action outcome
+          schema:
+            type: string
+            enum: [auto_executed, suggested, approved, rejected, escalated]
+        - name: startDate
+          in: query
+          description: Start of date range (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End of date range (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 25
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated list of audit actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditActionListResponse'
+              example:
+                auditActions:
+                  - id: "audit_act_001"
+                    agentId: "agent_enrichment_monitor"
+                    agentName: "Enrichment Monitor"
+                    createdAt: "2025-03-15T11:30:00Z"
+                    severity: "medium"
+                    proposedAction: "restart_job"
+                    description: "Restart stalled job job_def456"
+                    outcome: "approved"
+                    resolvedAt: "2025-03-15T11:35:00Z"
+                    resolvedBy: "U04ABCD1234"
+                    comment: "Approved - job has been stuck for too long"
+                  - id: "audit_act_003"
+                    agentId: "agent_credit_guardian"
+                    agentName: "Credit Guardian"
+                    createdAt: "2025-03-15T10:00:00Z"
+                    severity: "high"
+                    proposedAction: "pause_processing"
+                    description: "Apollo credits at 90% - pause new jobs to prevent overage"
+                    outcome: "auto_executed"
+                    resolvedAt: "2025-03-15T10:00:05Z"
+                    resolvedBy: "system"
+                    comment: null
+                pagination:
+                  page: 1
+                  limit: 25
+                  totalItems: 2
+                  totalPages: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /autonomous/events:
+    get:
+      operationId: querySystemEvents
+      summary: Query system events
+      description: Returns SystemEvent records with filtering by type, severity, and date range.
+      tags: [Events]
+      parameters:
+        - name: type
+          in: query
+          description: Filter by event type
+          schema:
+            type: string
+            enum: [infrastructure_auto_heal, infrastructure_escalation, worker_config_update, quality_auto_remediation, agent_started, agent_stopped, agent_error, execution_completed, mode_changed, team_updated, threshold_alert, system_health]
+        - name: severity
+          in: query
+          description: Filter by severity level
+          schema:
+            type: string
+            enum: [info, warning, error, critical]
+        - name: startDate
+          in: query
+          description: Start of date range (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End of date range (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 25
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated list of system events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemEventListResponse'
+              example:
+                events:
+                  - id: "evt_001"
+                    type: "threshold_alert"
+                    severity: "warning"
+                    timestamp: "2025-03-15T10:00:00Z"
+                    source: "agent_credit_guardian"
+                    message: "Apollo API credits at 90% of daily limit"
+                    metadata:
+                      creditsUsed: 9000
+                      creditLimit: 10000
+                      percentUsed: 90
+                  - id: "evt_002"
+                    type: "mode_changed"
+                    severity: "info"
+                    timestamp: "2025-03-15T09:30:00Z"
+                    source: "admin_dashboard"
+                    message: "Agent 'Enrichment Monitor' mode changed from auto_execute to suggest_only"
+                    metadata:
+                      agentId: "agent_enrichment_monitor"
+                      previousMode: "auto_execute"
+                      newMode: "suggest_only"
+                      changedBy: "U04ABCD1234"
+                  - id: "evt_003"
+                    type: "agent_error"
+                    severity: "error"
+                    timestamp: "2025-03-15T08:15:00Z"
+                    source: "agent_data_quality"
+                    message: "Data Quality Checker failed: database connection timeout"
+                    metadata:
+                      errorCode: "DB_TIMEOUT"
+                      retryCount: 3
+                      agentPaused: true
+                pagination:
+                  page: 1
+                  limit: 25
+                  totalItems: 3
+                  totalPages: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /autonomous/dashboard:
+    get:
+      operationId: getDashboardData
+      summary: Get aggregated dashboard data
+      description: Returns a single aggregated payload with all agents status, recent actions, alerts, and key metrics for the admin dashboard overview.
+      tags: [Dashboard]
+      responses:
+        '200':
+          description: Aggregated dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+              example:
+                summary:
+                  totalAgents: 3
+                  activeAgents: 2
+                  pausedAgents: 1
+                  errorAgents: 0
+                  totalPendingActions: 2
+                  actionsLast24h: 8
+                  autoExecutedLast24h: 5
+                  suggestOnlyAgents: 2
+                  autoExecuteAgents: 1
+                agents:
+                  - id: "agent_enrichment_monitor"
+                    name: "Enrichment Monitor"
+                    status: "active"
+                    mode: "suggest_only"
+                    pendingActions: 2
+                    lastExecutionAt: "2025-03-15T11:30:00Z"
+                    successRate: 96.5
+                  - id: "agent_credit_guardian"
+                    name: "Credit Guardian"
+                    status: "active"
+                    mode: "auto_execute"
+                    pendingActions: 0
+                    lastExecutionAt: "2025-03-15T11:45:00Z"
+                    successRate: 99.1
+                  - id: "agent_data_quality"
+                    name: "Data Quality Checker"
+                    status: "paused"
+                    mode: "suggest_only"
+                    pendingActions: 0
+                    lastExecutionAt: "2025-03-14T22:00:00Z"
+                    successRate: 94.2
+                recentActions:
+                  - id: "audit_act_001"
+                    agentName: "Enrichment Monitor"
+                    severity: "medium"
+                    proposedAction: "restart_job"
+                    description: "Restart stalled job job_def456"
+                    outcome: "pending"
+                    createdAt: "2025-03-15T11:30:00Z"
+                  - id: "audit_act_003"
+                    agentName: "Credit Guardian"
+                    severity: "high"
+                    proposedAction: "pause_processing"
+                    description: "Apollo credits at 90% - paused new jobs"
+                    outcome: "auto_executed"
+                    createdAt: "2025-03-15T10:00:00Z"
+                alerts:
+                  - id: "alert_001"
+                    severity: "warning"
+                    message: "Apollo API credits at 90% of daily limit"
+                    timestamp: "2025-03-15T10:00:00Z"
+                    source: "agent_credit_guardian"
+                  - id: "alert_002"
+                    severity: "error"
+                    message: "Data Quality Checker paused due to database timeout"
+                    timestamp: "2025-03-15T08:15:00Z"
+                    source: "agent_data_quality"
+                teams:
+                  - id: "team_ops"
+                    name: "Operations"
+                    agentCount: 2
+                    activeAgents: 2
+                  - id: "team_quality"
+                    name: "Quality Assurance"
+                    agentCount: 1
+                    activeAgents: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  parameters:
+    AgentId:
+      name: agentId
+      in: path
+      required: true
+      description: Unique agent identifier
+      schema:
+        type: string
+        example: "agent_enrichment_monitor"
+
+    AuditActionId:
+      name: auditActionId
+      in: path
+      required: true
+      description: Unique audit action identifier
+      schema:
+        type: string
+        example: "audit_act_001"
+
+    TeamId:
+      name: teamId
+      in: path
+      required: true
+      description: Unique Team identifier
+      schema:
+        type: string
+        example: "team_ops"
+
+  schemas:
+    # --- Agent schemas ---
+    AgentSummary:
+      type: object
+      required: [id, name, status, mode, pendingActions, totalExecutions, successRate]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [active, paused, error]
+        mode:
+          type: string
+          enum: [suggest_only, auto_execute]
+        lastExecutionAt:
+          type: string
+          format: date-time
+          nullable: true
+        pendingActions:
+          type: integer
+          description: Number of pending audit actions awaiting approval
+        totalExecutions:
+          type: integer
+        successRate:
+          type: number
+          description: Success rate as a percentage (0-100)
+        teamId:
+          type: string
+          nullable: true
+
+    AgentListResponse:
+      type: object
+      required: [agents, totalAgents]
+      properties:
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentSummary'
+        totalAgents:
+          type: integer
+
+    AgentDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/AgentSummary'
+        - type: object
+          required: [config, stats, recentExecutions, pendingAuditActions, createdAt, updatedAt]
+          properties:
+            config:
+              type: object
+              additionalProperties: true
+              description: Agent-specific configuration key-value pairs
+            stats:
+              type: object
+              properties:
+                totalExecutions:
+                  type: integer
+                successRate:
+                  type: number
+                avgExecutionMs:
+                  type: integer
+                lastExecutionAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                last24hExecutions:
+                  type: integer
+            recentExecutions:
+              type: array
+              items:
+                $ref: '#/components/schemas/AgentExecution'
+            pendingAuditActions:
+              type: array
+              items:
+                $ref: '#/components/schemas/AuditActionPending'
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    AgentExecution:
+      type: object
+      required: [id, triggeredAt, trigger, outcome, durationMs, summary]
+      properties:
+        id:
+          type: string
+        triggeredAt:
+          type: string
+          format: date-time
+        trigger:
+          type: string
+          enum: [scheduled, event, manual]
+        outcome:
+          type: string
+          enum: [no_action, action_suggested, action_executed, error]
+        durationMs:
+          type: integer
+        summary:
+          type: string
+
+    AuditActionPending:
+      type: object
+      required: [id, createdAt, severity, proposedAction, description]
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        proposedAction:
+          type: string
+        description:
+          type: string
+        context:
+          type: object
+          additionalProperties: true
+
+    # --- Audit Action schemas ---
+    AuditActionRecord:
+      type: object
+      required: [id, agentId, agentName, createdAt, severity, proposedAction, description, outcome]
+      properties:
+        id:
+          type: string
+        agentId:
+          type: string
+        agentName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        proposedAction:
+          type: string
+        description:
+          type: string
+        outcome:
+          type: string
+          enum: [pending, approved, rejected, auto_executed, expired]
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        resolvedBy:
+          type: string
+          nullable: true
+          description: Slack user ID or "system" for auto-executed
+        comment:
+          type: string
+          nullable: true
+
+    AuditActionListResponse:
+      type: object
+      required: [auditActions, pagination]
+      properties:
+        auditActions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditActionRecord'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # --- Team schemas ---
+    TeamSummary:
+      type: object
+      required: [id, name, agentCount, activeAgents, totalPendingActions, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        agentCount:
+          type: integer
+        activeAgents:
+          type: integer
+        totalPendingActions:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    TeamDetail:
+      allOf:
+        - $ref: '#/components/schemas/TeamSummary'
+        - type: object
+          properties:
+            agents:
+              type: array
+              items:
+                type: object
+                required: [id, name, status, mode, pendingActions]
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  status:
+                    type: string
+                    enum: [active, paused, error]
+                  mode:
+                    type: string
+                    enum: [suggest_only, auto_execute]
+                  pendingActions:
+                    type: integer
+            updatedAt:
+              type: string
+              format: date-time
+
+    TeamListResponse:
+      type: object
+      required: [teams, totalTeams]
+      properties:
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamSummary'
+        totalTeams:
+          type: integer
+
+    TeamCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        agentIds:
+          type: array
+          items:
+            type: string
+          description: Agent IDs to assign to this Team
+
+    TeamUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        agentIds:
+          type: array
+          items:
+            type: string
+          description: Full list of agent IDs (replaces current assignments)
+
+    # --- System Event schemas ---
+    SystemEvent:
+      type: object
+      required: [id, type, severity, timestamp, source, message]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [infrastructure_auto_heal, infrastructure_escalation, worker_config_update, quality_auto_remediation, agent_started, agent_stopped, agent_error, execution_completed, mode_changed, team_updated, threshold_alert, system_health]
+        severity:
+          type: string
+          enum: [info, warning, error, critical]
+        timestamp:
+          type: string
+          format: date-time
+        source:
+          type: string
+          description: Agent ID or system component that generated the event
+        message:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+
+    SystemEventListResponse:
+      type: object
+      required: [events, pagination]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemEvent'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # --- Dashboard schema ---
+    DashboardResponse:
+      type: object
+      required: [summary, agents, recentActions, alerts, teams]
+      properties:
+        summary:
+          type: object
+          required: [totalAgents, activeAgents, pausedAgents, errorAgents, totalPendingActions, actionsLast24h, autoExecutedLast24h, suggestOnlyAgents, autoExecuteAgents]
+          properties:
+            totalAgents:
+              type: integer
+            activeAgents:
+              type: integer
+            pausedAgents:
+              type: integer
+            errorAgents:
+              type: integer
+            totalPendingActions:
+              type: integer
+            actionsLast24h:
+              type: integer
+            autoExecutedLast24h:
+              type: integer
+            suggestOnlyAgents:
+              type: integer
+            autoExecuteAgents:
+              type: integer
+        agents:
+          type: array
+          items:
+            type: object
+            required: [id, name, status, mode, pendingActions, successRate]
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              status:
+                type: string
+                enum: [active, paused, error]
+              mode:
+                type: string
+                enum: [suggest_only, auto_execute]
+              pendingActions:
+                type: integer
+              lastExecutionAt:
+                type: string
+                format: date-time
+                nullable: true
+              successRate:
+                type: number
+        recentActions:
+          type: array
+          items:
+            type: object
+            required: [id, agentName, severity, proposedAction, description, outcome, createdAt]
+            properties:
+              id:
+                type: string
+              agentName:
+                type: string
+              severity:
+                type: string
+                enum: [info, warning, high, critical]
+              proposedAction:
+                type: string
+              description:
+                type: string
+              outcome:
+                type: string
+                enum: [auto_executed, suggested, approved, rejected, escalated]
+              createdAt:
+                type: string
+                format: date-time
+        alerts:
+          type: array
+          items:
+            type: object
+            required: [id, severity, message, timestamp, source]
+            properties:
+              id:
+                type: string
+              severity:
+                type: string
+                enum: [info, warning, error, critical]
+              message:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              source:
+                type: string
+        teams:
+          type: array
+          items:
+            type: object
+            required: [id, name, agentCount, activeAgents]
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              agentCount:
+                type: integer
+              activeAgents:
+                type: integer
+
+    # --- Shared schemas ---
+    Pagination:
+      type: object
+      required: [page, limit, totalItems, totalPages]
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+
+    SuccessMessage:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    ActionOutcomeResponse:
+      type: object
+      required: [success, message, auditActionId, outcome]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        auditActionId:
+          type: string
+        outcome:
+          type: string
+          enum: [approved, rejected]
+        executedAt:
+          type: string
+          format: date-time
+        rejectedAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        result:
+          type: object
+          additionalProperties: true
+          description: Execution result details (only for approved actions)
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Invalid parameter"
+            details: "Check query parameters and try again"
+
+    Unauthorized:
+      description: Authentication required or insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Unauthorized"
+            details: "Valid admin authentication required"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Not found"
+            details: "The requested resource does not exist"

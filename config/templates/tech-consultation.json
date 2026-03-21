@@ -1,0 +1,72 @@
+{
+  "id": "tech-consultation",
+  "name": "Tech Stack Consultation",
+  "description": "AI-powered tech stack advisory pipeline. Analyzes a project profile and generates a research-backed recommendation report with architecture diagrams, alternatives, and partner resources.",
+  "icon": "cpu",
+  "category": "sales",
+  "difficulty": "beginner",
+  "estimatedTime": "5-15 minutes",
+  "inputs": [
+    {
+      "id": "project_profile",
+      "label": "Project Profile (JSON from discovery conversation)",
+      "type": "textarea",
+      "placeholder": "Paste the projectProfile JSON from the consultation conversation",
+      "required": true
+    },
+    {
+      "id": "contact_name",
+      "label": "Contact Name",
+      "type": "text",
+      "placeholder": "Prospect's name",
+      "required": true
+    },
+    {
+      "id": "contact_email",
+      "label": "Contact Email",
+      "type": "text",
+      "placeholder": "prospect@company.com",
+      "required": true
+    },
+    {
+      "id": "include_partners",
+      "label": "Include partner resources?",
+      "type": "select",
+      "options": [
+        { "value": "yes", "label": "Yes — include matched programs" },
+        { "value": "no", "label": "No — tech stack only" }
+      ],
+      "default": "yes"
+    },
+    {
+      "id": "persona_mode",
+      "label": "Persona mode",
+      "type": "select",
+      "options": [
+        { "value": "simple", "label": "Simple (business-focused)" },
+        { "value": "dev", "label": "Dev (technical)" }
+      ],
+      "default": "simple"
+    }
+  ],
+  "cluster": {
+    "systemPrompt": "You are part of the 23 Systems tech advisory team. Your shared workspace is at {{CLUSTER_SHARED_DIR}}. Coordinate by reading and writing files in shared folders. Be thorough, research-backed, and professional.",
+    "folders": ["discovery", "research", "reports"],
+    "roles": [
+      {
+        "roleName": "Research Agent",
+        "role": "You are a senior solutions architect and technology researcher. Given a project profile, validate the best tech stack choices using web search. Check each potential recommendation against real-world adoption, community health (GitHub stars, npm downloads), ecosystem maturity, and known issues at scale. Be opinionated — recommend what you'd actually use, not just what's popular.",
+        "prompt": "Read the project profile from {{CLUSTER_SHARED_DIR}}discovery/profile.json.\n\nFor each of the 8 recommendation categories (Frontend, Backend, Database, Hosting/Infra, Auth, Payments, DevOps/CI, Monitoring), research the best options using web search:\n\n```bash\nskills/search-web/search.js \"<technology> adoption production 2025\" --content -n 3\n```\n\nConsider:\n- Project stage: {{input.persona_mode}} perspective\n- Team size and experience\n- Constraints listed in the profile\n- Real-time requirements\n- Scaling expectations\n- Budget constraints\n- Compliance requirements\n\nSkip categories that don't apply (e.g., Payments if no transactions).\n\nFor each category, output:\n- Primary recommendation with confidence score (0-1)\n- Why this choice (2-3 sentences)\n- 2-3 alternatives\n- Key tradeoff vs alternatives\n\nSave structured JSON to {{CLUSTER_SHARED_DIR}}research/recommendations.json in this format:\n{\n  \"projectProfile\": { ... },\n  \"recommendations\": [\n    {\n      \"category\": \"Frontend\",\n      \"recommendation\": \"Next.js 14\",\n      \"confidence\": 0.92,\n      \"why\": \"...\",\n      \"alternatives\": [\"Remix\", \"SvelteKit\"],\n      \"tradeoffs\": \"...\"\n    }\n  ],\n  \"matchedPartners\": []\n}",
+        "maxConcurrency": 1,
+        "dependsOn": null
+      },
+      {
+        "roleName": "Report Agent",
+        "role": "You are a technical writer who creates polished, branded HTML reports. You take structured recommendations and generate professional deliverables using the 23 Systems template system.",
+        "prompt": "Read the recommendations from {{CLUSTER_SHARED_DIR}}research/recommendations.json.\n\nGenerate the branded HTML report:\n\n```bash\nnode skills/tech-stack-advisor/generate-report.js \\\n  --recommendations {{CLUSTER_SHARED_DIR}}research/recommendations.json \\\n  --include-partners {{input.include_partners}} \\\n  --output {{CLUSTER_SHARED_DIR}}reports/tech-stack-report.html\n```\n\nVerify the output looks correct by checking the generated file exists and has content.\n\nAlso create a plain-text summary at {{CLUSTER_SHARED_DIR}}reports/summary.md with:\n- Project name and description\n- Top-line recommendation (one sentence)\n- Quick list of the full stack\n- Contact info: {{input.contact_name}} ({{input.contact_email}})\n- Whether partner resources were included",
+        "maxConcurrency": 1,
+        "dependsOn": "Research Agent"
+      }
+    ]
+  }
+}

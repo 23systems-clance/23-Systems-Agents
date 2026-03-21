@@ -1,0 +1,4053 @@
+// Prisma Schema: Slack List Processor
+// Database: PostgreSQL
+// Feature Branch: 1-slack-list-processor
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum JobType {
+  TECHNOGRAPHIC
+  CONTACT
+  COMBINED
+  TECH_REPORT
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  AWAITING_PHONES
+  AWAITING_DNC_DECISION
+  AWAITING_EMAIL_VERIFICATION
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum PersonaType {
+  IT_LEADER
+  ENGINEERING_LEADER
+  FINANCE_LEADER
+  SALES_LEADER
+  FOUNDER_OWNER
+  CEO
+  OPERATIONS_LEADER
+  HR_LEADER
+  CUSTOMER_SUCCESS_LEADER
+  MARKETING_LEADER
+  PRODUCT_LEADER
+  COMPLIANCE_LEADER
+  RESEARCH_LEADER
+  NON_LEADER
+}
+
+enum TechSpendTier {
+  TIER_1
+  TIER_2
+  TIER_3
+  UNCLASSIFIED
+}
+
+enum SourceFileType {
+  CSV
+  XLSX
+}
+
+enum ListPurpose {
+  JUST_A_LIST
+  COLD_CALLING
+  LINKEDIN
+  EMAILING
+  ALL
+}
+
+enum ApiService {
+  BUILTWITH
+  APOLLO
+  AI_ORCHESTRATOR
+  QUALITY_GATE
+}
+
+enum EnrichmentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+enum ContactEnrichmentStatus {
+  PENDING
+  ENRICHED
+  PHONE_PENDING
+  COMPLETE
+  FAILED
+}
+
+enum PhoneLookupStatus {
+  PENDING
+  RECEIVED
+  TIMED_OUT
+}
+
+// ---------------------------------------------------------------------------
+// Waterfall Enrichment Enums (Feature 27)
+// ---------------------------------------------------------------------------
+
+enum Provider {
+  APOLLO
+  WIZA
+  AI_ARK
+  FINDYMAIL
+}
+
+enum DataType {
+  EMAIL
+  PHONE
+}
+
+enum AttemptStatus {
+  SUCCESS
+  FAILED
+  SKIPPED
+  TIMEOUT
+  NO_DATA
+}
+
+enum WebhookStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+enum EnrichmentMode {
+  EMAIL_ONLY
+  PHONE_ONLY
+  ALL
+}
+
+enum CallStatus {
+  ACCEPTED_STATE
+  DO_NOT_CALL
+  UNKNOWN
+}
+
+enum DncStatus {
+  NOT_CHECKED
+  CLEAN
+  ON_DNC_LIST
+}
+
+enum ConfigDocType {
+  ICP
+  USE_CASES
+  CAMPAIGNS
+  SETTINGS
+}
+
+enum FilterJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum SplitJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum SplitMode {
+  HALF
+  QUARTERS
+  BY_COLUMN
+  CUSTOM
+}
+
+enum DocumentType {
+  ICP
+  USE_CASE
+  SETTINGS
+  ONE_PAGER
+  UNKNOWN
+}
+
+enum DocumentStatus {
+  PROCESSING
+  ACTIVE
+  FAILED
+  ARCHIVED
+}
+
+enum AnalysisJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Agent Integration Enums (Feature 5)
+// ---------------------------------------------------------------------------
+
+enum WorkspaceStatus {
+  ACTIVE
+  SUSPENDED
+  UNINSTALLED
+}
+
+enum AgentThreadStatus {
+  ACTIVE
+  EXPIRED
+  PURGED
+}
+
+enum ConversationRole {
+  USER
+  ASSISTANT
+}
+
+enum JobSourceInterface {
+  TRIGGER
+  AGENT
+  COMMAND
+}
+
+// ---------------------------------------------------------------------------
+// Admin Dashboard Enums (Feature 3)
+// ---------------------------------------------------------------------------
+
+enum ErrorCategory {
+  API_ERROR
+  QUEUE_ERROR
+  FILE_PROCESSING_ERROR
+  SLACK_ERROR
+  SYSTEM_ERROR
+}
+
+enum ErrorLifecycleState {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum ReportType {
+  COST_SUMMARY
+  USAGE_BREAKDOWN
+  CLIENT_REPORT
+  ERROR_SUMMARY
+}
+
+enum ReportFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum AdminRole {
+  ADMIN
+  EDITOR // Feature 31: can cancel jobs, view audit trail
+  VIEWER
+}
+
+enum BillingStatus {
+  PENDING // Profile created, no payment method yet
+  ACTIVE // Payment method confirmed, enrichment allowed
+  SUSPENDED // Admin manually suspended (disputes, holds, offboarding)
+  DELINQUENT // Overage charge failed, enrichment blocked
+}
+
+enum CreditTransactionType {
+  MONTHLY_ALLOCATION // Monthly credit reset + new allocation
+  ENRICHMENT_DEDUCTION // Credits consumed during enrichment
+  OVERAGE_CHARGE // Overage charged to payment method
+  MANUAL_ADJUSTMENT // Admin manual credit adjustment
+  ROLLOVER_RESET // Rollover calculation during monthly reset
+  CREDIT_PACK_PURCHASE // Credits added via credit pack purchase
+  LICENSE_ACTIVATION // Initial credits from license key activation
+}
+
+// ---------------------------------------------------------------------------
+// Multi-Tenant SaaS Licensing Enums (Feature 35)
+// ---------------------------------------------------------------------------
+
+enum OnboardingStep {
+  PENDING // Installed, awaiting license key
+  LICENSE_KEY // License key entry step
+  BILLING // Billing/payment setup step
+  CHANNELS // Channel assignment step
+  COMPLETE // Onboarding finished
+}
+
+enum WorkspaceType {
+  PLATFORM_OWNER // Platform owner workspace (all features, billing exempt)
+  CLIENT // Client workspace (feature-gated, billing required)
+}
+
+enum EnrichmentChannelStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// ---------------------------------------------------------------------------
+// Power Dialer Enums (Feature 22)
+// ---------------------------------------------------------------------------
+
+enum CallSessionStatus {
+  QUEUED
+  RINGING
+  CONNECTED
+  VOICEMAIL
+  COMPLETED
+  FAILED
+  SKIPPED
+  NO_ANSWER
+}
+
+enum AmdResult {
+  HUMAN
+  MACHINE_START
+  MACHINE_END
+  FAX
+  UNKNOWN
+}
+
+enum DispositionType {
+  CONNECTED_INTERESTED
+  CONNECTED_NOT_INTERESTED
+  CONNECTED_CALLBACK_REQUESTED
+  VOICEMAIL_AUTO_SKIPPED
+  VOICEMAIL_LEFT_MESSAGE
+  NO_ANSWER
+  WRONG_NUMBER
+  DO_NOT_CALL
+  INVALID_NUMBER
+  DROPPED_CALL
+}
+
+enum TranscriptionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum RecordingReviewStatus {
+  NONE
+  FLAGGED
+  REVIEWED
+}
+
+enum ComplianceEventType {
+  CONSENT_PLAYED
+  TCPA_WINDOW_BLOCKED
+  OPT_OUT_RECORDED
+  OPT_OUT_BLOCKED
+}
+
+enum CallbackStatus {
+  PENDING
+  COMPLETED
+  MISSED
+}
+
+enum UncallableReason {
+  DNC
+  REMOVED
+  INVALID_NUMBER
+  NO_PHONE
+}
+
+// ---------------------------------------------------------------------------
+// Vertical Pack Platform Enums (Feature 39)
+// ---------------------------------------------------------------------------
+
+enum AgentStatus {
+  DRAFT
+  TESTING
+  PUBLISHED
+  DEPRECATED
+}
+
+enum McpServerStatus {
+  HEALTHY
+  ERROR
+  UNKNOWN
+}
+
+enum McpAuthType {
+  API_KEY
+  OAUTH2
+  BEARER_TOKEN
+  BASIC_AUTH
+  NONE
+}
+
+enum SkillStatus {
+  DRAFT
+  TESTING
+  PUBLISHED
+  DEPRECATED
+}
+
+enum SkillTriggerType {
+  SLACK_COMMAND
+  API_CALL
+  SCHEDULED
+  EVENT
+  MANUAL
+}
+
+enum SkillDeliveryChannel {
+  SLACK_THREAD
+  EMAIL
+  CRM_SYNC
+  FILE_DOWNLOAD
+  WEBHOOK
+}
+
+enum PackStatus {
+  DRAFT
+  PUBLISHED
+  DEPRECATED
+}
+
+enum PackCategory {
+  SALES
+  OPERATIONS
+  RESEARCH
+  EXECUTIVE
+  CUSTOM
+}
+
+enum PackTier {
+  FREE
+  STARTER
+  GROWTH
+  AGENCY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum SkillExecutionStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  SPEND_LIMIT_BLOCKED
+  AWAITING_APPROVAL // Feature 31: execution paused pending admin Approve/Reject
+}
+
+// ---------------------------------------------------------------------------
+// Autonomous Agents Enums (Feature 31)
+// ---------------------------------------------------------------------------
+
+enum TeamStatus {
+  ACTIVE
+  INACTIVE
+}
+
+/// Shared severity enum used by AuditAction and SystemEvent
+enum Severity {
+  INFO
+  WARNING
+  HIGH
+  CRITICAL
+}
+
+enum AuditOutcome {
+  AUTO_EXECUTED
+  SUGGESTED
+  APPROVED
+  REJECTED
+  ESCALATED
+}
+
+enum ConflictOutcome {
+  AUTO_MERGED
+  APPROVED
+  REJECTED
+  ESCALATED
+}
+
+enum PendingActionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+/// The central entity representing a processing request initiated by a Slack user.
+model Job {
+  id                        String             @id @default(uuid()) @db.Uuid
+  slackChannelId            String             @map("slack_channel_id")
+  slackChannelName          String?            @map("slack_channel_name")
+  slackThreadTs             String             @map("slack_thread_ts")
+  slackUserId               String             @map("slack_user_id")
+  slackTeamId               String             @map("slack_team_id")
+  jobType                   JobType            @map("job_type")
+  status                    JobStatus          @default(PENDING)
+  progress                  Int                @default(0)
+  sourceFileName            String?            @map("source_file_name")
+  sourceFileUrl             String?            @map("source_file_url")
+  sourceFileType            SourceFileType?    @map("source_file_type")
+  sourceRowCount            Int?               @map("source_row_count")
+  resultFileUrl             String?            @map("result_file_url")
+  resultFileName            String?            @map("result_file_name")
+  purpose                   ListPurpose?
+  isCosell                  Boolean            @default(false) @map("is_cosell")
+  cosellProvider            String?            @map("cosell_provider")
+  listOwner                 String?            @map("list_owner")
+  campaignName              String?            @map("campaign_name")
+  additionalContext         String?            @map("additional_context") @db.Text
+  enrichInstruction         String?            @map("enrich_instruction") @db.Text
+  bullmqJobId               String?            @map("bullmq_job_id")
+  parsedIntent              Json?              @map("parsed_intent") @db.JsonB
+  errorMessage              String?            @map("error_message") @db.Text
+  companiesProcessed        Int                @default(0) @map("companies_processed")
+  companiesFailed           Int                @default(0) @map("companies_failed")
+  contactsFound             Int                @default(0) @map("contacts_found")
+  documentSlugs             String[]           @default([]) @map("document_slugs")
+  settingsOverrides         Json?              @map("settings_overrides") @db.JsonB
+  sourceInterface           JobSourceInterface @default(TRIGGER) @map("source_interface")
+  /// Credit rate snapshot taken at job start for billing consistency.
+  /// Contains effective costs per operation type at time of job creation.
+  /// Null for legacy jobs or billing-exempt workspaces.
+  creditRateSnapshot        Json?              @map("credit_rate_snapshot") @db.JsonB
+  /// Quality gate filtering result for this job (total/passed/filtered/breakdown).
+  /// Null for jobs created before quality gating or non-applicable job types.
+  qualityGateResult         Json?              @map("quality_gate_result") @db.JsonB
+  /// Frozen copy of the QualityGateConfig at job submission time (FR-014).
+  qualityGateConfigSnapshot Json?              @map("quality_gate_config_snapshot") @db.JsonB
+  /// Apollo search cache statistics for this job (Feature 22).
+  apolloSearchCacheHits     Int                @default(0) @map("apollo_search_cache_hits")
+  apolloSearchCacheMisses   Int                @default(0) @map("apollo_search_cache_misses")
+  apolloContactCacheHits    Int                @default(0) @map("apollo_contact_cache_hits")
+  apolloContactCacheMisses  Int                @default(0) @map("apollo_contact_cache_misses")
+  /// Cache performance counters for domain enrichment cache (Feature 17).
+  cacheHits                 Int                @default(0) @map("cache_hits")
+  cacheMisses               Int                @default(0) @map("cache_misses")
+  forceRefresh              Boolean            @default(false) @map("force_refresh")
+  /// Waterfall enrichment mode for multi-provider contact enrichment (Feature 27).
+  enrichmentMode            EnrichmentMode?    @map("enrichment_mode")
+  /// Array of providers that successfully returned data for this job (Feature 27).
+  providersUsed             String[]           @default([]) @map("providers_used")
+  /// Total cost across all providers for this job (Feature 27).
+  totalCost                 Float              @default(0) @map("total_cost")
+  /// Email verification choice: VERIFY / SKIP / null (US6: Findymail).
+  emailVerificationChoice   String?            @map("email_verification_choice")
+  /// Count of emails verified as valid by Findymail (US6).
+  emailsVerified            Int                @default(0) @map("emails_verified")
+  /// Count of emails that failed Findymail verification (US6).
+  emailsUnverified          Int                @default(0) @map("emails_unverified")
+  clientId                  String?            @map("client_id") @db.Uuid
+  startedAt                 DateTime?          @map("started_at")
+  completedAt               DateTime?          @map("completed_at")
+  createdAt                 DateTime           @default(now()) @map("created_at")
+  updatedAt                 DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  client              ManagedClient?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  companies           JobCompany[]
+  contacts            JobContact[]
+  apiUsageLogs        ApiUsageLog[]
+  pendingPhoneLookups PendingPhoneLookup[]
+  errorLogs           ErrorLog[]
+  agentThreadJobs     AgentThreadJob[]
+  providerAttempts    ProviderAttempt[] // Feature 27: Waterfall enrichment attempts
+  providerWebhooks    ProviderWebhook[] // Feature 27: Webhook deliveries
+
+  @@index([slackChannelId])
+  @@index([slackUserId])
+  @@index([status])
+  @@index([jobType])
+  @@index([createdAt])
+  @@index([slackTeamId])
+  @@index([clientId])
+  @@map("jobs")
+}
+
+/// A company record within a specific job. Stores enriched technographic data.
+model JobCompany {
+  id                   String           @id @default(uuid()) @db.Uuid
+  jobId                String           @map("job_id") @db.Uuid
+  rowIndex             Int              @map("row_index")
+  domain               String?
+  companyName          String?          @map("company_name")
+  resolvedDomain       String?          @map("resolved_domain")
+  locationCountry      String?          @map("location_country")
+  locationState        String?          @map("location_state")
+  locationCity         String?          @map("location_city")
+  locationZip          String?          @map("location_zip")
+  trafficRank          Int?             @map("traffic_rank")
+  telephones           String[]         @default([])
+  emails               String[]         @default([])
+  socialProfiles       String[]         @default([]) @map("social_profiles")
+  metaNames            String[]         @default([]) @map("meta_names")
+  vertical             String?
+  companyNameFromApi   String?          @map("company_name_from_api")
+  salesRevenue         Int?             @map("sales_revenue")
+  techSpendUsd         Int?             @map("tech_spend_usd")
+  employeeCount        Int?             @map("employee_count")
+  productCount         Int?             @map("product_count")
+  followers            Int?
+  cloudProviderPrimary String?          @map("cloud_provider_primary")
+  cloudProvidersAll    String?          @map("cloud_providers_all")
+  techSpendTier        TechSpendTier?   @map("tech_spend_tier")
+  techSpendScore       Int?             @map("tech_spend_score")
+  technologyCount      Int              @default(0) @map("technology_count")
+  enterpriseTechCount  Int              @default(0) @map("enterprise_tech_count")
+  enrichmentStatus     EnrichmentStatus @default(PENDING) @map("enrichment_status")
+  errorMessage         String?          @map("error_message")
+  rawBuiltwithResponse Json?            @map("raw_builtwith_response") @db.JsonB
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  job          Job                 @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  technologies CompanyTechnology[]
+  contacts     JobContact[]
+
+  @@unique([jobId, rowIndex])
+  @@index([jobId])
+  @@index([domain])
+  @@index([enrichmentStatus])
+  @@map("job_companies")
+}
+
+/// Individual technology detected for a company. Stored separately for queryability.
+model CompanyTechnology {
+  id            String    @id @default(uuid()) @db.Uuid
+  jobCompanyId  String    @map("job_company_id") @db.Uuid
+  name          String
+  tag           String?
+  categories    String[]
+  firstDetected DateTime? @map("first_detected")
+  lastDetected  DateTime? @map("last_detected")
+  isEnterprise  Boolean   @default(false) @map("is_enterprise")
+
+  // Relations
+  jobCompany JobCompany @relation(fields: [jobCompanyId], references: [id], onDelete: Cascade)
+
+  @@index([jobCompanyId])
+  @@index([name])
+  @@map("company_technologies")
+}
+
+/// A contact (decision maker) found for a company within a job.
+model JobContact {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  jobId              String                  @map("job_id") @db.Uuid
+  jobCompanyId       String                  @map("job_company_id") @db.Uuid
+  fullName           String?                 @map("full_name")
+  firstName          String?                 @map("first_name")
+  lastName           String?                 @map("last_name")
+  email              String?
+  directPhone        String?                 @map("direct_phone")
+  businessPhone      String?                 @map("business_phone")
+  jobTitle           String?                 @map("job_title")
+  personaType        PersonaType             @map("persona_type")
+  seniorityLevel     String?                 @map("seniority_level")
+  linkedinUrl        String?                 @map("linkedin_url")
+  apolloPersonId     String?                 @map("apollo_person_id")
+  isDecisionMaker    Boolean                 @default(true) @map("is_decision_maker")
+  timezoneUtc        String?                 @map("timezone_utc")
+  timezoneLabel      String?                 @map("timezone_label")
+  apolloMetadata     Json?                   @map("apollo_metadata")
+  enrichmentStatus   ContactEnrichmentStatus @default(PENDING) @map("enrichment_status")
+  phoneReceivedAt    DateTime?               @map("phone_received_at")
+  /// Provider that found the email (Feature 27: Waterfall enrichment).
+  emailSource        Provider?               @map("email_source")
+  /// Cost to enrich email via waterfall (Feature 27).
+  emailCost          Float?                  @map("email_cost")
+  /// Provider that found the phone (Feature 27: Waterfall enrichment).
+  phoneSource        Provider?               @map("phone_source")
+  /// Cost to enrich phone via waterfall (Feature 27).
+  phoneCost          Float?                  @map("phone_cost")
+  /// Number of provider enrichment attempts for this contact (Feature 27).
+  enrichmentAttempts Int                     @default(0) @map("enrichment_attempts")
+  /// Phone enrichment quality gate result: ACCEPTED_STATE / DO_NOT_CALL / UNKNOWN.
+  callStatus         CallStatus?             @map("call_status")
+  /// DNC scrub API result: NOT_CHECKED / CLEAN / ON_DNC_LIST.
+  dncStatus          DncStatus?              @map("dnc_status")
+  /// Findymail email verification result (US6).
+  emailVerified      Boolean?                @map("email_verified")
+  /// Email provider detected by Findymail, e.g. "Google", "Microsoft" (US6).
+  emailProvider      String?                 @map("email_provider")
+  /// Cost of Findymail verification call for this contact (US6).
+  verificationCost   Float?                  @map("verification_cost")
+  createdAt          DateTime                @default(now()) @map("created_at")
+  updatedAt          DateTime                @updatedAt @map("updated_at")
+
+  // Relations
+  job                 Job                  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobCompany          JobCompany           @relation(fields: [jobCompanyId], references: [id], onDelete: Cascade)
+  pendingPhoneLookups PendingPhoneLookup[]
+  providerAttempts    ProviderAttempt[] // Feature 27: Enrichment attempts
+
+  @@index([jobId])
+  @@index([jobCompanyId])
+  @@index([personaType])
+  @@index([enrichmentStatus])
+  @@map("job_contacts")
+}
+
+/// Correlation table for Apollo.io async phone webhook delivery.
+model PendingPhoneLookup {
+  id              String            @id @default(uuid()) @db.Uuid
+  jobId           String            @map("job_id") @db.Uuid
+  jobContactId    String            @map("job_contact_id") @db.Uuid
+  apolloRequestId String            @unique @map("apollo_request_id")
+  status          PhoneLookupStatus @default(PENDING)
+  phoneData       Json?             @map("phone_data") @db.JsonB
+  expiresAt       DateTime          @map("expires_at")
+  receivedAt      DateTime?         @map("received_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  // Relations
+  job        Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobContact JobContact @relation(fields: [jobContactId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([status])
+  @@map("pending_phone_lookups")
+}
+
+/// Cached technology report results to avoid duplicate API charges (FR-018).
+model TechReportCache {
+  id                 String   @id @default(uuid()) @db.Uuid
+  queryHash          String   @unique @map("query_hash")
+  technology         String
+  country            String?
+  stateRegion        String?  @map("state_region")
+  companySize        String?  @map("company_size")
+  trafficLevel       String?  @map("traffic_level")
+  resultCount        Int      @map("result_count")
+  resultFileUrl      String   @map("result_file_url")
+  requestedByUserId  String   @map("requested_by_user_id")
+  requestedInChannel String   @map("requested_in_channel")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  // Relations
+  entries TechReportCacheEntry[]
+
+  @@index([technology])
+  @@index([createdAt])
+  @@map("tech_report_caches")
+}
+
+/// Individual company entry within a cached tech report.
+model TechReportCacheEntry {
+  id                 String  @id @default(uuid()) @db.Uuid
+  cacheId            String  @map("cache_id") @db.Uuid
+  domain             String
+  companyName        String? @map("company_name")
+  country            String?
+  stateRegion        String? @map("state_region")
+  city               String?
+  trafficRank        Int?    @map("traffic_rank")
+  technologyDetected String  @map("technology_detected")
+
+  // Relations
+  cache TechReportCache @relation(fields: [cacheId], references: [id], onDelete: Cascade)
+
+  @@index([cacheId])
+  @@index([domain])
+  @@map("tech_report_cache_entries")
+}
+
+/// Tracks API usage per job for cost attribution (FR-019).
+model ApiUsageLog {
+  id               String     @id @default(uuid()) @db.Uuid
+  jobId            String     @map("job_id") @db.Uuid
+  service          ApiService
+  endpoint         String
+  requestCount     Int        @default(1) @map("request_count")
+  creditsConsumed  Decimal?   @map("credits_consumed")
+  tokensInput      Int?       @map("tokens_input")
+  tokensOutput     Int?       @map("tokens_output")
+  estimatedCostUsd Decimal?   @map("estimated_cost_usd")
+  responseStatus   Int?       @map("response_status")
+  durationMs       Int?       @map("duration_ms")
+  slackTeamId      String?    @map("slack_team_id")
+  createdAt        DateTime   @default(now()) @map("created_at")
+
+  // Relations
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([service])
+  @@index([createdAt])
+  @@index([slackTeamId])
+  @@map("api_usage_logs")
+}
+
+/// Immutable audit trail for all user-facing actions (Constitution Principle V - SOC 2).
+/// Append-only: no UPDATE or DELETE. No updated_at field.
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  action      String   @map("action")
+  actorUserId String   @map("actor_user_id")
+  actorTeamId String?  @map("actor_team_id")
+  targetType  String?  @map("target_type")
+  targetId    String?  @map("target_id")
+  channelId   String?  @map("channel_id")
+  metadata    Json?    @map("metadata")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// /filter and /analyze Models
+// ---------------------------------------------------------------------------
+
+/// Per-channel configuration documents for /analyze command.
+/// Stores ICP, UseCases, Campaigns, and Settings markdown docs.
+model ChannelConfigDoc {
+  id               String        @id @default(uuid()) @db.Uuid
+  slackTeamId      String        @map("slack_team_id")
+  slackChannelId   String        @map("slack_channel_id")
+  docType          ConfigDocType @map("doc_type")
+  clientId         String?       @map("client_id") @db.Uuid
+  content          String        @db.Text
+  uploadedByUserId String        @map("uploaded_by_user_id")
+  originalFileName String?       @map("original_file_name")
+  displayLabel     String?       @map("display_label")
+  s3Key            String?       @map("s3_key")
+  originalMimeType String?       @map("original_mime_type")
+  contentSizeBytes Int?          @map("content_size_bytes")
+  version          Int           @default(1)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  client ManagedClient? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@unique([slackTeamId, slackChannelId, docType])
+  @@index([slackTeamId, slackChannelId])
+  @@index([clientId])
+  @@map("channel_config_docs")
+}
+
+/// Tracks /filter operations on uploaded lists.
+model FilterJob {
+  id             String          @id @default(uuid()) @db.Uuid
+  slackChannelId String          @map("slack_channel_id")
+  slackThreadTs  String          @map("slack_thread_ts")
+  slackUserId    String          @map("slack_user_id")
+  slackTeamId    String          @map("slack_team_id")
+  status         FilterJobStatus @default(PENDING)
+  sourceFileName String?         @map("source_file_name")
+  sourceFileType SourceFileType? @map("source_file_type")
+  sourceRowCount Int?            @map("source_row_count")
+  resultRowCount Int?            @map("result_row_count")
+  filterCriteria Json?           @map("filter_criteria") @db.JsonB
+  filterMode     String?         @map("filter_mode")
+  resultFileUrl  String?         @map("result_file_url")
+  resultFileName String?         @map("result_file_name")
+  errorMessage   String?         @map("error_message") @db.Text
+  startedAt      DateTime?       @map("started_at")
+  completedAt    DateTime?       @map("completed_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  @@index([slackChannelId])
+  @@index([slackUserId])
+  @@index([status])
+  @@map("filter_jobs")
+}
+
+/// Tracks /split operations on uploaded lists.
+model SplitJob {
+  id               String          @id @default(uuid()) @db.Uuid
+  slackChannelId   String          @map("slack_channel_id")
+  slackThreadTs    String          @map("slack_thread_ts")
+  slackUserId      String          @map("slack_user_id")
+  slackTeamId      String          @map("slack_team_id")
+  status           SplitJobStatus  @default(PENDING)
+  sourceFileName   String?         @map("source_file_name")
+  sourceFileType   SourceFileType? @map("source_file_type")
+  sourceRowCount   Int?            @map("source_row_count")
+  splitMode        SplitMode       @map("split_mode")
+  splitColumn      String?         @map("split_column")
+  splitCount       Int             @map("split_count")
+  clientName       String?         @map("client_name")
+  campaignName     String?         @map("campaign_name")
+  resultFileUrls   String[]        @default([]) @map("result_file_urls")
+  resultFileNames  String[]        @default([]) @map("result_file_names")
+  resultFileCounts Int[]           @default([]) @map("result_file_counts")
+  errorMessage     String?         @map("error_message") @db.Text
+  startedAt        DateTime?       @map("started_at")
+  completedAt      DateTime?       @map("completed_at")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  @@index([slackChannelId])
+  @@index([slackUserId])
+  @@index([status])
+  @@map("split_jobs")
+}
+
+/// Tracks /analyze report generation jobs.
+model AnalysisJob {
+  id                  String            @id @default(uuid()) @db.Uuid
+  slackChannelId      String            @map("slack_channel_id")
+  slackThreadTs       String            @map("slack_thread_ts")
+  slackUserId         String            @map("slack_user_id")
+  slackTeamId         String            @map("slack_team_id")
+  status              AnalysisJobStatus @default(PENDING)
+  sourceJobIds        String[]          @default([]) @map("source_job_ids")
+  sourceFileNames     String[]          @default([]) @map("source_file_names")
+  companyCount        Int?              @map("company_count")
+  contactCount        Int?              @map("contact_count")
+  hasIcp              Boolean           @default(false) @map("has_icp")
+  hasUseCases         Boolean           @default(false) @map("has_use_cases")
+  hasCampaigns        Boolean           @default(false) @map("has_campaigns")
+  hasSettings         Boolean           @default(false) @map("has_settings")
+  topOpportunityCount Int?              @map("top_opportunity_count")
+  resultPdfUrl        String?           @map("result_pdf_url")
+  resultPdfFileName   String?           @map("result_pdf_file_name")
+  summaryJson         Json?             @map("summary_json") @db.JsonB
+  errorMessage        String?           @map("error_message") @db.Text
+  bullmqJobId         String?           @map("bullmq_job_id")
+  startedAt           DateTime?         @map("started_at")
+  completedAt         DateTime?         @map("completed_at")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  apiUsageLogs AnalysisApiUsageLog[]
+
+  @@index([slackChannelId])
+  @@index([slackUserId])
+  @@index([status])
+  @@map("analysis_jobs")
+}
+
+/// A stored reference document belonging to a docs channel.
+/// Documents are scoped per channel -- the same slug may exist in different docs channels.
+model ClientDocument {
+  id               String         @id @default(uuid()) @db.Uuid
+  slackTeamId      String         @map("slack_team_id")
+  slackChannelId   String         @map("slack_channel_id")
+  slackUserId      String         @map("slack_user_id")
+  slackFileId      String?        @map("slack_file_id")
+  slug             String
+  label            String
+  summary          String?        @db.Text
+  documentType     DocumentType   @map("document_type")
+  status           DocumentStatus @default(PROCESSING)
+  version          Int            @default(1)
+  s3Key            String         @map("s3_key")
+  originalS3Key    String?        @map("original_s3_key")
+  originalFileName String         @map("original_file_name")
+  originalMimeType String         @map("original_mime_type")
+  contentSizeBytes Int?           @map("content_size_bytes")
+  errorMessage     String?        @map("error_message") @db.Text
+  slackThreadTs    String?        @map("slack_thread_ts")
+  parsedSettings   Json?          @map("parsed_settings") @db.JsonB
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  @@unique([slackTeamId, slackChannelId, slug])
+  @@index([slackTeamId])
+  @@index([slackTeamId, slackChannelId])
+  @@index([documentType])
+  @@index([status])
+  @@index([slackTeamId, documentType])
+  @@index([slackTeamId, slug])
+  @@map("client_documents")
+}
+
+/// Tracks explicitly registered docs channels for a workspace.
+model DocsChannelConfig {
+  id                 String   @id @default(uuid()) @db.Uuid
+  slackTeamId        String   @map("slack_team_id")
+  slackChannelId     String   @map("slack_channel_id")
+  channelName        String?  @map("channel_name")
+  registeredByUserId String   @map("registered_by_user_id")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@unique([slackTeamId, slackChannelId])
+  @@index([slackTeamId, isActive])
+  @@map("docs_channel_configs")
+}
+
+/// Tracks AI API usage and costs for /analyze report generation.
+model AnalysisApiUsageLog {
+  id               String   @id @default(uuid()) @db.Uuid
+  analysisJobId    String   @map("analysis_job_id") @db.Uuid
+  endpoint         String
+  tokensInput      Int?     @map("tokens_input")
+  tokensOutput     Int?     @map("tokens_output")
+  estimatedCostUsd Decimal? @map("estimated_cost_usd")
+  durationMs       Int?     @map("duration_ms")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Relations
+  analysisJob AnalysisJob @relation(fields: [analysisJobId], references: [id], onDelete: Cascade)
+
+  @@index([analysisJobId])
+  @@map("analysis_api_usage_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Admin Dashboard Models (Feature 3)
+// ---------------------------------------------------------------------------
+
+/// Admin users with individual API keys and/or password login for dashboard access.
+model AdminUser {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String
+  email        String    @unique
+  username     String?   @unique
+  passwordHash String?   @map("password_hash")
+  apiKeyHash   String?   @unique @map("api_key_hash")
+  role         AdminRole @default(VIEWER)
+  isActive     Boolean   @default(true) @map("is_active")
+  slackUserId  String?   @unique @map("slack_user_id") // Feature 31: Slack command authorization
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  acknowledgedErrors ErrorLog[]        @relation("ErrorAcknowledgedBy")
+  resolvedErrors     ErrorLog[]        @relation("ErrorResolvedBy")
+  budgetThresholds   BudgetThreshold[]
+  scheduledReports   ScheduledReport[]
+  retentionUpdates   RetentionConfig[] @relation("RetentionUpdatedBy")
+  createdLicenseKeys LicenseKey[]
+  // Feature 31 relations
+  auditActions       AuditAction[]
+  conflictDecisions  ConflictDecision[]
+
+  @@map("admin_users")
+}
+
+/// Centralized error tracking with lifecycle states.
+model ErrorLog {
+  id             String              @id @default(uuid()) @db.Uuid
+  category       ErrorCategory
+  service        String
+  message        String              @db.Text
+  stackTrace     String?             @map("stack_trace") @db.Text
+  jobId          String?             @map("job_id") @db.Uuid
+  slackUserId    String?             @map("slack_user_id")
+  slackChannelId String?             @map("slack_channel_id")
+  slackTeamId    String?             @map("slack_team_id")
+  metadata       Json?               @db.JsonB
+  lifecycleState ErrorLifecycleState @default(OPEN) @map("lifecycle_state")
+  acknowledgedBy String?             @map("acknowledged_by") @db.Uuid
+  acknowledgedAt DateTime?           @map("acknowledged_at")
+  resolvedBy     String?             @map("resolved_by") @db.Uuid
+  resolvedAt     DateTime?           @map("resolved_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  // Relations
+  job               Job?       @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  acknowledgedAdmin AdminUser? @relation("ErrorAcknowledgedBy", fields: [acknowledgedBy], references: [id], onDelete: SetNull)
+  resolvedAdmin     AdminUser? @relation("ErrorResolvedBy", fields: [resolvedBy], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([service])
+  @@index([lifecycleState])
+  @@index([jobId])
+  @@index([slackTeamId])
+  @@index([createdAt])
+  @@map("error_logs")
+}
+
+/// Configurable spending limits with monthly reset and Slack alerting.
+model BudgetThreshold {
+  id                 String      @id @default(uuid()) @db.Uuid
+  name               String
+  thresholdAmountUsd Decimal     @map("threshold_amount_usd")
+  providerScope      ApiService? @map("provider_scope")
+  slackChannelId     String      @map("slack_channel_id")
+  isActive           Boolean     @default(true) @map("is_active")
+  lastTriggeredAt    DateTime?   @map("last_triggered_at")
+  lastTriggeredMonth String?     @map("last_triggered_month")
+  createdBy          String      @map("created_by") @db.Uuid
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  creator AdminUser @relation(fields: [createdBy], references: [id])
+
+  @@index([isActive])
+  @@index([providerScope])
+  @@index([createdBy])
+  @@map("budget_thresholds")
+}
+
+/// Configuration for recurring automated reports delivered to Slack.
+model ScheduledReport {
+  id             String          @id @default(uuid()) @db.Uuid
+  name           String
+  reportType     ReportType      @map("report_type")
+  frequency      ReportFrequency
+  slackChannelId String          @map("slack_channel_id")
+  filters        Json?           @db.JsonB
+  bullmqJobKey   String?         @map("bullmq_job_key")
+  isActive       Boolean         @default(true) @map("is_active")
+  lastRunAt      DateTime?       @map("last_run_at")
+  lastError      String?         @map("last_error") @db.Text
+  createdBy      String          @map("created_by") @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  creator AdminUser @relation(fields: [createdBy], references: [id])
+
+  @@index([isActive])
+  @@index([frequency])
+  @@index([createdBy])
+  @@map("scheduled_reports")
+}
+
+/// Pre-computed daily cost and usage aggregates for fast trending queries.
+model DailyAggregate {
+  id                   String     @id @default(uuid()) @db.Uuid
+  date                 DateTime   @db.Date
+  service              ApiService
+  slackTeamId          String     @map("slack_team_id")
+  totalRequests        Int        @default(0) @map("total_requests")
+  totalCostUsd         Decimal    @default(0) @map("total_cost_usd")
+  totalTokensInput     Int        @default(0) @map("total_tokens_input")
+  totalTokensOutput    Int        @default(0) @map("total_tokens_output")
+  totalCreditsConsumed Decimal    @default(0) @map("total_credits_consumed")
+  errorCount           Int        @default(0) @map("error_count")
+  avgDurationMs        Int?       @map("avg_duration_ms")
+  createdAt            DateTime   @default(now()) @map("created_at")
+
+  @@unique([date, service, slackTeamId])
+  @@index([date])
+  @@index([service])
+  @@index([slackTeamId])
+  @@map("daily_aggregates")
+}
+
+/// Per-data-type retention periods. Admin-configurable.
+model RetentionConfig {
+  id            String    @id @default(uuid()) @db.Uuid
+  dataType      String    @unique @map("data_type")
+  retentionDays Int       @map("retention_days")
+  lastPurgedAt  DateTime? @map("last_purged_at")
+  updatedBy     String?   @map("updated_by") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  updatedByAdmin AdminUser? @relation("RetentionUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("retention_configs")
+}
+
+// ---------------------------------------------------------------------------
+// Enrichment Configuration Models
+// ---------------------------------------------------------------------------
+
+/// Per-workspace quality gate configuration.
+/// One-to-one with ManagedClient. When absent, global defaults apply.
+model QualityGateConfig {
+  id                      String   @id @default(uuid()) @db.Uuid
+  clientId                String   @unique @map("client_id") @db.Uuid
+  rejectPersonalEmails    Boolean  @default(true) @map("reject_personal_emails")
+  rejectMissingCompany    Boolean  @default(true) @map("reject_missing_company")
+  rejectDuplicateEmails   Boolean  @default(true) @map("reject_duplicate_emails")
+  deduplicateDomains      Boolean  @default(true) @map("deduplicate_domains")
+  suppressionDomains      String[] @default([]) @map("suppression_domains")
+  personalDomainOverrides String[] @default([]) @map("personal_domain_overrides")
+  allowPersonalDomains    String[] @default([]) @map("allow_personal_domains")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  client ManagedClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("quality_gate_configs")
+}
+
+/// Configurable Apollo contact search filter presets.
+/// One preset is marked as default and applied to all enrichment jobs
+/// unless overridden via Slack modal customization.
+/// scope: "global" = visible to all users, "private" = visible only to the creator.
+model EnrichmentPreset {
+  id                String   @id @default(uuid()) @db.Uuid
+  name              String
+  isDefault         Boolean  @default(false) @map("is_default")
+  scope             String   @default("global")
+  personSeniorities String[] @default([]) @map("person_seniorities")
+  personTitles      String[] @default([]) @map("person_titles")
+  personDepartments String[] @default([]) @map("person_departments")
+  personFunctions   String[] @default([]) @map("person_functions")
+  perPage           Int      @default(25) @map("per_page")
+  createdByUserId   String   @map("created_by_user_id")
+  createdByName     String?  @map("created_by_name")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([isDefault])
+  @@index([scope, createdByUserId])
+  @@map("enrichment_presets")
+}
+
+// ---------------------------------------------------------------------------
+// Agent Integration Models (Feature 5)
+// ---------------------------------------------------------------------------
+
+/// Stores OAuth installation data for each client workspace.
+/// Created during OAuth callback, deleted 90 days after uninstall.
+model WorkspaceInstallation {
+  id                  String          @id @default(cuid())
+  slackTeamId         String          @unique @map("slack_team_id")
+  slackTeamName       String          @map("slack_team_name")
+  botToken            String          @map("bot_token")
+  botId               String          @map("bot_id")
+  botUserId           String          @map("bot_user_id")
+  appId               String          @map("app_id")
+  installedByUserId   String          @map("installed_by_user_id")
+  scopes              String
+  status              WorkspaceStatus @default(ACTIVE)
+  uninstalledAt       DateTime?       @map("uninstalled_at")
+  purgeAfter          DateTime?       @map("purge_after")
+  monthlySpendCapUsd  Decimal?        @map("monthly_spend_cap_usd")
+  maxBuiltwithLookups Int?            @map("max_builtwith_lookups")
+  maxApolloCredits    Int?            @map("max_apollo_credits")
+  maxAiTokens         Int?            @map("max_ai_tokens")
+  onboardingComplete  Boolean         @default(false) @map("onboarding_complete")
+  settings            Json?           @db.JsonB
+  createdAt           DateTime        @default(now()) @map("created_at")
+  updatedAt           DateTime        @updatedAt @map("updated_at")
+
+  // Multi-tenant SaaS licensing fields (Feature 35)
+  workspaceType          WorkspaceType   @default(CLIENT) @map("workspace_type")
+  licenseKeyId           String?         @map("license_key_id")
+  featureFlags           Json            @default("{}") @map("feature_flags") @db.JsonB
+  onboardingStatus       OnboardingStep  @default(PENDING) @map("onboarding_status")
+  clientDashboardEnabled Boolean         @default(true) @map("client_dashboard_enabled")
+
+  // Vertical Pack Platform fields (Feature 39)
+  dailySpendLimitUsd   Decimal?  @map("daily_spend_limit_usd") @db.Decimal(10, 2)
+  dailySpendUsedUsd    Decimal   @default(0) @map("daily_spend_used_usd") @db.Decimal(10, 2)
+  dailySpendResetAt    DateTime? @map("daily_spend_reset_at")
+
+  // Relations
+  agentThreads       AgentThread[]
+  managedClients     ManagedClient[]
+  promptClickEvents  PromptClickEvent[] @relation("PromptClickEvents")
+  licenseKey         LicenseKey?        @relation(fields: [licenseKeyId], references: [id])
+  enrichmentChannels EnrichmentChannel[]
+  analysisChannel    AnalysisChannel?
+
+  @@map("workspace_installations")
+}
+
+/// Represents a single agent conversation in the side-panel.
+model AgentThread {
+  id                 String            @id @default(cuid())
+  slackThreadTs      String            @map("slack_thread_ts")
+  slackChannelId     String            @map("slack_channel_id")
+  slackUserId        String            @map("slack_user_id")
+  slackTeamId        String            @map("slack_team_id")
+  viewingChannelId   String?           @map("viewing_channel_id")
+  viewingChannelName String?           @map("viewing_channel_name")
+  title              String?
+  status             AgentThreadStatus @default(ACTIVE)
+  lastActivityAt     DateTime          @default(now()) @map("last_activity_at")
+  createdAt          DateTime          @default(now()) @map("created_at")
+
+  // Relations
+  workspace  WorkspaceInstallation @relation(fields: [slackTeamId], references: [slackTeamId])
+  turns      ConversationTurn[]
+  audit      AgentThreadAudit?
+  threadJobs AgentThreadJob[]
+
+  @@index([slackTeamId, slackUserId])
+  @@index([slackTeamId, slackThreadTs])
+  @@index([status, lastActivityAt])
+  @@map("agent_threads")
+}
+
+/// Individual message in an agent thread. Purged after 7 days.
+model ConversationTurn {
+  id              String           @id @default(cuid())
+  agentThreadId   String           @map("agent_thread_id")
+  role            ConversationRole
+  content         String           @db.Text
+  intent          String?
+  confidence      Float?
+  extractedParams Json?            @map("extracted_params") @db.JsonB
+  tokensInput     Int?             @map("tokens_input")
+  tokensOutput    Int?             @map("tokens_output")
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  agentThread AgentThread @relation(fields: [agentThreadId], references: [id], onDelete: Cascade)
+
+  @@index([agentThreadId])
+  @@index([createdAt])
+  @@map("conversation_turns")
+}
+
+/// Compact audit summary generated before conversation turns are purged. Permanent retention.
+model AgentThreadAudit {
+  id                  String   @id @default(cuid())
+  agentThreadId       String   @unique @map("agent_thread_id")
+  slackTeamId         String   @map("slack_team_id")
+  slackUserId         String   @map("slack_user_id")
+  threadTitle         String?  @map("thread_title")
+  turnCount           Int      @map("turn_count")
+  intentsClassified   Json     @map("intents_classified") @db.JsonB
+  jobsCreated         Json     @map("jobs_created") @db.JsonB
+  actionsPerformed    Json     @map("actions_performed") @db.JsonB
+  firstMessageAt      DateTime @map("first_message_at")
+  lastMessageAt       DateTime @map("last_message_at")
+  totalAiTokensInput  Int      @map("total_ai_tokens_input")
+  totalAiTokensOutput Int      @map("total_ai_tokens_output")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  // Relations
+  agentThread AgentThread @relation(fields: [agentThreadId], references: [id], onDelete: Cascade)
+
+  @@index([slackTeamId])
+  @@map("agent_thread_audits")
+}
+
+/// Junction table linking agent threads to jobs created within them.
+model AgentThreadJob {
+  id            String   @id @default(cuid())
+  agentThreadId String   @map("agent_thread_id")
+  jobId         String   @map("job_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  agentThread AgentThread @relation(fields: [agentThreadId], references: [id], onDelete: Cascade)
+  job         Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([agentThreadId, jobId])
+  @@index([agentThreadId])
+  @@index([jobId])
+  @@map("agent_thread_jobs")
+}
+
+// ---------------------------------------------------------------------------
+// BDR Onboarding Agent Enums (Feature 7)
+// ---------------------------------------------------------------------------
+
+enum TrainingItemType {
+  VIDEO
+  READING
+  QUIZ
+  PRACTICE_TASK
+  CHECKLIST
+  RESOURCE_LINK
+  REIMBURSEMENT_INFO
+}
+
+enum AutomationType {
+  CHECK_IN
+  REMINDER
+  WEEKLY_SUMMARY
+  CUSTOM_MESSAGE
+}
+
+enum OnboardingEnrollmentStatus {
+  ACTIVE
+  SUPERVISED
+  PENDING_GRADUATION
+  GRADUATED
+  EXTENDED
+  CANCELLED
+}
+
+enum OnboardingModuleStatus {
+  PENDING
+  DELIVERED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum ManagerReviewStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+// ---------------------------------------------------------------------------
+// BDR Manager Agent Enums (Feature 6)
+// ---------------------------------------------------------------------------
+
+enum CampaignType {
+  EMAIL
+  PHONE
+  LINKEDIN
+  MULTI_CHANNEL
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum StepType {
+  EMAIL
+  PHONE
+  LINKEDIN
+}
+
+enum ContactCampaignStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  RESPONDED
+  SKIPPED
+  REMOVED
+}
+
+enum StepExecutionStatus {
+  PENDING
+  FIRED
+  WAITING_WEBHOOK
+  COMPLETED
+  SKIPPED
+  FAILED
+}
+
+enum WebhookSource {
+  INSTANTLY
+  HEYREACH
+  HUBSPOT
+}
+
+enum ReplyChannel {
+  EMAIL
+  LINKEDIN
+}
+
+enum SmartReplyDraftStatus {
+  GENERATING
+  READY
+  SENT
+  REJECTED
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// BDR Manager Agent Models (Feature 6)
+// ---------------------------------------------------------------------------
+
+/// Central campaign entity for multi-channel outreach orchestration.
+/// Lifecycle: DRAFT -> ACTIVE -> PAUSED -> COMPLETED -> ARCHIVED
+model Campaign {
+  id                   String         @id @default(uuid()) @db.Uuid
+  slackTeamId          String         @map("slack_team_id")
+  name                 String
+  description          String?        @db.Text
+  campaignType         CampaignType   @map("campaign_type")
+  status               CampaignStatus @default(DRAFT)
+  icpDefinition        String?        @map("icp_definition") @db.Text
+  meetingLink          String?        @map("meeting_link")
+  callScript           String?        @map("call_script") @db.Text
+  emailSequenceCopy    String?        @map("email_sequence_copy") @db.Text
+  linkedinSequenceCopy String?        @map("linkedin_sequence_copy") @db.Text
+  hubspotListId        String?        @map("hubspot_list_id")
+  externalListId       String?        @map("external_list_id")
+  instantlyCampaignId  String?        @map("instantly_campaign_id")
+  heyreachCampaignId   String?        @map("heyreach_campaign_id")
+  totalContacts        Int            @default(0) @map("total_contacts")
+  activeContacts       Int            @default(0) @map("active_contacts")
+  completedContacts    Int            @default(0) @map("completed_contacts")
+  clientId             String?        @map("client_id") @db.Uuid
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  client                ManagedClient?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  sequenceSteps         CampaignSequenceStep[]
+  contacts              CampaignContact[]
+  bdrs                  CampaignBdr[]
+  dailyActivities       DailyBdrActivity[]
+  eodReports            EodReport[]
+  uniboxReplies         UniboxReply[]
+  onboardingEnrollments OnboardingEnrollment[]
+  dialerSessions        DialerSession[]
+
+  @@index([slackTeamId])
+  @@index([status])
+  @@index([clientId])
+  @@index([createdAt])
+  @@map("campaigns")
+}
+
+/// An ordered step within a campaign's outreach sequence.
+model CampaignSequenceStep {
+  id         String   @id @default(uuid()) @db.Uuid
+  campaignId String   @map("campaign_id") @db.Uuid
+  stepOrder  Int      @map("step_order")
+  stepType   StepType @map("step_type")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, stepOrder])
+  @@index([campaignId])
+  @@map("campaign_sequence_steps")
+}
+
+/// A contact imported from HubSpot into a campaign with sequence tracking.
+model CampaignContact {
+  id               String                @id @default(uuid()) @db.Uuid
+  campaignId       String                @map("campaign_id") @db.Uuid
+  hubspotContactId String?               @map("hubspot_contact_id")
+  firstName        String                @map("first_name")
+  lastName         String                @map("last_name")
+  email            String?
+  emailVerified    Boolean               @default(false) @map("email_verified")
+  mobilePhone      String?               @map("mobile_phone")
+  directPhone      String?               @map("direct_phone")
+  linkedinUrl      String?               @map("linkedin_url")
+  companyName      String?               @map("company_name")
+  jobTitle         String?               @map("job_title")
+  currentStepIndex Int                   @default(0) @map("current_step_index")
+  status           ContactCampaignStatus @default(ACTIVE)
+  statusReason     String?               @map("status_reason")
+  resolvedPhone    String?               @map("resolved_phone")
+  canEmail         Boolean               @default(false) @map("can_email")
+  canCall          Boolean               @default(false) @map("can_call")
+  canLinkedin      Boolean               @default(false) @map("can_linkedin")
+  startedAt        DateTime?             @map("started_at")
+  completedAt      DateTime?             @map("completed_at")
+  lastActivityAt   DateTime?             @map("last_activity_at")
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+
+  // Personality enrichment (populated via on-demand enrichment)
+  personalityData       Json?     @map("personality_data") @db.JsonB
+  personalityEnrichedAt DateTime? @map("personality_enriched_at")
+
+  // Relations
+  campaign           Campaign                       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  stepExecutions     CampaignContactStepExecution[]
+  uniboxReplies      UniboxReply[]
+  dialerCallSessions CallSession[]
+  dialerQueueItems   DialerQueueItem[]
+
+  @@index([campaignId])
+  @@index([status])
+  @@index([campaignId, currentStepIndex])
+  @@index([campaignId, status])
+  @@map("campaign_contacts")
+}
+
+/// Per-step execution record tracking what happened at each sequence step.
+model CampaignContactStepExecution {
+  id                String              @id @default(uuid()) @db.Uuid
+  campaignContactId String              @map("campaign_contact_id") @db.Uuid
+  stepIndex         Int                 @map("step_index")
+  stepType          StepType            @map("step_type")
+  status            StepExecutionStatus @default(PENDING)
+  result            String?
+  externalId        String?             @map("external_id")
+  firedAt           DateTime?           @map("fired_at")
+  completedAt       DateTime?           @map("completed_at")
+  createdAt         DateTime            @default(now()) @map("created_at")
+
+  // Relations
+  campaignContact   CampaignContact  @relation(fields: [campaignContactId], references: [id], onDelete: Cascade)
+  dialerCallSession CallSession?
+  dialerQueueItem   DialerQueueItem?
+
+  @@index([campaignContactId])
+  @@index([status])
+  @@index([campaignContactId, stepIndex])
+  @@map("campaign_contact_step_executions")
+}
+
+/// Junction table linking a BDR (Slack user) to a campaign.
+model CampaignBdr {
+  id          String   @id @default(uuid()) @db.Uuid
+  campaignId  String   @map("campaign_id") @db.Uuid
+  slackUserId String   @map("slack_user_id")
+  slackTeamId String   @map("slack_team_id")
+  displayName String   @map("display_name")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, slackUserId])
+  @@index([campaignId])
+  @@index([slackUserId])
+  @@map("campaign_bdrs")
+}
+
+/// Audit log for all inbound webhooks from Instantly and HeyReach.
+model WebhookEvent {
+  id                 String        @id @default(uuid()) @db.Uuid
+  source             WebhookSource
+  eventType          String        @map("event_type")
+  campaignId         String?       @map("campaign_id") @db.Uuid
+  contactEmail       String?       @map("contact_email")
+  contactLinkedinUrl String?       @map("contact_linkedin_url")
+  rawPayload         Json          @map("raw_payload") @db.JsonB
+  processed          Boolean       @default(false)
+  processedAt        DateTime?     @map("processed_at")
+  createdAt          DateTime      @default(now()) @map("created_at")
+
+  @@index([source, processed])
+  @@index([contactEmail])
+  @@index([campaignId])
+  @@index([createdAt])
+  @@map("webhook_events")
+}
+
+/// Stored reply data from Instantly/HeyReach webhooks for the UniBox.
+model UniboxReply {
+  id                String       @id @default(uuid()) @db.Uuid
+  campaignId        String       @map("campaign_id") @db.Uuid
+  campaignContactId String?      @map("campaign_contact_id") @db.Uuid
+  channel           ReplyChannel
+  fromName          String?      @map("from_name")
+  fromEmail         String?      @map("from_email")
+  fromLinkedinUrl   String?      @map("from_linkedin_url")
+  subject           String?
+  body              String       @db.Text
+  rawPayload        Json?        @map("raw_payload") @db.JsonB
+  externalId        String?      @map("external_id")
+  isRead            Boolean      @default(false) @map("is_read")
+  receivedAt        DateTime     @map("received_at")
+  createdAt         DateTime     @default(now()) @map("created_at")
+
+  // Smart Reply Draft fields (all nullable for backwards compatibility)
+  draftBody        String?               @map("draft_body") @db.Text
+  draftStatus      SmartReplyDraftStatus? @map("draft_status")
+  draftIntent      String?               @map("draft_intent")
+  draftGeneratedAt DateTime?             @map("draft_generated_at")
+  draftTokensUsed  Int?                  @map("draft_tokens_used")
+  draftCostUsd     Decimal?              @map("draft_cost_usd") @db.Decimal(10, 6)
+  draftError       String?               @map("draft_error") @db.Text
+
+  // Relations
+  campaign        Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignContact CampaignContact? @relation(fields: [campaignContactId], references: [id], onDelete: SetNull)
+
+  @@index([campaignId])
+  @@index([campaignContactId])
+  @@index([isRead])
+  @@index([receivedAt])
+  @@index([draftStatus])
+  @@map("unibox_replies")
+}
+
+/// Aggregated daily stats per BDR per campaign.
+model DailyBdrActivity {
+  id                      String   @id @default(uuid()) @db.Uuid
+  campaignId              String   @map("campaign_id") @db.Uuid
+  slackUserId             String   @map("slack_user_id")
+  date                    DateTime @db.Date
+  emailsSent              Int      @default(0) @map("emails_sent")
+  linkedinActionsSent     Int      @default(0) @map("linkedin_actions_sent")
+  callsCompleted          Int      @default(0) @map("calls_completed")
+  emailRepliesReceived    Int      @default(0) @map("email_replies_received")
+  linkedinRepliesReceived Int      @default(0) @map("linkedin_replies_received")
+  supervised              Boolean  @default(false)
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, slackUserId, date])
+  @@index([slackUserId, date])
+  @@index([campaignId])
+  @@map("daily_bdr_activities")
+}
+
+/// End-of-day report per BDR with automated stats and optional notes.
+model EodReport {
+  id          String   @id @default(uuid()) @db.Uuid
+  campaignId  String?  @map("campaign_id") @db.Uuid
+  slackUserId String   @map("slack_user_id")
+  slackTeamId String   @map("slack_team_id")
+  date        DateTime @db.Date
+  stats       Json     @db.JsonB
+  bdrNotes    String?  @map("bdr_notes") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([slackUserId, date])
+  @@index([slackTeamId, date])
+  @@map("eod_reports")
+}
+
+// ---------------------------------------------------------------------------
+// Client & BDR Management Models
+// ---------------------------------------------------------------------------
+
+/// A business client entity with encrypted external API keys.
+/// Each client owns their own Instantly, HeyReach, and HubSpot credentials.
+model ManagedClient {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String
+  slug            String   @unique
+  slackTeamId     String?  @map("slack_team_id")
+  instantlyApiKey String?  @map("instantly_api_key") @db.Text
+  heyreachApiKey  String?  @map("heyreach_api_key") @db.Text
+  hubspotApiKey   String?  @map("hubspot_api_key") @db.Text
+  hubspotPortalId String?  @map("hubspot_portal_id")
+  isActive                  Boolean  @default(true) @map("is_active")
+  connectedCallTimerSeconds Int      @default(45) @map("connected_call_timer_seconds")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  workspace           WorkspaceInstallation? @relation(fields: [slackTeamId], references: [slackTeamId])
+  bdrs                BdrClient[]
+  campaigns           Campaign[]
+  channelMappings     ChannelClientMapping[]
+  jobs                Job[]
+  creditTransactions  CreditTransaction[]
+  hubspotConnection   HubSpotConnection?
+  qualityGateConfig   QualityGateConfig?
+  crmConnections      CrmConnection[]
+  workflows           WorkflowTemplate[]
+  configDocs          ChannelConfigDoc[]
+  dialerSessions      DialerSession[]
+  callSessions        CallSession[]
+  callRecordings      CallRecording[]
+  callQualityMetrics  CallQualityMetric[]
+  twilioPhoneNumbers  TwilioPhoneNumber[]
+  uncallableContacts  UncallableContact[]
+  analyticsSavedViews AnalyticsSavedView[]
+  scheduledCallbacks  ScheduledCallback[]
+
+  @@index([isActive])
+  @@index([slackTeamId])
+  @@map("managed_clients")
+}
+
+/// Maps a Slack channel to a ManagedClient for config doc association.
+model ChannelClientMapping {
+  id              String   @id @default(uuid()) @db.Uuid
+  slackTeamId     String   @map("slack_team_id")
+  slackChannelId  String   @map("slack_channel_id")
+  clientId        String   @map("client_id") @db.Uuid
+  createdByUserId String   @map("created_by_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  client ManagedClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([slackTeamId, slackChannelId])
+  @@index([clientId])
+  @@map("channel_client_mappings")
+}
+
+/// A Business Development Representative linked to a Slack user.
+model Bdr {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  email       String?
+  managerId   String?  @map("manager_id")
+  slackUserId String   @map("slack_user_id")
+  slackTeamId String   @map("slack_team_id")
+  isActive    Boolean  @default(true) @map("is_active")
+  metadata    Json?    @db.JsonB
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  clients            BdrClient[]
+  dialerSessions     DialerSession[]
+  callSessions       CallSession[]
+  callRecordings     CallRecording[]
+  callQualityMetrics CallQualityMetric[]
+  scheduledCallbacks ScheduledCallback[]
+
+  @@unique([slackUserId, slackTeamId])
+  @@index([slackUserId])
+  @@index([isActive])
+  @@map("bdrs")
+}
+
+/// Many-to-many junction between BDRs and Clients.
+model BdrClient {
+  id        String   @id @default(uuid()) @db.Uuid
+  bdrId     String   @map("bdr_id") @db.Uuid
+  clientId  String   @map("client_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  bdr    Bdr           @relation(fields: [bdrId], references: [id], onDelete: Cascade)
+  client ManagedClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([bdrId, clientId])
+  @@index([bdrId])
+  @@index([clientId])
+  @@map("bdr_clients")
+}
+
+// ---------------------------------------------------------------------------
+// BDR Onboarding Agent Models (Feature 7)
+// ---------------------------------------------------------------------------
+
+/// A reusable template defining a BDR onboarding program structure.
+/// Plans are versioned — edits create new records with incremented version numbers.
+model OnboardingPlan {
+  id                 String   @id @default(uuid()) @db.Uuid
+  slackTeamId        String   @map("slack_team_id")
+  name               String
+  description        String?  @db.Text
+  durationDays       Int      @map("duration_days")
+  supervisedStartDay Int?     @map("supervised_start_day")
+  version            Int      @default(1)
+  isLatest           Boolean  @default(true) @map("is_latest")
+  parentPlanId       String?  @map("parent_plan_id") @db.Uuid
+  weekdaysOnly       Boolean  @default(true) @map("weekdays_only")
+  createdByUserId    String   @map("created_by_user_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  parentPlan  OnboardingPlan?        @relation("PlanVersions", fields: [parentPlanId], references: [id], onDelete: SetNull)
+  childPlans  OnboardingPlan[]       @relation("PlanVersions")
+  modules     OnboardingModule[]
+  enrollments OnboardingEnrollment[]
+
+  @@index([slackTeamId, isLatest])
+  @@index([parentPlanId])
+  @@map("onboarding_plans")
+}
+
+/// A single day's training content within a plan.
+model OnboardingModule {
+  id               String   @id @default(uuid()) @db.Uuid
+  planId           String   @map("plan_id") @db.Uuid
+  dayNumber        Int      @map("day_number")
+  weekNumber       Int      @map("week_number")
+  title            String
+  description      String?  @db.Text
+  estimatedMinutes Int?     @map("estimated_minutes")
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  plan           OnboardingPlan         @relation(fields: [planId], references: [id], onDelete: Cascade)
+  trainingItems  TrainingItem[]
+  automations    OnboardingAutomation[]
+  moduleProgress ModuleProgress[]
+
+  @@unique([planId, dayNumber])
+  @@index([planId, dayNumber])
+  @@map("onboarding_modules")
+}
+
+/// An individual piece of training content within a module.
+model TrainingItem {
+  id               String           @id @default(uuid()) @db.Uuid
+  moduleId         String           @map("module_id") @db.Uuid
+  type             TrainingItemType
+  title            String
+  content          String?          @db.Text
+  metadata         Json?            @db.JsonB
+  estimatedMinutes Int?             @map("estimated_minutes")
+  sortOrder        Int              @default(0) @map("sort_order")
+  libraryItemId    String?          @map("library_item_id") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  module      OnboardingModule    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  libraryItem ContentLibraryItem? @relation(fields: [libraryItemId], references: [id], onDelete: SetNull)
+
+  @@index([moduleId, sortOrder])
+  @@map("training_items")
+}
+
+/// A scheduled action attached to a module/day.
+model OnboardingAutomation {
+  id          String         @id @default(uuid()) @db.Uuid
+  moduleId    String         @map("module_id") @db.Uuid
+  type        AutomationType
+  triggerTime String         @map("trigger_time")
+  content     String?        @db.Text
+  conditions  Json?          @db.JsonB
+  sortOrder   Int            @default(0) @map("sort_order")
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  // Relations
+  module           OnboardingModule  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  checkinResponses CheckinResponse[]
+
+  @@index([moduleId])
+  @@map("onboarding_automations")
+}
+
+/// An instance of a BDR going through an onboarding plan.
+model OnboardingEnrollment {
+  id                   String                     @id @default(uuid()) @db.Uuid
+  slackTeamId          String                     @map("slack_team_id")
+  slackUserId          String                     @map("slack_user_id")
+  bdrName              String                     @map("bdr_name")
+  planId               String                     @map("plan_id") @db.Uuid
+  managerId            String                     @map("manager_id")
+  startDate            DateTime                   @map("start_date") @db.Date
+  deliveryHour         Int                        @map("delivery_hour")
+  timezone             String
+  status               OnboardingEnrollmentStatus @default(ACTIVE)
+  currentDay           Int                        @default(0) @map("current_day")
+  supervisedCampaignId String?                    @map("supervised_campaign_id") @db.Uuid
+  graduatedAt          DateTime?                  @map("graduated_at")
+  cancelledAt          DateTime?                  @map("cancelled_at")
+  extendedDays         Int                        @default(0) @map("extended_days")
+  createdAt            DateTime                   @default(now()) @map("created_at")
+  updatedAt            DateTime                   @updatedAt @map("updated_at")
+
+  // Relations
+  plan               OnboardingPlan    @relation(fields: [planId], references: [id])
+  supervisedCampaign Campaign?         @relation(fields: [supervisedCampaignId], references: [id], onDelete: SetNull)
+  moduleProgress     ModuleProgress[]
+  checkinResponses   CheckinResponse[]
+
+  @@index([slackUserId, status])
+  @@index([slackTeamId, status])
+  @@index([planId])
+  @@map("onboarding_enrollments")
+}
+
+/// Per-module completion tracking for an enrolled BDR.
+model ModuleProgress {
+  id                  String                 @id @default(uuid()) @db.Uuid
+  enrollmentId        String                 @map("enrollment_id") @db.Uuid
+  moduleId            String                 @map("module_id") @db.Uuid
+  dayNumber           Int                    @map("day_number")
+  status              OnboardingModuleStatus @default(PENDING)
+  deliveredAt         DateTime?              @map("delivered_at")
+  completedAt         DateTime?              @map("completed_at")
+  quizResponses       Json?                  @map("quiz_responses") @db.JsonB
+  quizScore           Float?                 @map("quiz_score")
+  practiceSubmission  String?                @map("practice_submission") @db.Text
+  managerReviewStatus ManagerReviewStatus?   @map("manager_review_status")
+  managerReviewedAt   DateTime?              @map("manager_reviewed_at")
+  checklistProgress   Json?                  @map("checklist_progress") @db.JsonB
+  deliveryMessageTs   String?                @map("delivery_message_ts")
+  deliveryFailed      Boolean                @default(false) @map("delivery_failed")
+  deliveryError       String?                @map("delivery_error") @db.Text
+  createdAt           DateTime               @default(now()) @map("created_at")
+  updatedAt           DateTime               @updatedAt @map("updated_at")
+
+  // Relations
+  enrollment OnboardingEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  module     OnboardingModule     @relation(fields: [moduleId], references: [id])
+
+  @@unique([enrollmentId, dayNumber])
+  @@index([enrollmentId, dayNumber])
+  @@index([enrollmentId, status])
+  @@map("module_progress")
+}
+
+/// Records BDR responses to check-in prompts.
+model CheckinResponse {
+  id           String   @id @default(uuid()) @db.Uuid
+  enrollmentId String   @map("enrollment_id") @db.Uuid
+  automationId String   @map("automation_id") @db.Uuid
+  dayNumber    Int      @map("day_number")
+  response     String   @db.Text
+  respondedAt  DateTime @default(now()) @map("responded_at")
+
+  // Relations
+  enrollment OnboardingEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  automation OnboardingAutomation @relation(fields: [automationId], references: [id])
+
+  @@index([enrollmentId, dayNumber])
+  @@map("checkin_responses")
+}
+
+// ---------------------------------------------------------------------------
+// Visual Workflow Builder Enums (Feature 7-workflow-builder)
+// ---------------------------------------------------------------------------
+
+enum WorkflowTriggerType {
+  FILE_UPLOAD
+  KEYWORD
+  SLASH_COMMAND
+  MANUAL
+  WEBHOOK
+}
+
+enum WorkflowVersionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum WorkflowExecutionStatus {
+  ACTIVE
+  WAITING_INPUT
+  WAITING_DELAY
+  COMPLETED
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+enum WorkflowNodeType {
+  TRIGGER
+  MESSAGE
+  BUTTON_CHOICE
+  FORM_MODAL
+  ENRICHMENT
+  CONDITION
+  ACTION
+  DELAY
+  HUBSPOT
+  PARSER
+  API_CALL
+}
+
+enum WebhookEndpointStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// ---------------------------------------------------------------------------
+// Visual Workflow Builder Models (Feature 7-workflow-builder)
+// ---------------------------------------------------------------------------
+
+/// A named workflow "blueprint" representing a Slack interaction flow.
+/// Owns all versions. Scoped to an optional client for per-client workflow routing.
+model WorkflowTemplate {
+  id              String              @id @default(uuid()) @db.Uuid
+  slackTeamId     String              @map("slack_team_id")
+  name            String
+  description     String?             @db.Text
+  triggerType     WorkflowTriggerType @map("trigger_type")
+  isActive        Boolean             @default(false) @map("is_active")
+  clientId        String?             @map("client_id") @db.Uuid
+  createdByUserId String              @map("created_by_user_id")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  client           ManagedClient?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  versions         WorkflowVersion[]
+  webhookEndpoints WebhookEndpoint[]
+  channelMappings  WorkflowChannelMapping[]
+
+  @@index([slackTeamId])
+  @@index([slackTeamId, triggerType])
+  @@index([clientId])
+  @@index([slackTeamId, triggerType, clientId])
+  @@map("workflow_templates")
+}
+
+/// Maps a Slack channel directly to a specific workflow, scoped by trigger type.
+/// Provides channel-level override (tier-1) in the 3-tier workflow resolution.
+model WorkflowChannelMapping {
+  id              String              @id @default(uuid()) @db.Uuid
+  templateId      String              @map("template_id") @db.Uuid
+  slackChannelId  String              @map("slack_channel_id")
+  slackTeamId     String              @map("slack_team_id")
+  triggerType     WorkflowTriggerType @map("trigger_type")
+  createdByUserId String              @map("created_by_user_id")
+  createdAt       DateTime            @default(now()) @map("created_at")
+
+  // Relations
+  template WorkflowTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([slackTeamId, slackChannelId, triggerType])
+  @@index([templateId])
+  @@index([slackTeamId, slackChannelId])
+  @@map("workflow_channel_mappings")
+}
+
+/// A point-in-time snapshot of a workflow's graph configuration.
+/// Each publish creates a new version; executions are pinned to a specific version.
+model WorkflowVersion {
+  id                String                @id @default(uuid()) @db.Uuid
+  templateId        String                @map("template_id") @db.Uuid
+  version           Int                   @default(1)
+  status            WorkflowVersionStatus @default(DRAFT)
+  graph             Json                  @db.JsonB
+  publishedAt       DateTime?             @map("published_at")
+  publishedByUserId String?               @map("published_by_user_id")
+  createdAt         DateTime              @default(now()) @map("created_at")
+  updatedAt         DateTime              @updatedAt @map("updated_at")
+
+  // Relations
+  template         WorkflowTemplate    @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  executions       WorkflowExecution[]
+  webhookEndpoints WebhookEndpoint[]
+
+  @@unique([templateId, version])
+  @@index([templateId, status])
+  @@map("workflow_versions")
+}
+
+/// A single run of a workflow by a Slack user. Pinned to a specific version via FK.
+/// Contains nodeHistory JSONB array for per-node execution analytics.
+model WorkflowExecution {
+  id             String                  @id @default(uuid()) @db.Uuid
+  versionId      String                  @map("version_id") @db.Uuid
+  slackTeamId    String                  @map("slack_team_id")
+  slackUserId    String                  @map("slack_user_id")
+  slackChannelId String                  @map("slack_channel_id")
+  slackThreadTs  String?                 @map("slack_thread_ts")
+  status         WorkflowExecutionStatus @default(ACTIVE)
+  currentNodeId  String?                 @map("current_node_id")
+  context        Json                    @default("{}") @db.JsonB
+  nodeHistory    Json                    @default("[]") @db.JsonB
+  nodeProgress   Json?                   @map("node_progress") @db.JsonB
+  webhookToken   String?                 @map("webhook_token")
+  errorMessage   String?                 @map("error_message") @db.Text
+  expiresAt      DateTime                @map("expires_at")
+  startedAt      DateTime                @default(now()) @map("started_at")
+  completedAt    DateTime?               @map("completed_at")
+  createdAt      DateTime                @default(now()) @map("created_at")
+  updatedAt      DateTime                @updatedAt @map("updated_at")
+
+  // Relations
+  version     WorkflowVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  webhookLogs WebhookLog[]
+
+  @@index([slackTeamId, slackUserId])
+  @@index([slackChannelId, slackThreadTs])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([versionId])
+  @@map("workflow_executions")
+}
+
+/// A generated webhook URL tied to a workflow's TRIGGER node.
+/// Created on publish, deactivated on archive.
+model WebhookEndpoint {
+  id           String                @id @default(uuid()) @db.Uuid
+  templateId   String                @map("template_id") @db.Uuid
+  versionId    String                @map("version_id") @db.Uuid
+  token        String                @unique
+  hmacSecret   String                @map("hmac_secret")
+  description  String?
+  status       WebhookEndpointStatus @default(ACTIVE)
+  totalCalls   Int                   @default(0) @map("total_calls")
+  lastCalledAt DateTime?             @map("last_called_at")
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+
+  // Relations
+  template WorkflowTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  version  WorkflowVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  logs     WebhookLog[]
+
+  @@index([templateId])
+  @@index([status])
+  @@map("webhook_endpoints")
+}
+
+/// Log of incoming webhook requests for auditability.
+model WebhookLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  endpointId     String   @map("endpoint_id") @db.Uuid
+  sourceIp       String?  @map("source_ip")
+  validated      Boolean
+  payloadHash    String?  @map("payload_hash")
+  responseStatus Int      @map("response_status")
+  executionId    String?  @map("execution_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  endpoint  WebhookEndpoint    @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  execution WorkflowExecution? @relation(fields: [executionId], references: [id], onDelete: SetNull)
+
+  @@index([endpointId])
+  @@index([createdAt])
+  @@map("webhook_logs")
+}
+
+/// A user-saved custom workflow template persisted to the database.
+/// Created via POST /templates from a published workflow version.
+model WorkflowCustomTemplate {
+  id              String   @id @default(uuid()) @db.Uuid
+  slackTeamId     String   @map("slack_team_id")
+  name            String
+  description     String?
+  graph           Json     @db.JsonB
+  nodeCount       Int      @default(0) @map("node_count")
+  createdByUserId String   @map("created_by_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([slackTeamId])
+  @@map("workflow_custom_templates")
+}
+
+/// Reusable training content stored in a shared library.
+model ContentLibraryItem {
+  id               String           @id @default(uuid()) @db.Uuid
+  slackTeamId      String           @map("slack_team_id")
+  type             TrainingItemType
+  title            String
+  content          String?          @db.Text
+  metadata         Json?            @db.JsonB
+  estimatedMinutes Int?             @map("estimated_minutes")
+  categoryTags     String[]         @default([]) @map("category_tags")
+  usageCount       Int              @default(0) @map("usage_count")
+  createdByUserId  String           @map("created_by_user_id")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  trainingItems TrainingItem[]
+
+  @@index([slackTeamId])
+  @@index([type])
+  @@map("content_library_items")
+}
+
+// ---------------------------------------------------------------------------
+// Billing Models
+// ---------------------------------------------------------------------------
+
+/// Client workspace billing configuration.
+/// One billing profile per workspace. Controls credit allowance,
+/// overage rates, and payment method references.
+model BillingProfile {
+  id            String        @id @default(uuid()) @db.Uuid
+  slackTeamId   String        @unique @map("slack_team_id")
+  status        BillingStatus @default(PENDING)
+  billingExempt Boolean       @default(false) @map("billing_exempt")
+
+  // Credit configuration
+  monthlyAllowance   Int     @map("monthly_allowance")
+  creditBalance      Int     @default(0) @map("credit_balance")
+  maxRolloverCredits Int     @map("max_rollover_credits")
+  overageRateUsd     Decimal @map("overage_rate_usd") // USD per credit
+
+  // Billing cycle
+  billingCycleDay Int       @map("billing_cycle_day") // 1-31
+  lastResetAt     DateTime? @map("last_reset_at")
+
+  // Contact info
+  billingContactUserId String? @map("billing_contact_user_id") // Slack user ID
+  billingEmail         String? @map("billing_email")
+
+  // Stripe references
+  stripeCustomerId      String? @unique @map("stripe_customer_id")
+  stripePaymentMethodId String? @map("stripe_payment_method_id")
+
+  // Multi-tenant SaaS licensing fields (Feature 35)
+  subscriptionTier     String    @default("starter") @map("subscription_tier")
+  stripeSubscriptionId String?   @map("stripe_subscription_id")
+  nextResetAt          DateTime? @map("next_reset_at")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  transactions CreditTransaction[]
+  magicLinks   MagicLink[]
+
+  @@index([status])
+  @@index([billingCycleDay])
+  @@map("billing_profiles")
+}
+
+/// Immutable credit transaction ledger.
+/// Append-only: no UPDATE or DELETE. No updatedAt field.
+/// Every credit movement is recorded here for audit trail.
+model CreditTransaction {
+  id               String                @id @default(uuid()) @db.Uuid
+  billingProfileId String                @map("billing_profile_id") @db.Uuid
+  type             CreditTransactionType
+  amount           Int // Positive = addition, negative = deduction
+  balanceAfter     Int                   @map("balance_after")
+  referenceId      String?               @map("reference_id") // Job ID or Stripe charge ID
+  description      String                @db.Text
+  metadata         Json?                 @db.JsonB // Extra context (admin ID, rate snapshot, etc.)
+  clientId         String?               @map("client_id") @db.Uuid
+  createdAt        DateTime              @default(now()) @map("created_at")
+
+  // Relations
+  billingProfile BillingProfile @relation(fields: [billingProfileId], references: [id], onDelete: Cascade)
+  client         ManagedClient? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([billingProfileId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([referenceId])
+  @@index([clientId])
+  @@map("credit_transactions")
+}
+
+/// Singleton cache configuration for TTL and feature toggles.
+/// Shared across all workspaces. Extended by Feature 17 (BuiltWith) and Feature 22 (Apollo).
+model CacheConfig {
+  id                   String   @id @default(uuid()) @db.Uuid
+  enabled              Boolean  @default(true)
+  ttlDays              Int      @default(60) @map("ttl_days")
+  apolloSearchTtlDays  Int      @default(14) @map("apollo_search_ttl_days")
+  apolloContactTtlDays Int      @default(30) @map("apollo_contact_ttl_days")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("cache_config")
+}
+
+/// Cached Apollo people search result for a domain + filter combination (FR-001).
+/// Shared across all workspaces — search results are not tenant-specific.
+model ApolloSearchCache {
+  id               String   @id @default(uuid()) @db.Uuid
+  normalizedDomain String   @map("normalized_domain")
+  filterHash       String   @map("filter_hash")
+  contacts         Json     @db.JsonB
+  resultCount      Int      @map("result_count")
+  filterSnapshot   Json     @map("filter_snapshot") @db.JsonB
+  hitCount         Int      @default(0) @map("hit_count")
+  searchedAt       DateTime @default(now()) @map("searched_at")
+  expiresAt        DateTime @map("expires_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@unique([normalizedDomain, filterHash])
+  @@index([expiresAt])
+  @@index([searchedAt])
+  @@map("apollo_search_cache")
+}
+
+/// Cached Apollo bulk enrichment result for an individual contact (FR-008).
+/// Shared across all workspaces — contact professional data is not tenant-specific.
+model ApolloContactCache {
+  id             String   @id @default(uuid()) @db.Uuid
+  apolloPersonId String   @unique @map("apollo_person_id")
+  fullName       String?  @map("full_name")
+  firstName      String?  @map("first_name")
+  lastName       String?  @map("last_name")
+  email          String?
+  jobTitle       String?  @map("job_title")
+  seniorityLevel String?  @map("seniority_level")
+  linkedinUrl    String?  @map("linkedin_url")
+  timezoneUtc    String?  @map("timezone_utc")
+  timezoneLabel  String?  @map("timezone_label")
+  hasPhoneData   Boolean  @default(false) @map("has_phone_data")
+  directPhone    String?  @map("direct_phone")
+  businessPhone  String?  @map("business_phone")
+  apolloMetadata Json?    @map("apollo_metadata") @db.JsonB
+  hitCount       Int      @default(0) @map("hit_count")
+  enrichedAt     DateTime @default(now()) @map("enriched_at")
+  expiresAt      DateTime @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([expiresAt])
+  @@index([enrichedAt])
+  @@map("apollo_contact_cache")
+}
+
+/// Global credit rate configuration.
+/// Defines base credit cost per operation type and global markup percentage.
+/// Exactly one active configuration at any time.
+model CreditRateConfig {
+  id                        String   @id @default(uuid()) @db.Uuid
+  builtWithCtuLookupCost    Int      @map("builtwith_ctu_lookup_cost")
+  builtWithDomainLookupCost Int      @map("builtwith_domain_lookup_cost")
+  apolloPeopleSearchCost    Int      @map("apollo_people_search_cost")
+  apolloBulkEnrichCost      Int      @map("apollo_bulk_enrich_cost")
+  markupPercent             Int      @map("markup_percent") // e.g., 25 for 25%
+  isActive                  Boolean  @default(true) @map("is_active")
+  updatedByAdminId          String?  @map("updated_by_admin_id") @db.Uuid
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@map("credit_rate_configs")
+}
+
+/// Secure magic link tokens for payment onboarding.
+/// Each token is single-use and expires after 24 hours.
+model MagicLink {
+  id               String    @id @default(uuid()) @db.Uuid
+  billingProfileId String    @map("billing_profile_id") @db.Uuid
+  token            String    @unique
+  expiresAt        DateTime  @map("expires_at")
+  usedAt           DateTime? @map("used_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  billingProfile BillingProfile @relation(fields: [billingProfileId], references: [id], onDelete: Cascade)
+
+  @@index([billingProfileId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("magic_links")
+}
+
+// ---------------------------------------------------------------------------
+// HubSpot OAuth Integration Models (Feature 14)
+// ---------------------------------------------------------------------------
+
+enum HubSpotConnectionStatus {
+  ACTIVE
+  DISCONNECTED
+  TOKEN_EXPIRED
+  ERROR
+}
+
+enum HubSpotImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum HubSpotSyncType {
+  CONTACT_IMPORT
+  ACTIVITY_PUSH
+  ACTIVITY_PULL
+  WEBHOOK_EVENT
+}
+
+/// A client's OAuth connection to their HubSpot portal. One-to-one with ManagedClient.
+model HubSpotConnection {
+  id       String @id @default(uuid()) @db.Uuid
+  clientId String @unique @map("client_id") @db.Uuid
+
+  // OAuth tokens (encrypted at application layer via tokenEncryption.ts)
+  accessToken    String   @map("access_token") @db.Text
+  refreshToken   String   @map("refresh_token") @db.Text
+  tokenExpiresAt DateTime @map("token_expires_at")
+
+  // HubSpot portal info
+  hubspotPortalId   String   @map("hubspot_portal_id")
+  hubspotPortalName String?  @map("hubspot_portal_name")
+  grantedScopes     String[] @map("granted_scopes")
+
+  // Connection lifecycle
+  status          HubSpotConnectionStatus @default(ACTIVE)
+  connectedBy     String                  @map("connected_by")
+  connectedAt     DateTime                @default(now()) @map("connected_at")
+  disconnectedAt  DateTime?               @map("disconnected_at")
+  lastRefreshedAt DateTime?               @map("last_refreshed_at")
+
+  // Custom properties provisioned flag
+  propertiesCreated Boolean @default(false) @map("properties_created")
+
+  // Sync tracking
+  lastSyncAt            DateTime? @map("last_sync_at")
+  totalContactsSynced   Int       @default(0) @map("total_contacts_synced")
+  totalActivitiesLogged Int       @default(0) @map("total_activities_logged")
+  totalSyncFailures     Int       @default(0) @map("total_sync_failures")
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  client             ManagedClient              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  importJobs         HubSpotImportJob[]
+  contactMappings    HubSpotContactMapping[]
+  engagementMappings HubSpotEngagementMapping[]
+  syncLogs           HubSpotSyncLog[]
+  crmConnection      CrmConnection?
+
+  @@index([status])
+  @@map("hubspot_connections")
+}
+
+/// Tracks each contact import operation from CSV/XLSX to HubSpot.
+model HubSpotImportJob {
+  id           String @id @default(uuid()) @db.Uuid
+  connectionId String @map("connection_id") @db.Uuid
+
+  // Source file
+  sourceFileName  String  @map("source_file_name")
+  sourceFileUrl   String? @map("source_file_url") @db.Text
+  sourceRowCount  Int     @map("source_row_count")
+  enrichmentJobId String? @map("enrichment_job_id") @db.Uuid
+
+  // Import naming
+  clientName   String @map("client_name")
+  campaignName String @map("campaign_name")
+  listName     String @map("list_name")
+
+  // HubSpot results
+  hubspotListId  String? @map("hubspot_list_id")
+  hubspotListUrl String? @map("hubspot_list_url") @db.Text
+
+  // Column mapping used
+  columnMapping Json @map("column_mapping")
+
+  // Counts
+  contactsCreated Int @default(0) @map("contacts_created")
+  contactsUpdated Int @default(0) @map("contacts_updated")
+  contactsFailed  Int @default(0) @map("contacts_failed")
+  contactsTotal   Int @default(0) @map("contacts_total")
+
+  // Job tracking
+  status       HubSpotImportStatus @default(PENDING)
+  errorMessage String?             @map("error_message") @db.Text
+  startedAt    DateTime?           @map("started_at")
+  completedAt  DateTime?           @map("completed_at")
+
+  // Slack context
+  slackChannelId String  @map("slack_channel_id")
+  slackThreadTs  String? @map("slack_thread_ts")
+  slackUserId    String  @map("slack_user_id")
+
+  // BullMQ reference
+  bullmqJobId String? @map("bullmq_job_id")
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  connection HubSpotConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId])
+  @@index([status])
+  @@index([slackChannelId])
+  @@map("hubspot_import_jobs")
+}
+
+/// Links internal contacts (by email) to HubSpot contact IDs for deduplication and activity association.
+model HubSpotContactMapping {
+  id           String @id @default(uuid()) @db.Uuid
+  connectionId String @map("connection_id") @db.Uuid
+
+  // Contact identity
+  email            String
+  hubspotContactId String  @map("hubspot_contact_id")
+  hubspotCompanyId String? @map("hubspot_company_id")
+
+  // Sync metadata
+  lastSyncedAt DateTime @default(now()) @map("last_synced_at")
+  importJobId  String?  @map("import_job_id") @db.Uuid
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  connection HubSpotConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([connectionId, email])
+  @@index([hubspotContactId])
+  @@map("hubspot_contact_mappings")
+}
+
+/// Tracks engagement records pushed to HubSpot to prevent duplicate activity logging.
+model HubSpotEngagementMapping {
+  id           String @id @default(uuid()) @db.Uuid
+  connectionId String @map("connection_id") @db.Uuid
+
+  // Internal event reference
+  eventType   String @map("event_type")
+  eventId     String @map("event_id")
+  eventSource String @map("event_source")
+
+  // HubSpot engagement
+  hubspotEngagementId String @map("hubspot_engagement_id")
+  hubspotContactId    String @map("hubspot_contact_id")
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  connection HubSpotConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([connectionId, eventType, eventId, eventSource])
+  @@index([hubspotContactId])
+  @@map("hubspot_engagement_mappings")
+}
+
+/// Records each sync operation for history, debugging, and statistics.
+model HubSpotSyncLog {
+  id           String @id @default(uuid()) @db.Uuid
+  connectionId String @map("connection_id") @db.Uuid
+
+  // Sync details
+  syncType  HubSpotSyncType
+  direction String          @default("push")
+
+  // Results
+  recordsProcessed Int @default(0) @map("records_processed")
+  recordsCreated   Int @default(0) @map("records_created")
+  recordsUpdated   Int @default(0) @map("records_updated")
+  recordsFailed    Int @default(0) @map("records_failed")
+
+  // Metadata
+  durationMs   Int?    @map("duration_ms")
+  errorMessage String? @map("error_message") @db.Text
+  metadata     Json?
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  connection HubSpotConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId])
+  @@index([syncType])
+  @@index([createdAt])
+  @@map("hubspot_sync_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Domain Enrichment Cache Models (Feature 17)
+// ---------------------------------------------------------------------------
+
+/// Domain-keyed cache of BuiltWith enrichment results (FR-001).
+/// Shared across all workspaces — BuiltWith data is public, not tenant-specific.
+model DomainEnrichmentCache {
+  id                String   @id @default(uuid()) @db.Uuid
+  normalizedDomain  String   @unique @map("normalized_domain")
+  builtwithResponse Json     @map("builtwith_response") @db.JsonB
+  technologies      Json     @map("technologies") @db.JsonB
+  vertical          String?
+  trafficRank       Int?     @map("traffic_rank")
+  techSpendTier     String?  @map("tech_spend_tier")
+  techSpendScore    Int?     @map("tech_spend_score")
+  companyName       String?  @map("company_name")
+  locationCountry   String?  @map("location_country")
+  locationState     String?  @map("location_state")
+  locationCity      String?  @map("location_city")
+  isComplete        Boolean  @default(true) @map("is_complete")
+  hitCount          Int      @default(0) @map("hit_count")
+  enrichedAt        DateTime @default(now()) @map("enriched_at")
+  expiresAt         DateTime @map("expires_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([expiresAt])
+  @@index([enrichedAt])
+  @@index([techSpendTier])
+  @@map("domain_enrichment_cache")
+}
+
+// ---------------------------------------------------------------------------
+// Prompt Library Models (Feature 19)
+// ---------------------------------------------------------------------------
+
+enum PromptCategory {
+  CLASSIFIER
+  PARSER
+  GENERATOR
+}
+
+enum PromptVersionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Prompt {
+  id              String         @id @default(uuid()) @db.Uuid
+  slug            String         @unique
+  displayName     String         @map("display_name")
+  description     String?        @db.Text
+  category        PromptCategory
+  modelConfig     Json           @map("model_config") @db.JsonB
+  toolDefinitions Json?          @map("tool_definitions") @db.JsonB
+  isActive        Boolean        @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  versions  PromptVersion[]
+  variables PromptVariableMapping[]
+
+  @@index([category])
+  @@index([isActive])
+  @@map("prompts")
+}
+
+model PromptVersion {
+  id          String              @id @default(uuid()) @db.Uuid
+  promptId    String              @map("prompt_id") @db.Uuid
+  version     Int
+  content     String              @db.Text
+  status      PromptVersionStatus
+  publishedBy String?             @map("published_by")
+  publishedAt DateTime?           @map("published_at")
+  changeNote  String?             @map("change_note")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  prompt   Prompt          @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  testRuns PromptTestRun[]
+
+  @@unique([promptId, version])
+  @@index([promptId, status])
+  @@map("prompt_versions")
+}
+
+model PromptVariable {
+  id           String  @id @default(uuid()) @db.Uuid
+  name         String  @unique
+  description  String?
+  defaultValue String? @map("default_value") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  prompts            PromptVariableMapping[]
+  workspaceOverrides WorkspacePromptOverride[]
+
+  @@map("prompt_variables")
+}
+
+model PromptVariableMapping {
+  promptId   String @map("prompt_id") @db.Uuid
+  variableId String @map("variable_id") @db.Uuid
+
+  // Relations
+  prompt   Prompt         @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  variable PromptVariable @relation(fields: [variableId], references: [id], onDelete: Cascade)
+
+  @@id([promptId, variableId])
+  @@map("prompt_variable_mappings")
+}
+
+model WorkspacePromptOverride {
+  id            String @id @default(uuid()) @db.Uuid
+  workspaceId   String @map("workspace_id")
+  variableId    String @map("variable_id") @db.Uuid
+  overrideValue String @map("override_value") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  variable PromptVariable @relation(fields: [variableId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, variableId])
+  @@index([workspaceId])
+  @@map("workspace_prompt_overrides")
+}
+
+model PromptTestRun {
+  id               String  @id @default(uuid()) @db.Uuid
+  promptVersionId  String  @map("prompt_version_id") @db.Uuid
+  inputText        String  @map("input_text") @db.Text
+  outputResult     Json    @map("output_result") @db.JsonB
+  tokensUsed       Int     @map("tokens_used")
+  inputTokens      Int     @map("input_tokens")
+  outputTokens     Int     @map("output_tokens")
+  estimatedCostUsd Decimal @map("estimated_cost_usd") @db.Decimal(10, 6)
+  durationMs       Int     @map("duration_ms")
+  testedBy         String  @map("tested_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  promptVersion PromptVersion @relation(fields: [promptVersionId], references: [id], onDelete: Cascade)
+
+  @@index([promptVersionId])
+  @@index([createdAt])
+  @@map("prompt_test_runs")
+}
+
+// ---------------------------------------------------------------------------
+// Canonical Data Schema & CRM Adapter Models (Feature 18)
+// ---------------------------------------------------------------------------
+
+enum CrmType {
+  HUBSPOT
+  ATTIO
+  SALESFORCE
+}
+
+enum CrmConnectionStatus {
+  ACTIVE
+  DISCONNECTED
+  TOKEN_EXPIRED
+  ERROR
+}
+
+enum CrmPushStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum SyncDirection {
+  TO_CRM
+  FROM_CRM
+  BIDIRECTIONAL
+}
+
+/// CRM-agnostic contact record. Created on-demand during CRM import from JobContact data.
+model CanonicalContact {
+  id String @id @default(uuid()) @db.Uuid
+
+  // Identity (unique key for upsert)
+  email String @unique
+
+  // Standard contact fields
+  firstName   String? @map("first_name")
+  lastName    String? @map("last_name")
+  jobTitle    String? @map("job_title")
+  company     String?
+  domain      String?
+  phone       String?
+  mobilePhone String? @map("mobile_phone")
+  linkedinUrl String? @map("linkedin_url")
+  city        String?
+  state       String?
+  country     String?
+
+  // Enrichment metadata
+  enrichmentSource String?   @map("enrichment_source")
+  enrichmentDate   DateTime? @map("enrichment_date")
+  techSpendTier    String?   @map("tech_spend_tier")
+  enrichmentJobId  String?   @map("enrichment_job_id") @db.Uuid
+
+  // Source linkage
+  jobContactId String? @map("job_contact_id") @db.Uuid
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  pushRecords CrmPushRecord[]   @relation("ContactPushRecords")
+  account     CanonicalAccount? @relation(fields: [domain], references: [domain])
+
+  @@index([domain])
+  @@index([enrichmentJobId])
+  @@map("canonical_contacts")
+}
+
+/// CRM-agnostic account record. Created on-demand during CRM import from JobCompany data.
+model CanonicalAccount {
+  id String @id @default(uuid()) @db.Uuid
+
+  // Identity (unique key for upsert)
+  domain String @unique
+
+  // Standard account fields
+  companyName   String?  @map("company_name")
+  industry      String?
+  employeeCount Int?     @map("employee_count")
+  annualRevenue Float?   @map("annual_revenue")
+  city          String?
+  state         String?
+  country       String?
+  technologies  String[] @default([])
+  cloudProvider String?  @map("cloud_provider")
+  trafficRank   Int?     @map("traffic_rank")
+  techSpendTier String?  @map("tech_spend_tier")
+
+  // Source linkage
+  jobCompanyId    String? @map("job_company_id") @db.Uuid
+  enrichmentJobId String? @map("enrichment_job_id") @db.Uuid
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  contacts    CanonicalContact[]
+  pushRecords CrmPushRecord[]    @relation("AccountPushRecords")
+
+  @@index([companyName])
+  @@index([enrichmentJobId])
+  @@map("canonical_accounts")
+}
+
+/// CRM-agnostic connection record. Links a client to a specific CRM via adapter.
+model CrmConnection {
+  id       String @id @default(uuid()) @db.Uuid
+  clientId String @map("client_id") @db.Uuid
+
+  // CRM type and status
+  crmType CrmType             @map("crm_type")
+  status  CrmConnectionStatus @default(ACTIVE)
+
+  // Display
+  displayName String? @map("display_name")
+
+  // CRM-specific config reference
+  hubspotConnectionId String? @unique @map("hubspot_connection_id") @db.Uuid
+
+  // Adapter config (for non-HubSpot CRMs or additional settings)
+  adapterConfig Json? @map("adapter_config")
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  client            ManagedClient      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  hubspotConnection HubSpotConnection? @relation(fields: [hubspotConnectionId], references: [id])
+  fieldMappings     CrmFieldMapping[]
+  pushRecords       CrmPushRecord[]
+
+  @@unique([clientId, crmType])
+  @@index([crmType])
+  @@map("crm_connections")
+}
+
+/// Per-connection field mapping. Defines how canonical fields translate to CRM properties.
+model CrmFieldMapping {
+  id              String @id @default(uuid()) @db.Uuid
+  crmConnectionId String @map("crm_connection_id") @db.Uuid
+
+  // Mapping definition
+  canonicalField   String  @map("canonical_field")
+  crmProperty      String  @map("crm_property")
+  crmPropertyLabel String? @map("crm_property_label")
+  dataType         String  @default("string") @map("data_type")
+
+  // Behavior
+  transformRule     String?       @map("transform_rule")
+  isRequired        Boolean       @default(false) @map("is_required")
+  syncDirection     SyncDirection @default(TO_CRM) @map("sync_direction")
+  overwriteExisting Boolean       @default(true) @map("overwrite_existing")
+
+  // Ordering
+  displayOrder Int @default(0) @map("display_order")
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  connection CrmConnection @relation(fields: [crmConnectionId], references: [id], onDelete: Cascade)
+
+  @@unique([crmConnectionId, canonicalField])
+  @@index([crmConnectionId])
+  @@map("crm_field_mappings")
+}
+
+/// Tracks per-record push status to enable incremental imports.
+model CrmPushRecord {
+  id              String @id @default(uuid()) @db.Uuid
+  crmConnectionId String @map("crm_connection_id") @db.Uuid
+
+  // Canonical record reference (one of these will be set)
+  canonicalContactId String? @map("canonical_contact_id") @db.Uuid
+  canonicalAccountId String? @map("canonical_account_id") @db.Uuid
+
+  // CRM-side reference
+  crmRecordId String? @map("crm_record_id")
+
+  // Push status
+  pushStatus   CrmPushStatus @default(PENDING) @map("push_status")
+  lastPushedAt DateTime?     @map("last_pushed_at")
+  errorMessage String?       @map("error_message") @db.Text
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  connection       CrmConnection     @relation(fields: [crmConnectionId], references: [id], onDelete: Cascade)
+  canonicalContact CanonicalContact? @relation("ContactPushRecords", fields: [canonicalContactId], references: [id], onDelete: Cascade)
+  canonicalAccount CanonicalAccount? @relation("AccountPushRecords", fields: [canonicalAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([crmConnectionId, canonicalContactId])
+  @@unique([crmConnectionId, canonicalAccountId])
+  @@index([pushStatus])
+  @@index([lastPushedAt])
+  @@map("crm_push_records")
+}
+
+// ---------------------------------------------------------------------------
+// Feature 23: Dynamic Suggested Prompts
+// ---------------------------------------------------------------------------
+
+enum PromptContextType {
+  DEFAULT
+  CHANNEL
+  ACTIVITY
+  WORKSPACE
+}
+
+model PromptClickEvent {
+  id        String  @id @default(uuid()) @db.Uuid
+  userId    String  @map("user_id")
+  teamId    String  @map("team_id")
+  channelId String? @map("channel_id")
+  threadTs  String  @map("thread_ts")
+
+  // Prompt details
+  promptTitle    String            @map("prompt_title")
+  promptPosition Int               @map("prompt_position")
+  contextType    PromptContextType @map("context_type")
+
+  // Optional metadata
+  metadata Json?
+
+  // Timestamps
+  clickedAt DateTime @default(now()) @map("clicked_at")
+
+  // Relations
+  workspace WorkspaceInstallation @relation("PromptClickEvents", fields: [teamId], references: [slackTeamId], onDelete: Cascade)
+
+  // Indexes for analytics queries
+  @@index([teamId, userId, clickedAt])
+  @@index([clickedAt])
+  @@index([promptTitle, clickedAt])
+  @@index([contextType, clickedAt])
+  @@map("prompt_click_events")
+}
+
+// ---------------------------------------------------------------------------
+// Feature 27: Multi-Provider Waterfall Enrichment
+// ---------------------------------------------------------------------------
+
+/// Tracks each provider enrichment attempt for cost attribution and debugging.
+/// Records every API call to Apollo, Wiza, or AI Ark with request/response details.
+model ProviderAttempt {
+  id        String        @id @default(uuid()) @db.Uuid
+  jobId     String        @map("job_id") @db.Uuid
+  contactId String        @map("contact_id") @db.Uuid
+  provider  Provider
+  dataType  DataType      @map("data_type")
+  status    AttemptStatus
+
+  // Request tracking
+  requestId       String? @map("request_id") // Provider's request ID for webhook correlation
+  requestPayload  Json?   @map("request_payload") @db.JsonB
+  responsePayload Json?   @map("response_payload") @db.JsonB
+
+  // Cost tracking
+  cost            Float?
+  creditsConsumed Int?   @map("credits_consumed")
+
+  // Result tracking
+  emailFound String? @map("email_found")
+  phoneFound String? @map("phone_found")
+
+  // Error tracking
+  errorMessage String? @map("error_message")
+  httpStatus   Int?    @map("http_status")
+
+  // Timing
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  durationMs  Int?      @map("duration_ms")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  job     Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  contact JobContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([contactId])
+  @@index([provider, dataType])
+  @@index([requestId])
+  @@map("provider_attempts")
+}
+
+/// Tracks webhook deliveries from Wiza and AI Ark for async phone enrichment.
+/// Ensures idempotent webhook processing via unique webhookId constraint.
+model ProviderWebhook {
+  id        String   @id @default(uuid()) @db.Uuid
+  jobId     String   @map("job_id") @db.Uuid
+  provider  Provider
+  requestId String   @map("request_id") // Correlates with ProviderAttempt.requestId
+  webhookId String   @unique @map("webhook_id") // Provider's webhook delivery ID
+
+  // Payload
+  rawPayload Json    @map("raw_payload") @db.JsonB
+  eventType  String? @map("event_type")
+
+  // Status
+  status      WebhookStatus
+  processedAt DateTime?     @map("processed_at")
+
+  // Retry tracking
+  retriesAttempted Int       @default(0) @map("retries_attempted")
+  lastRetryAt      DateTime? @map("last_retry_at")
+
+  // Error tracking
+  errorMessage String? @map("error_message")
+
+  // Security
+  signatureVerified Boolean  @default(false) @map("signature_verified")
+  receivedAt        DateTime @default(now()) @map("received_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([provider, requestId])
+  @@index([webhookId])
+  @@map("provider_webhooks")
+}
+
+/// Stores per-provider pricing configuration for cost calculation.
+/// Enables runtime pricing updates without code deployment.
+model ProviderCost {
+  id             String   @id @default(uuid()) @db.Uuid
+  provider       Provider
+  dataType       DataType @map("data_type")
+  costPerUnit    Float    @map("cost_per_unit") // Cost in USD per successful enrichment
+  creditsPerUnit Int?     @map("credits_per_unit") // Provider-specific credit consumption
+
+  effectiveDate DateTime  @default(now()) @map("effective_date")
+  expiresAt     DateTime? @map("expires_at") // null = current pricing
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([provider, dataType, effectiveDate])
+  @@index([provider, dataType])
+  @@map("provider_costs")
+}
+
+// ---------------------------------------------------------------------------
+// Power Dialer Models (Feature 22)
+// ---------------------------------------------------------------------------
+
+model DialerSession {
+  id             String    @id @default(uuid()) @db.Uuid
+  bdrId          String    @map("bdr_id") @db.Uuid
+  clientId       String    @map("client_id") @db.Uuid
+  campaignId     String?   @map("campaign_id") @db.Uuid
+  status         String    @default("ACTIVE") // ACTIVE | PAUSED | COMPLETED
+  totalDialed    Int       @default(0) @map("total_dialed")
+  totalConnected Int       @default(0) @map("total_connected")
+  totalVoicemail Int       @default(0) @map("total_voicemail")
+  totalNoAnswer  Int       @default(0) @map("total_no_answer")
+  startedAt      DateTime  @default(now()) @map("started_at")
+  pausedAt       DateTime? @map("paused_at")
+  completedAt    DateTime? @map("completed_at")
+  metadata       Json?     @db.JsonB
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  bdr          Bdr               @relation(fields: [bdrId], references: [id])
+  client       ManagedClient     @relation(fields: [clientId], references: [id])
+  campaign     Campaign?         @relation(fields: [campaignId], references: [id])
+  callSessions CallSession[]
+  queueItems   DialerQueueItem[]
+
+  @@index([bdrId, status])
+  @@index([clientId])
+  @@map("dialer_sessions")
+}
+
+model CallSession {
+  id                String  @id @default(uuid()) @db.Uuid
+  dialerSessionId   String  @map("dialer_session_id") @db.Uuid
+  bdrId             String  @map("bdr_id") @db.Uuid
+  clientId          String  @map("client_id") @db.Uuid
+  campaignContactId String? @map("campaign_contact_id") @db.Uuid
+  stepExecutionId   String? @unique @map("step_execution_id") @db.Uuid
+
+  contactName  String  @map("contact_name")
+  contactEmail String? @map("contact_email")
+  contactPhone String  @map("contact_phone")
+  companyName  String? @map("company_name")
+  jobTitle     String? @map("job_title")
+
+  twilioCallSid       String? @unique @map("twilio_call_sid")
+  twilioConferenceSid String? @map("twilio_conference_sid")
+  callerIdNumber      String? @map("caller_id_number")
+
+  status        CallSessionStatus @default(QUEUED)
+  amdResult     AmdResult?        @map("amd_result")
+  consentPlayed Boolean           @default(false) @map("consent_played")
+
+  dialedAt        DateTime? @map("dialed_at")
+  answeredAt      DateTime? @map("answered_at")
+  connectedAt     DateTime? @map("connected_at")
+  endedAt         DateTime? @map("ended_at")
+  durationSeconds    Int?      @map("duration_seconds")
+  talkTimeSeconds    Int?      @map("talk_time_seconds")
+  recordingStartedAt DateTime? @map("recording_started_at")
+
+  disposition      DispositionType?
+  dispositionNotes String?          @map("disposition_notes") @db.Text
+  dispositionAt    DateTime?        @map("disposition_at")
+
+  hubspotEngagementId String? @map("hubspot_engagement_id")
+
+  twilioCostUsd   Decimal? @map("twilio_cost_usd") @db.Decimal(10, 6)
+  deepgramCostUsd Decimal? @map("deepgram_cost_usd") @db.Decimal(10, 6)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  dialerSession                DialerSession                 @relation(fields: [dialerSessionId], references: [id])
+  bdr                          Bdr                           @relation(fields: [bdrId], references: [id])
+  client                       ManagedClient                 @relation(fields: [clientId], references: [id])
+  campaignContact              CampaignContact?              @relation(fields: [campaignContactId], references: [id])
+  stepExecution                CampaignContactStepExecution? @relation(fields: [stepExecutionId], references: [id])
+  recording                    CallRecording?
+  qualityMetric                CallQualityMetric?
+  dialerQueueItem              DialerQueueItem?
+  scheduledCallbacksAsOriginal ScheduledCallback[]           @relation("OriginalCall")
+  scheduledCallbacksAsCallback ScheduledCallback[]           @relation("CallbackCall")
+
+  @@index([dialerSessionId])
+  @@index([bdrId, createdAt])
+  @@index([clientId, createdAt])
+  @@index([twilioCallSid])
+  @@index([campaignContactId])
+  @@index([status])
+  @@map("call_sessions")
+}
+
+model CallRecording {
+  id            String @id @default(uuid()) @db.Uuid
+  callSessionId String @unique @map("call_session_id") @db.Uuid
+  clientId      String @map("client_id") @db.Uuid
+  bdrId         String @map("bdr_id") @db.Uuid
+
+  twilioRecordingSid String? @unique @map("twilio_recording_sid")
+  twilioRecordingUrl String? @map("twilio_recording_url") @db.Text
+
+  s3Key           String? @map("s3_key")
+  s3Bucket        String? @map("s3_bucket")
+  s3CopyStatus    String? @map("s3_copy_status")
+  durationSeconds Int?    @map("duration_seconds")
+  fileSizeBytes   Int?    @map("file_size_bytes")
+
+  transcriptionStatus TranscriptionStatus @default(PENDING) @map("transcription_status")
+  transcript          String?             @db.Text
+  transcriptJson      Json?               @map("transcript_json")
+  deepgramRequestId   String?             @map("deepgram_request_id")
+  transcribedAt       DateTime?           @map("transcribed_at")
+
+  isFavorited   Boolean               @default(false) @map("is_favorited")
+  favoritedById String?               @map("favorited_by_id")
+  reviewStatus  RecordingReviewStatus @default(NONE) @map("review_status")
+  reviewedById  String?               @map("reviewed_by_id")
+  reviewedAt    DateTime?             @map("reviewed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  callSession   CallSession    @relation(fields: [callSessionId], references: [id])
+  client        ManagedClient  @relation(fields: [clientId], references: [id])
+  bdr           Bdr            @relation(fields: [bdrId], references: [id])
+  coachingNotes CoachingNote[]
+
+  @@index([clientId, createdAt])
+  @@index([bdrId, createdAt])
+  @@index([isFavorited])
+  @@index([reviewStatus])
+  @@index([transcriptionStatus])
+  @@map("call_recordings")
+}
+
+model CoachingNote {
+  id               String   @id @default(uuid()) @db.Uuid
+  recordingId      String   @map("recording_id") @db.Uuid
+  authorId         String   @map("author_id")
+  authorName       String   @map("author_name")
+  content          String   @db.Text
+  timestampSeconds Int?     @map("timestamp_seconds")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  recording CallRecording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+
+  @@index([recordingId])
+  @@map("coaching_notes")
+}
+
+model DialerQueueItem {
+  id                String  @id @default(uuid()) @db.Uuid
+  dialerSessionId   String  @map("dialer_session_id") @db.Uuid
+  campaignContactId String? @map("campaign_contact_id") @db.Uuid
+  stepExecutionId   String? @unique @map("step_execution_id") @db.Uuid
+
+  contactName      String  @map("contact_name")
+  contactEmail     String? @map("contact_email")
+  contactPhone     String  @map("contact_phone")
+  companyName      String? @map("company_name")
+  jobTitle         String? @map("job_title")
+  hubspotContactId String? @map("hubspot_contact_id")
+
+  position      Int
+  status        String  @default("PENDING") // PENDING | DIALING | COMPLETED | SKIPPED
+  callSessionId String? @unique @map("call_session_id") @db.Uuid
+
+  tcpaEligible Boolean   @default(true) @map("tcpa_eligible")
+  optedOut     Boolean   @default(false) @map("opted_out")
+  lastCalledAt DateTime? @map("last_called_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  dialerSession   DialerSession                 @relation(fields: [dialerSessionId], references: [id], onDelete: Cascade)
+  campaignContact CampaignContact?              @relation(fields: [campaignContactId], references: [id])
+  stepExecution   CampaignContactStepExecution? @relation(fields: [stepExecutionId], references: [id])
+  callSession     CallSession?                  @relation(fields: [callSessionId], references: [id])
+
+  @@unique([dialerSessionId, campaignContactId])
+  @@index([dialerSessionId, position])
+  @@index([dialerSessionId, status])
+  @@map("dialer_queue_items")
+}
+
+model TwilioPhoneNumber {
+  id            String   @id @default(uuid()) @db.Uuid
+  phoneNumber   String   @unique @map("phone_number")
+  twilioSid     String   @unique @map("twilio_sid")
+  areaCode      String   @map("area_code")
+  state         String?
+  clientId      String?  @map("client_id") @db.Uuid
+  isPrimary     Boolean  @default(false) @map("is_primary")
+  isActive      Boolean  @default(true) @map("is_active")
+  provisionedAt DateTime @default(now()) @map("provisioned_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  client ManagedClient? @relation(fields: [clientId], references: [id])
+
+  @@index([areaCode])
+  @@index([clientId])
+  @@index([isActive, clientId])
+  @@map("twilio_phone_numbers")
+}
+
+model ContactOptOut {
+  id           String   @id @default(uuid()) @db.Uuid
+  phoneNumber  String   @unique @map("phone_number")
+  contactEmail String?  @map("contact_email")
+  contactName  String?  @map("contact_name")
+  reason       String?
+  source       String // "dialer-disposition" | "manual" | "import"
+  recordedById String?  @map("recorded_by_id")
+  clientId     String?  @map("client_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([phoneNumber])
+  @@index([contactEmail])
+  @@map("contact_opt_outs")
+}
+
+model ComplianceLog {
+  id            String              @id @default(uuid()) @db.Uuid
+  callSessionId String?             @map("call_session_id") @db.Uuid
+  eventType     ComplianceEventType @map("event_type")
+  phoneNumber   String?             @map("phone_number")
+  contactState  String?             @map("contact_state")
+  details       String?             @db.Text
+  clientId      String              @map("client_id") @db.Uuid
+  bdrId         String?             @map("bdr_id") @db.Uuid
+  createdAt     DateTime            @default(now()) @map("created_at")
+
+  @@index([clientId, createdAt])
+  @@index([callSessionId])
+  @@index([eventType])
+  @@map("compliance_logs")
+}
+
+model ScheduledCallback {
+  id                String  @id @default(uuid()) @db.Uuid
+  callSessionId     String  @map("call_session_id") @db.Uuid
+  bdrId             String  @map("bdr_id") @db.Uuid
+  clientId          String  @map("client_id") @db.Uuid
+  campaignContactId String? @map("campaign_contact_id") @db.Uuid
+
+  contactName  String  @map("contact_name")
+  contactPhone String  @map("contact_phone")
+  companyName  String? @map("company_name")
+
+  scheduledAt            DateTime  @map("scheduled_at")
+  notes                  String?   @db.Text
+  status                 String    @default("PENDING") // PENDING | COMPLETED | MISSED
+  completedAt            DateTime? @map("completed_at")
+  completedCallSessionId String?   @map("completed_call_session_id") @db.Uuid
+  missedAt               DateTime? @map("missed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  callSession          CallSession   @relation("OriginalCall", fields: [callSessionId], references: [id])
+  completedCallSession CallSession?  @relation("CallbackCall", fields: [completedCallSessionId], references: [id])
+  bdr                  Bdr           @relation(fields: [bdrId], references: [id])
+  client               ManagedClient @relation(fields: [clientId], references: [id])
+
+  @@index([bdrId, status])
+  @@index([bdrId, scheduledAt])
+  @@index([clientId, status])
+  @@index([status, scheduledAt])
+  @@map("scheduled_callbacks")
+}
+
+model UncallableContact {
+  id           String    @id @default(uuid()) @db.Uuid
+  clientId     String    @map("client_id") @db.Uuid
+  contactPhone String    @map("contact_phone")
+  contactEmail String?   @map("contact_email")
+  contactName  String?   @map("contact_name")
+  companyName  String?   @map("company_name")
+  reason       String // DNC | REMOVED | INVALID_NUMBER | NO_PHONE
+  source       String // "disposition" | "manual" | "hubspot-refresh" | "auto-detection"
+  canReAdd     Boolean   @default(false) @map("can_re_add")
+  removedById  String?   @map("removed_by_id")
+  reAddedAt    DateTime? @map("re_added_at")
+  reAddedById  String?   @map("re_added_by_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  client ManagedClient @relation(fields: [clientId], references: [id])
+
+  @@unique([clientId, contactPhone])
+  @@index([clientId, reason])
+  @@index([contactPhone])
+  @@map("uncallable_contacts")
+}
+
+model AnalyticsSavedView {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id")
+  clientId  String   @map("client_id") @db.Uuid
+  name      String
+  tab       String // "rep" | "list" | "account" | "objections" | "when-to-call"
+  filters   Json
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client ManagedClient @relation(fields: [clientId], references: [id])
+
+  @@index([userId, clientId])
+  @@map("analytics_saved_views")
+}
+
+model CallQualityMetric {
+  id                   String   @id @default(uuid()) @db.Uuid
+  callSessionId        String   @unique @map("call_session_id") @db.Uuid
+  bdrId                String   @map("bdr_id") @db.Uuid
+  clientId             String   @map("client_id") @db.Uuid
+  mos                  Float?
+  jitter               Float?
+  packetLossPercentage Float?   @map("packet_loss_percentage")
+  roundTripTimeMs      Float?   @map("round_trip_time_ms")
+  codec                String?
+  edge                 String?
+  qualityWarnings      String[] @default([]) @map("quality_warnings")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  callSession CallSession   @relation(fields: [callSessionId], references: [id])
+  bdr         Bdr           @relation(fields: [bdrId], references: [id])
+  client      ManagedClient @relation(fields: [clientId], references: [id])
+
+  @@index([bdrId, createdAt])
+  @@index([clientId, createdAt])
+  @@map("call_quality_metrics")
+}
+
+// ---------------------------------------------------------------------------
+// Personality Analysis (AI ARK)
+// ---------------------------------------------------------------------------
+
+/// Caches AI ARK personality analysis results keyed by LinkedIn URL.
+/// Same person across campaigns reuses cached data (7-day TTL enforced in app).
+model PersonalityAnalysis {
+  id             String   @id @default(uuid()) @db.Uuid
+  linkedinUrl    String   @unique @map("linkedin_url")
+  contactName    String?  @map("contact_name")
+  rawResponse    Json     @map("raw_response")
+  archetypeName  String?  @map("archetype_name")
+  archetypeScore Float?   @map("archetype_score")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("personality_analyses")
+}
+
+// ---------------------------------------------------------------------------
+// Multi-Tenant SaaS Licensing (Feature 35)
+// ---------------------------------------------------------------------------
+
+/// One-time activation key issued by the platform owner for client workspace activation.
+model LicenseKey {
+  id                   String    @id @default(cuid())
+  key                  String    @unique
+  featureFlags         Json      @map("feature_flags") @db.JsonB
+  initialCredits       Int       @default(0) @map("initial_credits")
+  subscriptionTier     String    @default("starter") @map("subscription_tier")
+  expiresAt            DateTime? @map("expires_at")
+  singleUse            Boolean   @default(true) @map("single_use")
+  activatedWorkspaceId String?   @map("activated_workspace_id")
+  activatedAt          DateTime? @map("activated_at")
+  revokedAt            DateTime? @map("revoked_at")
+  createdByAdminId     String    @map("created_by_admin_id") @db.Uuid
+  notes                String?
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  createdByAdmin      AdminUser              @relation(fields: [createdByAdminId], references: [id])
+  activatedWorkspaces WorkspaceInstallation[]
+
+  @@index([activatedWorkspaceId])
+  @@index([createdByAdminId])
+  @@map("license_keys")
+}
+
+/// Pre-defined credit bundle available for one-time purchase via Stripe Checkout.
+model CreditPack {
+  id            String   @id @default(cuid())
+  name          String
+  creditAmount  Int      @map("credit_amount")
+  priceUsd      Decimal  @map("price_usd") @db.Decimal(10, 2)
+  stripePriceId String?  @map("stripe_price_id")
+  active        Boolean  @default(true)
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([active])
+  @@map("credit_packs")
+}
+
+/// Per-user private channel registration for enrichment access.
+model EnrichmentChannel {
+  id               String                   @id @default(cuid())
+  slackTeamId      String                   @map("slack_team_id")
+  slackChannelId   String                   @map("slack_channel_id")
+  slackChannelName String                   @map("slack_channel_name")
+  assignedUserId   String                   @map("assigned_user_id")
+  assignedUserName String                   @map("assigned_user_name")
+  status           EnrichmentChannelStatus  @default(ACTIVE)
+  registeredAt     DateTime                 @default(now()) @map("registered_at")
+  deactivatedAt    DateTime?                @map("deactivated_at")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+
+  // Relations
+  workspace WorkspaceInstallation @relation(fields: [slackTeamId], references: [slackTeamId])
+
+  @@unique([slackTeamId, slackChannelId])
+  @@index([slackTeamId, assignedUserId])
+  @@index([slackTeamId, status])
+  @@map("enrichment_channels")
+}
+
+/// Per-workspace ICP & analysis channel designation for document-based context.
+model AnalysisChannel {
+  id                       String    @id @default(cuid())
+  slackTeamId              String    @unique @map("slack_team_id")
+  slackChannelId           String    @map("slack_channel_id")
+  slackChannelName         String    @map("slack_channel_name")
+  icpDocumentUrl           String?   @map("icp_document_url")
+  useCasesDocumentUrl      String?   @map("use_cases_document_url")
+  caseStudiesDocumentUrl   String?   @map("case_studies_document_url")
+  testimonialsDocumentUrl  String?   @map("testimonials_document_url")
+  icpExtractedText         String?   @map("icp_extracted_text")
+  useCasesExtractedText    String?   @map("use_cases_extracted_text")
+  caseStudiesExtractedText String?   @map("case_studies_extracted_text")
+  testimonialsExtractedText String?  @map("testimonials_extracted_text")
+  lastDocumentUploadAt     DateTime? @map("last_document_upload_at")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  workspace WorkspaceInstallation @relation(fields: [slackTeamId], references: [slackTeamId])
+
+  @@index([slackChannelId])
+  @@map("analysis_channels")
+}
+
+// ---------------------------------------------------------------------------
+// Vertical Pack Platform Models (Feature 39)
+// ---------------------------------------------------------------------------
+
+/// The core reasoning unit. Backed by an LLM with a system prompt, tool access, and versioning.
+model Agent {
+  id          String      @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String      @unique
+  description String?     @db.Text
+  status      AgentStatus @default(DRAFT)
+  modelId     String      @map("model_id")
+  maxTokens   Int         @map("max_tokens")
+  creditCost  Decimal     @map("credit_cost") @db.Decimal(10, 4)
+  inputSchema Json?       @map("input_schema") @db.JsonB
+  outputSchema Json?      @map("output_schema") @db.JsonB
+  toolIds     String[]    @default([]) @map("tool_ids")
+  // Feature 31: Autonomous agent fields
+  suggestOnlyMode       Boolean   @default(true) @map("suggest_only_mode")
+  suggestOnlyApprovals  Int       @default(0) @map("suggest_only_approvals")
+  suggestOnlyRejections Int       @default(0) @map("suggest_only_rejections")
+  lastRunAt             DateTime? @map("last_run_at")
+  actionsToday          Int       @default(0) @map("actions_today")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  versions    AgentVersion[]
+  skills      Skill[]
+  // Feature 31 relations
+  teamAgents  TeamAgent[]
+
+  @@index([status])
+  @@map("agents")
+}
+
+/// Immutable snapshot of an agent's configuration at a point in time.
+model AgentVersion {
+  id           String      @id @default(uuid()) @db.Uuid
+  agentId      String      @map("agent_id") @db.Uuid
+  version      Int
+  status       AgentStatus
+  systemPrompt String      @map("system_prompt") @db.Text
+  modelId      String      @map("model_id")
+  maxTokens    Int         @map("max_tokens")
+  toolIds      String[]    @default([]) @map("tool_ids")
+  inputSchema  Json?       @map("input_schema") @db.JsonB
+  outputSchema Json?       @map("output_schema") @db.JsonB
+  changeNote   String?     @map("change_note")
+  publishedAt  DateTime?   @map("published_at")
+  publishedBy  String?     @map("published_by") @db.Uuid
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  // Relations
+  agent        Agent       @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  skills       Skill[]     @relation("SkillAgentVersion")
+  invocations  AgentInvocation[]
+
+  @@unique([agentId, version])
+  @@index([agentId, status])
+  @@map("agent_versions")
+}
+
+/// An external service connection that exposes tools for agents to invoke.
+model McpServer {
+  id             String          @id @default(uuid()) @db.Uuid
+  name           String
+  slug           String          @unique
+  provider       String
+  baseUrl        String          @map("base_url")
+  authType       McpAuthType     @map("auth_type")
+  credentials    String?         @db.Text
+  status         McpServerStatus @default(UNKNOWN)
+  byokEnabled    Boolean         @default(false) @map("byok_enabled")
+  rateLimitRpm   Int?            @map("rate_limit_rpm")
+  lastHealthCheck DateTime?      @map("last_health_check")
+  lastHealthError String?        @map("last_health_error") @db.Text
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  tools          McpTool[]
+  byokCredentials McpByokCredential[]
+
+  @@index([status])
+  @@map("mcp_servers")
+}
+
+/// A specific capability exposed by an MCP server.
+model McpTool {
+  id           String    @id @default(uuid()) @db.Uuid
+  serverId     String    @map("server_id") @db.Uuid
+  name         String
+  description  String?   @db.Text
+  inputSchema  Json?     @map("input_schema") @db.JsonB
+  outputSchema Json?     @map("output_schema") @db.JsonB
+  creditCost   Decimal   @default(0) @map("credit_cost") @db.Decimal(10, 4)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  server       McpServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, name])
+  @@index([serverId])
+  @@map("mcp_tools")
+}
+
+/// Per-workspace BYOK credentials for an MCP server.
+model McpByokCredential {
+  id           String    @id @default(uuid()) @db.Uuid
+  serverId     String    @map("server_id") @db.Uuid
+  slackTeamId  String    @map("slack_team_id")
+  credentials  String    @db.Text
+  isValid      Boolean   @default(true) @map("is_valid")
+  lastValidatedAt DateTime? @map("last_validated_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  server       McpServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, slackTeamId])
+  @@index([slackTeamId])
+  @@map("mcp_byok_credentials")
+}
+
+/// A composable execution unit combining an agent, MCP tools, trigger, and delivery.
+model Skill {
+  id              String              @id @default(uuid()) @db.Uuid
+  name            String
+  slug            String              @unique
+  description     String?             @db.Text
+  status          SkillStatus         @default(DRAFT)
+  agentId         String              @map("agent_id") @db.Uuid
+  agentVersionId  String              @map("agent_version_id") @db.Uuid
+  triggerType     SkillTriggerType    @map("trigger_type")
+  triggerConfig   Json?               @map("trigger_config") @db.JsonB
+  deliveryChannels SkillDeliveryChannel[] @map("delivery_channels")
+  deliveryConfig  Json?               @map("delivery_config") @db.JsonB
+  mcpToolIds      String[]            @default([]) @map("mcp_tool_ids")
+  inputMapping    Json?               @map("input_mapping") @db.JsonB
+  outputMapping   Json?               @map("output_mapping") @db.JsonB
+  creditCost      Decimal             @map("credit_cost") @db.Decimal(10, 4)
+  retryPolicy     Json?               @map("retry_policy") @db.JsonB
+  chainEventName  String?             @map("chain_event_name")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  agent          Agent               @relation(fields: [agentId], references: [id])
+  agentVersion   AgentVersion        @relation("SkillAgentVersion", fields: [agentVersionId], references: [id])
+  packSkills     PackSkill[]
+  executions     SkillExecution[]
+
+  @@index([status])
+  @@index([agentId])
+  @@index([triggerType])
+  @@map("skills")
+}
+
+/// A curated bundle of skills marketed for a specific use case.
+model VerticalPack {
+  id              String      @id @default(uuid()) @db.Uuid
+  name            String
+  slug            String      @unique
+  description     String?     @db.Text
+  category        PackCategory
+  status          PackStatus  @default(DRAFT)
+  tier            PackTier
+  monthlyPriceUsd Decimal?    @map("monthly_price_usd") @db.Decimal(10, 2)
+  creditsIncluded Int         @map("credits_included")
+  overageRateUsd  Decimal?    @map("overage_rate_usd") @db.Decimal(10, 4)
+  stripePriceId   String?     @map("stripe_price_id")
+  displayOrder    Int         @default(0) @map("display_order")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  packSkills    PackSkill[]
+  subscriptions PackSubscription[]
+
+  @@index([status])
+  @@index([category])
+  @@map("vertical_packs")
+}
+
+/// Many-to-many junction between packs and skills.
+model PackSkill {
+  id        String   @id @default(uuid()) @db.Uuid
+  packId    String   @map("pack_id") @db.Uuid
+  skillId   String   @map("skill_id") @db.Uuid
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  pack  VerticalPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  skill Skill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([packId, skillId])
+  @@index([packId])
+  @@index([skillId])
+  @@map("pack_skills")
+}
+
+/// A workspace's active subscription to a vertical pack.
+model PackSubscription {
+  id                String             @id @default(uuid()) @db.Uuid
+  packId            String             @map("pack_id") @db.Uuid
+  slackTeamId       String             @map("slack_team_id")
+  status            SubscriptionStatus @default(ACTIVE)
+  creditsIncluded   Int                @map("credits_included")
+  creditsUsed       Int                @default(0) @map("credits_used")
+  overageRateUsd    Decimal?           @map("overage_rate_usd") @db.Decimal(10, 4)
+  currentPeriodStart DateTime          @map("current_period_start")
+  currentPeriodEnd   DateTime          @map("current_period_end")
+  stripeSubscriptionId String?         @map("stripe_subscription_id")
+  cancelledAt       DateTime?          @map("cancelled_at")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  pack             VerticalPack      @relation(fields: [packId], references: [id])
+  creditTransactions PackCreditTransaction[]
+
+  @@unique([packId, slackTeamId])
+  @@index([slackTeamId])
+  @@index([status])
+  @@map("pack_subscriptions")
+}
+
+/// Append-only credit ledger for pack subscriptions.
+model PackCreditTransaction {
+  id                 String   @id @default(uuid()) @db.Uuid
+  packSubscriptionId String   @map("pack_subscription_id") @db.Uuid
+  type               CreditTransactionType
+  amount             Int
+  balanceAfter       Int      @map("balance_after")
+  referenceId        String?  @map("reference_id")
+  description        String   @db.Text
+  metadata           Json?    @db.JsonB
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  // Relations
+  packSubscription PackSubscription @relation(fields: [packSubscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([packSubscriptionId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("pack_credit_transactions")
+}
+
+/// A full end-to-end run of a skill, tracking the entire pipeline.
+model SkillExecution {
+  id               String               @id @default(uuid()) @db.Uuid
+  skillId          String               @map("skill_id") @db.Uuid
+  slackTeamId      String               @map("slack_team_id")
+  slackUserId      String?              @map("slack_user_id")
+  status           SkillExecutionStatus @default(QUEUED)
+  triggerType      SkillTriggerType     @map("trigger_type")
+  triggerSource    String?              @map("trigger_source")
+  input            Json?                @db.JsonB
+  output           Json?                @db.JsonB
+  creditsCost      Decimal              @default(0) @map("credits_cost") @db.Decimal(10, 4)
+  packSubscriptionId String?            @map("pack_subscription_id") @db.Uuid
+  bullmqJobId      String?              @map("bullmq_job_id")
+  errorMessage     String?              @map("error_message") @db.Text
+  retryCount       Int                  @default(0) @map("retry_count")
+  executionTrace   Json?                @map("execution_trace") @db.JsonB
+  startedAt        DateTime?            @map("started_at")
+  completedAt      DateTime?            @map("completed_at")
+  createdAt        DateTime             @default(now()) @map("created_at")
+
+  // Relations
+  skill            Skill                @relation(fields: [skillId], references: [id])
+  agentInvocations AgentInvocation[]
+  // Feature 31 reverse relations
+  auditActions     AuditAction[]
+  pendingActions   PendingAction[]
+
+  @@index([skillId])
+  @@index([slackTeamId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([packSubscriptionId])
+  @@map("skill_executions")
+}
+
+/// A single LLM call within a skill execution.
+model AgentInvocation {
+  id               String    @id @default(uuid()) @db.Uuid
+  executionId      String    @map("execution_id") @db.Uuid
+  agentVersionId   String    @map("agent_version_id") @db.Uuid
+  input            Json?     @db.JsonB
+  output           Json?     @db.JsonB
+  tokensInput      Int       @default(0) @map("tokens_input")
+  tokensOutput     Int       @default(0) @map("tokens_output")
+  costUsd          Decimal   @default(0) @map("cost_usd") @db.Decimal(10, 6)
+  modelId          String    @map("model_id")
+  durationMs       Int       @default(0) @map("duration_ms")
+  toolCallsMade    Json?     @map("tool_calls_made") @db.JsonB
+  errorMessage     String?   @map("error_message") @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  execution       SkillExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  agentVersion    AgentVersion   @relation(fields: [agentVersionId], references: [id])
+
+  @@index([executionId])
+  @@index([agentVersionId])
+  @@index([createdAt])
+  @@map("agent_invocations")
+}
+
+// ---------------------------------------------------------------------------
+// Autonomous Agents Models (Feature 31)
+// ---------------------------------------------------------------------------
+
+/// A named group of collaborating agents (also referred to as "Cluster").
+model Team {
+  id          String     @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String     @unique
+  description String?    @db.Text
+  status      TeamStatus @default(ACTIVE)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  teamAgents  TeamAgent[]
+
+  @@index([status])
+  @@map("teams")
+}
+
+/// Many-to-many junction between Teams and Agents.
+model TeamAgent {
+  id        String @id @default(uuid()) @db.Uuid
+  teamId    String @map("team_id") @db.Uuid
+  agentId   String @map("agent_id") @db.Uuid
+  sortOrder Int    @default(0) @map("sort_order")
+
+  // Relations
+  team  Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, agentId])
+  @@index([teamId])
+  @@index([agentId])
+  @@map("team_agents")
+}
+
+/// Database audit trail for all autonomous agent actions.
+model AuditAction {
+  id                    String       @id @default(uuid()) @db.Uuid
+  agentName             String       @map("agent_name")
+  action                String
+  confidence            Float
+  severity              Severity
+  metadata              Json         @db.JsonB
+  specialtyExecutionId  String?      @map("specialty_execution_id") @db.Uuid
+  outcome               AuditOutcome
+  adminUserId           String?      @map("admin_user_id") @db.Uuid
+  timestamp             DateTime     @default(now())
+
+  // Relations
+  specialtyExecution    SkillExecution? @relation(fields: [specialtyExecutionId], references: [id])
+  adminUser             AdminUser?      @relation(fields: [adminUserId], references: [id])
+
+  @@index([agentName, timestamp])
+  @@index([timestamp])
+  @@index([outcome, timestamp])
+  @@index([severity, timestamp])
+  @@map("audit_actions")
+}
+
+/// Per-worker concurrency settings managed by the API Rate Limit Manager Agent.
+model WorkerConfig {
+  id          String   @id @default(uuid()) @db.Uuid
+  workerName  String   @unique @map("worker_name")
+  concurrency Int
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedBy   String   @map("updated_by")
+  reason      String   @db.Text
+
+  @@index([workerName])
+  @@map("worker_configs")
+}
+
+/// System-level events generated by autonomous agents for admin dashboard visibility.
+model SystemEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  type           String
+  severity       Severity
+  message        String   @db.Text
+  metadata       Json     @db.JsonB
+  agentName      String?  @map("agent_name")
+  acknowledged   Boolean  @default(false)
+  acknowledgedBy String?  @map("acknowledged_by")
+  acknowledgedAt DateTime? @map("acknowledged_at")
+  timestamp      DateTime @default(now())
+
+  @@index([type, timestamp])
+  @@index([severity, timestamp])
+  @@index([acknowledged, timestamp])
+  @@map("system_events")
+}
+
+/// Aggregated campaign performance data for Campaign Optimization Agent.
+model CampaignMetrics {
+  id            String   @id @default(uuid()) @db.Uuid
+  campaignId    String   @map("campaign_id")
+  sendHour      Int
+  openRate      Float    @map("open_rate")
+  responseRate  Float    @map("response_rate")
+  sendCount     Int      @map("send_count")
+  abTestVariant String?  @map("ab_test_variant")
+  lastUpdated   DateTime @updatedAt @map("last_updated")
+
+  @@unique([campaignId, sendHour, abTestVariant])
+  @@index([campaignId])
+  @@map("campaign_metrics")
+}
+
+/// CRM conflict resolution decisions for supervised learning.
+model ConflictDecision {
+  id          String          @id @default(uuid()) @db.Uuid
+  conflictId  String          @map("conflict_id")
+  confidence  Float
+  features    Json            @db.JsonB
+  outcome     ConflictOutcome
+  adminUserId String?         @map("admin_user_id") @db.Uuid
+  metadata    Json?           @db.JsonB
+  timestamp   DateTime        @default(now())
+
+  // Relations
+  adminUser   AdminUser?      @relation(fields: [adminUserId], references: [id])
+
+  @@index([outcome, timestamp])
+  @@index([conflictId])
+  @@map("conflict_decisions")
+}
+
+/// Autonomous agent recommended action awaiting admin approval.
+model PendingAction {
+  id                    String              @id @default(uuid()) @db.Uuid
+  agentName             String              @map("agent_name")
+  action                String
+  confidence            Float
+  metadata              Json                @db.JsonB
+  specialtyExecutionId  String?             @map("specialty_execution_id") @db.Uuid
+  status                PendingActionStatus @default(PENDING)
+  reviewedBy            String?             @map("reviewed_by")
+  reviewedAt            DateTime?           @map("reviewed_at")
+  createdAt             DateTime            @default(now()) @map("created_at")
+
+  // Relations
+  specialtyExecution    SkillExecution?     @relation(fields: [specialtyExecutionId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([agentName, status])
+  @@map("pending_actions")
+}

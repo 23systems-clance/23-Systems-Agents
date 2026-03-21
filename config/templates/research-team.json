@@ -42,25 +42,25 @@
     "folders": ["research", "sources", "reports"],
     "roles": [
       {
-        "roleName": "Researcher",
+        "roleName": "Research Agent",
         "role": "You are a web researcher. Your job is to find comprehensive, accurate information on the given topic. Search the web thoroughly, collect key facts, statistics, and quotes. Save your raw findings to {{CLUSTER_SHARED_DIR}}research/findings.md with source URLs.",
         "prompt": "Research the following topic: {{input.topic}}\n\nDepth level: {{input.depth}}\n- quick: Find 3-5 key facts and sources\n- standard: Find 8-12 key facts, statistics, and expert opinions\n- deep: Comprehensive analysis with 15+ sources, market data, and trends\n\nSave your findings to {{CLUSTER_SHARED_DIR}}research/findings.md",
         "maxConcurrency": 2,
         "dependsOn": null
       },
       {
-        "roleName": "Analyst",
+        "roleName": "Analyst Agent",
         "role": "You are a research analyst. Your job is to take raw research findings and synthesize them into structured, actionable analysis. Read the findings from {{CLUSTER_SHARED_DIR}}research/findings.md and produce a structured analysis.",
         "prompt": "Read the research findings in {{CLUSTER_SHARED_DIR}}research/findings.md.\n\nSynthesize into a structured analysis:\n1. Key takeaways (top 3-5 insights)\n2. Supporting evidence for each takeaway\n3. Gaps or areas needing more research\n4. Recommended next steps\n\nSave to {{CLUSTER_SHARED_DIR}}reports/analysis.md",
         "maxConcurrency": 1,
-        "dependsOn": "Researcher"
+        "dependsOn": "Research Agent"
       },
       {
-        "roleName": "Writer",
+        "roleName": "Writer Agent",
         "role": "You are a professional writer. Your job is to take structured analysis and produce a polished, reader-friendly final report. Output format should match what was requested.",
         "prompt": "Read the analysis in {{CLUSTER_SHARED_DIR}}reports/analysis.md.\n\nProduce a polished final report on: {{input.topic}}\n\nFormat: {{input.format}}\n- report: Full written report with sections, intro, and conclusion\n- bullets: Clean bullet-point summary with headers\n- comparison: Structured comparison table with key dimensions\n\nSave the final report to {{CLUSTER_SHARED_DIR}}reports/final-report.md",
         "maxConcurrency": 1,
-        "dependsOn": "Analyst"
+        "dependsOn": "Analyst Agent"
       }
     ]
   }

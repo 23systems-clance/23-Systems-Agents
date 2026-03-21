@@ -1,0 +1,507 @@
+openapi: 3.0.3
+info:
+  title: CRM Adapter API
+  description: |
+    REST API for managing CRM connections, field mappings, and triggering CRM imports.
+    These endpoints are consumed by the admin dashboard (CloudFront SPA) and internal services.
+  version: 1.0.0
+
+servers:
+  - url: /api
+    description: Backend API (proxied via CloudFront /api/* -> ALB)
+
+paths:
+  # -----------------------------------------------------------------------
+  # CRM Connections
+  # -----------------------------------------------------------------------
+  /crm/connections:
+    get:
+      operationId: listCrmConnections
+      summary: List all CRM connections
+      description: Returns all CRM connections, optionally filtered by client.
+      tags: [CRM Connections]
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of CRM connections
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connections:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CrmConnection"
+
+    post:
+      operationId: createCrmConnection
+      summary: Create a CRM connection
+      description: |
+        Creates a new CRM connection for a client. For HubSpot, this is called
+        after OAuth callback to link the HubSpotConnection to a CrmConnection.
+      tags: [CRM Connections]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [clientId, crmType]
+              properties:
+                clientId:
+                  type: string
+                  format: uuid
+                crmType:
+                  $ref: "#/components/schemas/CrmType"
+                displayName:
+                  type: string
+                hubspotConnectionId:
+                  type: string
+                  format: uuid
+                  description: Required for HUBSPOT type
+      responses:
+        "201":
+          description: CRM connection created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmConnection"
+
+  /crm/connections/{connectionId}:
+    get:
+      operationId: getCrmConnection
+      summary: Get a CRM connection
+      tags: [CRM Connections]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+      responses:
+        "200":
+          description: CRM connection details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmConnection"
+        "404":
+          description: Connection not found
+
+    delete:
+      operationId: deleteCrmConnection
+      summary: Disconnect a CRM
+      description: |
+        Marks the CRM connection as DISCONNECTED. Does NOT delete canonical data.
+        Field mappings and push records are preserved for potential reconnection.
+      tags: [CRM Connections]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+      responses:
+        "200":
+          description: Connection disconnected
+        "404":
+          description: Connection not found
+
+  /crm/connections/{connectionId}/properties:
+    get:
+      operationId: getCrmProperties
+      summary: Fetch CRM property schema
+      description: |
+        Fetches the target CRM's property schema via the adapter. Results are
+        cached in Redis (1 hour TTL). Used to populate the field mapping dropdown.
+      tags: [CRM Connections]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+      responses:
+        "200":
+          description: List of CRM properties
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  properties:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CrmPropertyInfo"
+
+  # -----------------------------------------------------------------------
+  # Field Mappings
+  # -----------------------------------------------------------------------
+  /crm/connections/{connectionId}/field-mappings:
+    get:
+      operationId: listFieldMappings
+      summary: List field mappings for a connection
+      description: Returns all field mappings for the given CRM connection.
+      tags: [Field Mappings]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+      responses:
+        "200":
+          description: List of field mappings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mappings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CrmFieldMapping"
+                  unmappedCanonicalFields:
+                    type: array
+                    items:
+                      type: string
+                    description: Canonical fields not yet mapped
+
+    post:
+      operationId: createFieldMapping
+      summary: Add a field mapping
+      tags: [Field Mappings]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrmFieldMappingInput"
+      responses:
+        "201":
+          description: Field mapping created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmFieldMapping"
+        "409":
+          description: Mapping for this canonical field already exists
+
+    put:
+      operationId: bulkUpdateFieldMappings
+      summary: Bulk update field mappings
+      description: |
+        Replaces all field mappings for a connection. Used by the admin dashboard
+        "Save" action to persist the entire mapping table at once.
+      tags: [Field Mappings]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mappings]
+              properties:
+                mappings:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CrmFieldMappingInput"
+      responses:
+        "200":
+          description: Field mappings updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mappings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CrmFieldMapping"
+
+  /crm/connections/{connectionId}/field-mappings/{mappingId}:
+    patch:
+      operationId: updateFieldMapping
+      summary: Update a single field mapping
+      tags: [Field Mappings]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+        - name: mappingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrmFieldMappingInput"
+      responses:
+        "200":
+          description: Field mapping updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmFieldMapping"
+
+    delete:
+      operationId: deleteFieldMapping
+      summary: Remove a field mapping
+      tags: [Field Mappings]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+        - name: mappingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Field mapping deleted
+
+  /crm/connections/{connectionId}/auto-map:
+    post:
+      operationId: autoDetectFieldMappings
+      summary: Auto-detect field mappings
+      description: |
+        Fetches the CRM's property schema and auto-populates field mappings
+        by matching canonical field names to CRM property names. Does not
+        overwrite existing custom mappings.
+      tags: [Field Mappings]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+      responses:
+        "200":
+          description: Auto-detected mappings applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mappings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CrmFieldMapping"
+                  autoMappedCount:
+                    type: integer
+                  totalCanonicalFields:
+                    type: integer
+
+  # -----------------------------------------------------------------------
+  # CRM Import
+  # -----------------------------------------------------------------------
+  /crm/connections/{connectionId}/import:
+    post:
+      operationId: triggerCrmImport
+      summary: Trigger a CRM import
+      description: |
+        Converts enrichment results to canonical records and pushes them to the
+        target CRM via the adapter. Supports incremental import (only new/updated
+        records since last push).
+      tags: [CRM Import]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enrichmentJobId]
+              properties:
+                enrichmentJobId:
+                  type: string
+                  format: uuid
+                  description: Job whose results to import
+                listName:
+                  type: string
+                  description: Name for the CRM list (optional)
+                incrementalOnly:
+                  type: boolean
+                  default: true
+                  description: Only push records new/updated since last push
+      responses:
+        "202":
+          description: Import queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmImportResult"
+
+  /crm/connections/{connectionId}/import/{importId}:
+    get:
+      operationId: getCrmImportStatus
+      summary: Get import job status
+      tags: [CRM Import]
+      parameters:
+        - $ref: "#/components/parameters/connectionId"
+        - name: importId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Import job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmImportResult"
+
+components:
+  parameters:
+    connectionId:
+      name: connectionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    CrmType:
+      type: string
+      enum: [HUBSPOT, ATTIO, SALESFORCE]
+
+    CrmConnectionStatus:
+      type: string
+      enum: [ACTIVE, DISCONNECTED, TOKEN_EXPIRED, ERROR]
+
+    CrmConnection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        clientId:
+          type: string
+          format: uuid
+        clientName:
+          type: string
+        crmType:
+          $ref: "#/components/schemas/CrmType"
+        status:
+          $ref: "#/components/schemas/CrmConnectionStatus"
+        displayName:
+          type: string
+        fieldMappingCount:
+          type: integer
+        lastImportAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CrmPropertyInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          description: "e.g., string, number, date, enumeration"
+        groupName:
+          type: string
+        isCustom:
+          type: boolean
+
+    CrmFieldMapping:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        canonicalField:
+          type: string
+        crmProperty:
+          type: string
+        crmPropertyLabel:
+          type: string
+          nullable: true
+        dataType:
+          type: string
+        transformRule:
+          type: string
+          nullable: true
+        isRequired:
+          type: boolean
+        syncDirection:
+          type: string
+          enum: [TO_CRM, FROM_CRM, BIDIRECTIONAL]
+        overwriteExisting:
+          type: boolean
+        displayOrder:
+          type: integer
+
+    CrmFieldMappingInput:
+      type: object
+      required: [canonicalField, crmProperty]
+      properties:
+        canonicalField:
+          type: string
+        crmProperty:
+          type: string
+        crmPropertyLabel:
+          type: string
+        dataType:
+          type: string
+          default: string
+        transformRule:
+          type: string
+          nullable: true
+        isRequired:
+          type: boolean
+          default: false
+        syncDirection:
+          type: string
+          enum: [TO_CRM, FROM_CRM, BIDIRECTIONAL]
+          default: TO_CRM
+        overwriteExisting:
+          type: boolean
+          default: true
+        displayOrder:
+          type: integer
+          default: 0
+
+    CrmImportResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        connectionId:
+          type: string
+          format: uuid
+        enrichmentJobId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+        canonicalContactsCreated:
+          type: integer
+        canonicalAccountsCreated:
+          type: integer
+        crmContactsPushed:
+          type: integer
+        crmContactsFailed:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+              error:
+                type: string
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true

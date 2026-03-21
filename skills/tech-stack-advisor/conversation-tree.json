@@ -1,0 +1,548 @@
+{
+  "meta": {
+    "version": "1.0",
+    "description": "Client-side conversation state machine for tech stack advisor. Zero LLM calls — all questions are pre-written with branching logic.",
+    "typingDelay": { "min": 600, "max": 1500 }
+  },
+
+  "simple": {
+    "opening": {
+      "id": "opening",
+      "messages": [
+        "Hey! I'm the 23 Systems tech advisor. I help teams and founders figure out the best tech stack for their project.",
+        "Tell me — what are you building and what problem does it solve?"
+      ],
+      "input": { "type": "freeText", "placeholder": "Describe your project...", "storeAs": "projectDescription" },
+      "next": "depth_select"
+    },
+
+    "depth_select": {
+      "id": "depth_select",
+      "messages": [
+        "Interesting project! Let me ask a few questions so I can give you the best recommendation.",
+        "Would you prefer a **high-level recommendation** (~2 minutes, 3-4 questions) or a **deep dive** (~5 minutes, 8-10 questions covering integrations, compliance, and budget)?"
+      ],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "High-level (~2 min)", "value": "high_level" },
+          { "label": "Deep dive (~5 min)", "value": "deep_dive" }
+        ],
+        "storeAs": "depthMode"
+      },
+      "next": {
+        "high_level": "hl_stage",
+        "deep_dive": "dd_stage"
+      }
+    },
+
+    "hl_stage": {
+      "id": "hl_stage",
+      "messages": ["Great — let's keep it focused. Is this an MVP or proof of concept, or are you building for full production scale?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "MVP / Proof of concept", "value": "mvp" },
+          { "label": "Production scale", "value": "production" },
+          { "label": "Not sure yet", "value": "unsure" }
+        ],
+        "storeAs": "projectStage"
+      },
+      "next": "hl_team"
+    },
+
+    "hl_team": {
+      "id": "hl_team",
+      "messages": ["Got it. What does your team look like?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Solo developer", "value": "solo" },
+          { "label": "Small team (2-5)", "value": "small_team" },
+          { "label": "Larger team (6+)", "value": "large_team" },
+          { "label": "No dev team yet", "value": "no_team" }
+        ],
+        "storeAs": "teamSize"
+      },
+      "next": "hl_constraints"
+    },
+
+    "hl_constraints": {
+      "id": "hl_constraints",
+      "messages": ["Any hard constraints I should know about? Things like existing infrastructure, language preferences, or compliance requirements."],
+      "input": { "type": "freeText", "placeholder": "e.g., 'We already use AWS' or 'No constraints'", "storeAs": "constraints" },
+      "next": "hl_timeline"
+    },
+
+    "hl_timeline": {
+      "id": "hl_timeline",
+      "messages": ["Last one — what's your timeline?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Weeks (fast ship)", "value": "weeks" },
+          { "label": "1-3 months", "value": "months" },
+          { "label": "6+ months", "value": "long" },
+          { "label": "Ongoing / no deadline", "value": "ongoing" }
+        ],
+        "storeAs": "timeline"
+      },
+      "next": "summary"
+    },
+
+    "dd_stage": {
+      "id": "dd_stage",
+      "messages": ["Great — let's get thorough. First, is this an MVP or proof of concept, or are you building for full production scale?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "MVP / Proof of concept", "value": "mvp" },
+          { "label": "Production scale", "value": "production" },
+          { "label": "Not sure yet", "value": "unsure" }
+        ],
+        "storeAs": "projectStage"
+      },
+      "next": "dd_team"
+    },
+
+    "dd_team": {
+      "id": "dd_team",
+      "messages": ["What does your team look like?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Solo developer", "value": "solo" },
+          { "label": "Small team (2-5)", "value": "small_team" },
+          { "label": "Larger team (6+)", "value": "large_team" },
+          { "label": "No dev team yet", "value": "no_team" }
+        ],
+        "storeAs": "teamSize"
+      },
+      "next": "dd_current_stack"
+    },
+
+    "dd_current_stack": {
+      "id": "dd_current_stack",
+      "messages": ["Do you have an existing tech stack, or are you starting fresh?"],
+      "input": { "type": "freeText", "placeholder": "e.g., 'React + Node on Heroku' or 'Starting from scratch'", "storeAs": "currentStack" },
+      "next": "dd_realtime"
+    },
+
+    "dd_realtime": {
+      "id": "dd_realtime",
+      "messages": ["Will you need real-time features? Things like live chat, real-time collaboration, live dashboards, or push notifications."],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Yes, real-time is core", "value": "core" },
+          { "label": "Some real-time features", "value": "some" },
+          { "label": "No, standard request/response", "value": "none" }
+        ],
+        "storeAs": "realtimeNeeds"
+      },
+      "next": "dd_scale"
+    },
+
+    "dd_scale": {
+      "id": "dd_scale",
+      "messages": ["What kind of user load are you expecting at launch? And in 12 months?"],
+      "input": { "type": "freeText", "placeholder": "e.g., '100 users at launch, 10k in a year'", "storeAs": "expectedScale" },
+      "next": "dd_integrations"
+    },
+
+    "dd_integrations": {
+      "id": "dd_integrations",
+      "messages": ["Any third-party integrations you already know you'll need? Payments, auth providers, specific APIs?"],
+      "input": { "type": "freeText", "placeholder": "e.g., 'Stripe for payments, Google OAuth'", "storeAs": "integrations" },
+      "next": "dd_budget"
+    },
+
+    "dd_budget": {
+      "id": "dd_budget",
+      "messages": ["What's your budget range for infrastructure?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Bootstrapped (minimize cost)", "value": "bootstrapped" },
+          { "label": "Seed-funded (some runway)", "value": "seed" },
+          { "label": "Enterprise budget", "value": "enterprise" }
+        ],
+        "storeAs": "budget"
+      },
+      "next": "dd_compliance"
+    },
+
+    "dd_compliance": {
+      "id": "dd_compliance",
+      "messages": ["Does your industry have compliance requirements? HIPAA, SOC2, PCI, GDPR — anything like that?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Yes", "value": "yes" },
+          { "label": "No", "value": "no" },
+          { "label": "Not sure", "value": "unsure" }
+        ],
+        "storeAs": "complianceNeeded"
+      },
+      "next": {
+        "yes": "dd_compliance_detail",
+        "no": "dd_timeline",
+        "unsure": "dd_timeline"
+      }
+    },
+
+    "dd_compliance_detail": {
+      "id": "dd_compliance_detail",
+      "messages": ["Which compliance standards apply?"],
+      "input": { "type": "freeText", "placeholder": "e.g., 'HIPAA for healthcare data'", "storeAs": "complianceDetails" },
+      "next": "dd_timeline"
+    },
+
+    "dd_timeline": {
+      "id": "dd_timeline",
+      "messages": ["Almost done — what's your timeline?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Weeks (fast ship)", "value": "weeks" },
+          { "label": "1-3 months", "value": "months" },
+          { "label": "6+ months", "value": "long" },
+          { "label": "Ongoing / no deadline", "value": "ongoing" }
+        ],
+        "storeAs": "timeline"
+      },
+      "next": "dd_preference"
+    },
+
+    "dd_preference": {
+      "id": "dd_preference",
+      "messages": ["Last question — do you have a preference between managed services (like Vercel, Supabase, Railway) versus self-hosted infrastructure?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Managed (less ops work)", "value": "managed" },
+          { "label": "Self-hosted (more control)", "value": "self_hosted" },
+          { "label": "No preference", "value": "no_preference" }
+        ],
+        "storeAs": "hostingPreference"
+      },
+      "next": "summary"
+    },
+
+    "summary": {
+      "id": "summary",
+      "type": "summary",
+      "messages": [
+        "Here's what I'm working with:",
+        "{{GENERATED_SUMMARY}}",
+        "Sound right before I build your recommendation?"
+      ],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Looks good, let's go!", "value": "confirmed" },
+          { "label": "Let me adjust something", "value": "edit" }
+        ],
+        "storeAs": "summaryConfirmed"
+      },
+      "next": {
+        "confirmed": "partner_question",
+        "edit": "summary_edit"
+      }
+    },
+
+    "summary_edit": {
+      "id": "summary_edit",
+      "messages": ["No problem — what would you like to change or add?"],
+      "input": { "type": "freeText", "placeholder": "Tell me what to adjust...", "storeAs": "summaryCorrection" },
+      "next": "summary"
+    },
+
+    "partner_question": {
+      "id": "partner_question",
+      "messages": [
+        "One more thing — based on your project, there are companies that offer free cloud credits, startup programs, and implementation partners that could help bring this to life.",
+        "Would you like me to include those in your full report?"
+      ],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Yes, include partner resources", "value": "yes" },
+          { "label": "No thanks, just the tech stack", "value": "no" }
+        ],
+        "storeAs": "wantsPartners"
+      },
+      "next": "lead_gate"
+    },
+
+    "lead_gate": {
+      "id": "lead_gate",
+      "type": "lead_gate",
+      "messages": [
+        "I've got everything I need to build your full Tech Stack Report — complete with architecture diagrams, detailed reasoning, alternatives, and tradeoff analysis.",
+        "Enter your name and email below and I'll generate it for you."
+      ]
+    }
+  },
+
+  "dev": {
+    "opening": {
+      "id": "opening",
+      "messages": [
+        "Hey — I'm the 23 Systems tech advisor. I help engineering teams and technical founders choose the right stack.",
+        "What are you building? Give me the elevator pitch and the core technical challenge."
+      ],
+      "input": { "type": "freeText", "placeholder": "Describe your project and its technical challenge...", "storeAs": "projectDescription" },
+      "next": "depth_select"
+    },
+
+    "depth_select": {
+      "id": "depth_select",
+      "messages": [
+        "Good problem space. Let me ask a few questions to nail down the right stack.",
+        "Do you want a **high-level recommendation** (~2 min, high-level architecture) or a **deep dive** (~5 min, covering scaling strategy, protocol choices, and infrastructure)?"
+      ],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "High-level (~2 min)", "value": "high_level" },
+          { "label": "Deep dive (~5 min)", "value": "deep_dive" }
+        ],
+        "storeAs": "depthMode"
+      },
+      "next": {
+        "high_level": "hl_stage",
+        "deep_dive": "dd_stage"
+      }
+    },
+
+    "hl_stage": {
+      "id": "hl_stage",
+      "messages": ["Is this a prototype/MVP or are you architecting for production load from day one?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "MVP / Prototype", "value": "mvp" },
+          { "label": "Production-ready", "value": "production" },
+          { "label": "POC → production migration path", "value": "migration" }
+        ],
+        "storeAs": "projectStage"
+      },
+      "next": "hl_team"
+    },
+
+    "hl_team": {
+      "id": "hl_team",
+      "messages": ["What's the engineering team look like? And what's the primary language/framework experience?"],
+      "input": { "type": "freeText", "placeholder": "e.g., '3 devs, strong in Python and React, some Go'", "storeAs": "teamSize" },
+      "next": "hl_constraints"
+    },
+
+    "hl_constraints": {
+      "id": "hl_constraints",
+      "messages": ["Hard constraints? Existing infra, vendor lock-in, compliance requirements, or specific protocols you need to support?"],
+      "input": { "type": "freeText", "placeholder": "e.g., 'Existing Postgres on RDS, need WebSocket support'", "storeAs": "constraints" },
+      "next": "hl_timeline"
+    },
+
+    "hl_timeline": {
+      "id": "hl_timeline",
+      "messages": ["Timeline to first deploy?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "< 4 weeks", "value": "weeks" },
+          { "label": "1-3 months", "value": "months" },
+          { "label": "6+ months", "value": "long" },
+          { "label": "Ongoing iteration", "value": "ongoing" }
+        ],
+        "storeAs": "timeline"
+      },
+      "next": "summary"
+    },
+
+    "dd_stage": {
+      "id": "dd_stage",
+      "messages": ["First — is this a prototype/MVP or are you architecting for production from day one?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "MVP / Prototype", "value": "mvp" },
+          { "label": "Production-ready", "value": "production" },
+          { "label": "POC → production migration path", "value": "migration" }
+        ],
+        "storeAs": "projectStage"
+      },
+      "next": "dd_team"
+    },
+
+    "dd_team": {
+      "id": "dd_team",
+      "messages": ["What's the engineering team? Size, primary language/framework experience, and any gaps you know about."],
+      "input": { "type": "freeText", "placeholder": "e.g., '4 devs, TypeScript/React, weak on infra/DevOps'", "storeAs": "teamSize" },
+      "next": "dd_current_stack"
+    },
+
+    "dd_current_stack": {
+      "id": "dd_current_stack",
+      "messages": ["Existing stack? Or greenfield?"],
+      "input": { "type": "freeText", "placeholder": "e.g., 'Monolith on Rails + Postgres, migrating to microservices'", "storeAs": "currentStack" },
+      "next": "dd_realtime"
+    },
+
+    "dd_realtime": {
+      "id": "dd_realtime",
+      "messages": ["Real-time requirements? WebSockets, SSE, CRDTs, live collaboration, push notifications?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Core feature (low-latency required)", "value": "core" },
+          { "label": "Some real-time (notifications, updates)", "value": "some" },
+          { "label": "Standard request/response only", "value": "none" }
+        ],
+        "storeAs": "realtimeNeeds"
+      },
+      "next": "dd_scale"
+    },
+
+    "dd_scale": {
+      "id": "dd_scale",
+      "messages": ["Expected concurrent users at launch and at 12 months? And read/write ratio if you know it."],
+      "input": { "type": "freeText", "placeholder": "e.g., '500 concurrent at launch, 10k in a year, read-heavy 90/10'", "storeAs": "expectedScale" },
+      "next": "dd_integrations"
+    },
+
+    "dd_integrations": {
+      "id": "dd_integrations",
+      "messages": ["Third-party integrations? Payment processors, auth providers, external APIs, data sources?"],
+      "input": { "type": "freeText", "placeholder": "e.g., 'Stripe Connect, Auth0, Twilio, S3'", "storeAs": "integrations" },
+      "next": "dd_budget"
+    },
+
+    "dd_budget": {
+      "id": "dd_budget",
+      "messages": ["Infrastructure budget range? This affects managed vs self-hosted recommendations."],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Bootstrapped (optimize for free tiers)", "value": "bootstrapped" },
+          { "label": "Seed-funded ($500-2k/mo infra)", "value": "seed" },
+          { "label": "Enterprise ($5k+/mo)", "value": "enterprise" }
+        ],
+        "storeAs": "budget"
+      },
+      "next": "dd_compliance"
+    },
+
+    "dd_compliance": {
+      "id": "dd_compliance",
+      "messages": ["Compliance requirements? HIPAA, SOC2, PCI-DSS, GDPR, FedRAMP?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Yes — specific standards", "value": "yes" },
+          { "label": "No regulatory requirements", "value": "no" },
+          { "label": "Need to figure this out", "value": "unsure" }
+        ],
+        "storeAs": "complianceNeeded"
+      },
+      "next": {
+        "yes": "dd_compliance_detail",
+        "no": "dd_dx_vs_perf",
+        "unsure": "dd_dx_vs_perf"
+      }
+    },
+
+    "dd_compliance_detail": {
+      "id": "dd_compliance_detail",
+      "messages": ["Which standards? This affects database choice, hosting region, and encryption requirements."],
+      "input": { "type": "freeText", "placeholder": "e.g., 'HIPAA — storing PHI, need BAA from cloud provider'", "storeAs": "complianceDetails" },
+      "next": "dd_dx_vs_perf"
+    },
+
+    "dd_dx_vs_perf": {
+      "id": "dd_dx_vs_perf",
+      "messages": ["Developer experience vs raw performance — where do you land? This affects choices like Next.js vs Remix vs bare Vite, or Prisma vs raw SQL."],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "DX first (ship fast, iterate)", "value": "dx" },
+          { "label": "Performance first (optimize early)", "value": "performance" },
+          { "label": "Balance both", "value": "balanced" }
+        ],
+        "storeAs": "dxVsPerf"
+      },
+      "next": "dd_hosting_pref"
+    },
+
+    "dd_hosting_pref": {
+      "id": "dd_hosting_pref",
+      "messages": ["Last one — managed platforms (Vercel, Railway, Supabase) or self-hosted (Docker on EC2/GCE, Kubernetes)?"],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Managed (less ops)", "value": "managed" },
+          { "label": "Self-hosted (full control)", "value": "self_hosted" },
+          { "label": "Hybrid (managed frontend, self-hosted backend)", "value": "hybrid" }
+        ],
+        "storeAs": "hostingPreference"
+      },
+      "next": "summary"
+    },
+
+    "summary": {
+      "id": "summary",
+      "type": "summary",
+      "messages": [
+        "Here's the project profile I've built:",
+        "{{GENERATED_SUMMARY}}",
+        "Anything to adjust before I generate your recommendation?"
+      ],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Looks accurate, generate it", "value": "confirmed" },
+          { "label": "Need to adjust something", "value": "edit" }
+        ],
+        "storeAs": "summaryConfirmed"
+      },
+      "next": {
+        "confirmed": "partner_question",
+        "edit": "summary_edit"
+      }
+    },
+
+    "summary_edit": {
+      "id": "summary_edit",
+      "messages": ["What needs adjusting?"],
+      "input": { "type": "freeText", "placeholder": "What should I change...", "storeAs": "summaryCorrection" },
+      "next": "summary"
+    },
+
+    "partner_question": {
+      "id": "partner_question",
+      "messages": [
+        "Based on your stack profile, there are cloud credit programs, startup offers, and implementation partners that match your recommended technologies.",
+        "Want me to include matched programs in your report?"
+      ],
+      "input": {
+        "type": "choice",
+        "options": [
+          { "label": "Yes, include matched programs", "value": "yes" },
+          { "label": "Skip, just the stack", "value": "no" }
+        ],
+        "storeAs": "wantsPartners"
+      },
+      "next": "lead_gate"
+    },
+
+    "lead_gate": {
+      "id": "lead_gate",
+      "type": "lead_gate",
+      "messages": [
+        "Report ready to generate — full architecture breakdown, alternatives with tradeoff analysis, and confidence scores per category.",
+        "Drop your name and email below and I'll build it."
+      ]
+    }
+  }
+}

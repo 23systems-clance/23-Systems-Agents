@@ -46,7 +46,7 @@ for skill_dir in /job/skills/active/*/; do
     fi
 done
 
-# Start Chrome if available (installed by browser-tools skill via Puppeteer)
+# Start Chrome if available (installed by automate-browser skill via Puppeteer)
 CHROME_PID=""
 CHROME_BIN=$(find /home/agent/.cache/puppeteer -name "chrome" -type f 2>/dev/null | head -1)
 if [ -n "$CHROME_BIN" ]; then

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Deep Dive — Stripe's One-Shot End-to-End Coding Agents (Minions)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --violet: #7c3aed;
+    --violet-light: #a78bfa;
+    --violet-bg: #f5f3ff;
+    --violet-border: #ede9fe;
+    --teal: #0d9488;
+    --teal-bg: #f0fdfa;
+    --teal-border: #ccfbf1;
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text-primary: #171717;
+    --text-secondary: #525252;
+    --text-tertiary: #a3a3a3;
+    --border: #e5e5e5;
+    --border-subtle: #f0f0f0;
+    --rose: #e11d48;
+    --rose-bg: #fff1f2;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background: #171717;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0;
+  }
+  .sidebar-header {
+    padding: 28px 22px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--violet-light);
+    margin-bottom: 8px;
+  }
+  .sidebar-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .sidebar-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 8px;
+  }
+  .sidebar-nav {
+    padding: 16px 0;
+  }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: #262626;
+    border-left-color: var(--violet);
+  }
+  .sidebar-nav a .num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-link {
+    padding: 16px 22px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-link a {
+    font-size: 12px;
+    color: var(--violet-light);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: 260px;
+    padding: 40px 48px 60px;
+    max-width: 960px;
+  }
+
+  /* ── SECTION HEADING ── */
+  .section-heading {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    margin: 40px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-heading:first-child { margin-top: 0; }
+  .section-heading::before {
+    content: '';
+    width: 4px;
+    height: 22px;
+    background: linear-gradient(180deg, var(--violet), var(--teal));
+    border-radius: 2px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  /* ── OVERVIEW STATS ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-box {
+    background: var(--violet-bg);
+    border: 1px solid var(--violet-border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-box .val {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-box .lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  /* ── TAKEAWAYS ── */
+  .takeaway {
+    display: flex;
+    gap: 16px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .takeaway:last-child { border-bottom: none; }
+  .takeaway-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .takeaway-body h3 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+  }
+  .takeaway-body p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .takeaway-body .evidence {
+    margin-top: 10px;
+    background: var(--teal-bg);
+    border-left: 3px solid var(--teal);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+  .takeaway-body .evidence .ts {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-style: normal;
+    margin-top: 6px;
+  }
+
+  /* ── TOPIC DEEP DIVE ── */
+  .topic-section {
+    margin-bottom: 24px;
+  }
+  .topic-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .topic-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .topic-header .time-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    background: var(--violet-bg);
+    border: 1px solid var(--violet-border);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .topic-header .time-badge a {
+    color: var(--violet);
+    text-decoration: none;
+  }
+  .topic-header .time-badge a:hover {
+    text-decoration: underline;
+  }
+  .topic-body {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+  }
+  .topic-body ul {
+    margin: 10px 0;
+    padding-left: 20px;
+  }
+  .topic-body li {
+    margin-bottom: 6px;
+  }
+  .topic-divider {
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    margin: 20px 0;
+  }
+
+  /* ── ACTION ITEMS ── */
+  .action-list {
+    list-style: none;
+  }
+  .action-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .action-list li:last-child { border-bottom: none; }
+  .action-check {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── SOURCE BAR ── */
+  .source-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 32px;
+  }
+  .source-bar .label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .source-bar a {
+    font-size: 13px;
+    color: var(--violet);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 32px 0 16px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 24px; }
+  }
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 24px 16px; }
+  }
+</style>
+<link rel="stylesheet" href="../SOP Templates/brand-config.css">
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <img src="../uploads/23 Systems Logo.png" alt="23 Systems" style="height:28px;width:auto;flex-shrink:0;border-radius:6px;">
+      <span style="font-size:13px;font-weight:700;color:#fff;letter-spacing:0.5px;">23 Systems</span>
+    </div>
+    <div class="sidebar-label">Deep Dive Summary</div>
+    <div class="sidebar-title">Stripe's One-Shot End-to-End Coding Agents (Minions)</div>
+    <div class="sidebar-meta">IndyDevDan · March 2025</div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="#overview"><span class="num">01</span> Overview</a>
+    <a href="#takeaways"><span class="num">02</span> Key Takeaways</a>
+    <a href="#topics"><span class="num">03</span> Topic Breakdown</a>
+    <a href="#actions"><span class="num">04</span> Action Items</a>
+    <a href="#source"><span class="num">05</span> Source</a>
+  </div>
+  <div class="sidebar-link">
+    <a href="https://www.youtube.com/watch?v=V5A1IU8VVp4">Watch Original Video →</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<div class="main">
+
+  <!-- ── OVERVIEW ── -->
+  <h2 class="section-heading" id="overview">Overview</h2>
+
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="val">~40 min</div>
+      <div class="lbl">Duration</div>
+    </div>
+    <div class="stat-box">
+      <div class="val">8</div>
+      <div class="lbl">Topics</div>
+    </div>
+    <div class="stat-box">
+      <div class="val">7</div>
+      <div class="lbl">Key Takeaways</div>
+    </div>
+    <div class="stat-box">
+      <div class="val">6</div>
+      <div class="lbl">Action Items</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.75;">
+      IndyDevDan breaks down Stripe's "Minions" blog posts — their fully unattended, end-to-end coding agents that ship 1,300+ pull requests per week with zero human-written code. He analyzes Stripe's agentic architecture (API layer, devbox sandboxes, custom agent harness, blueprints, context engineering, MCP toolshed, CI iteration) and contrasts "agentic engineering" with "vibe coding," arguing that specialization at every layer is the key competitive advantage. He rates Stripe's system 8/10, noting their 2-round CI limit and lack of true "zero touch engineering" (prompt-to-production) as areas for improvement.
+    </p>
+  </div>
+
+  <!-- ── KEY TAKEAWAYS ── -->
+  <h2 class="section-heading" id="takeaways">Key Takeaways</h2>
+
+  <div class="card">
+    <div class="takeaway">
+      <div class="takeaway-badge">1</div>
+      <div class="takeaway-body">
+        <h3>Agentic Engineering vs Vibe Coding</h3>
+        <p>The speaker draws a sharp distinction between two approaches to AI-assisted development. Agentic engineering means understanding your system deeply enough that you can trust autonomous agents to operate within it. Vibe coding means neither knowing nor checking what the system does. Stripe's team exemplifies the former.</p>
+        <div class="evidence">
+          "Agentic engineering is knowing what will happen in your system so well you don't need to look. Vibe coding is not knowing and not looking."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=126s" style="color:var(--teal); text-decoration:none;">2:06</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">2</div>
+      <div class="takeaway-body">
+        <h3>Specialization Is Your Competitive Edge</h3>
+        <p>Stripe built custom agents because off-the-shelf tools can't handle their proprietary Ruby/Sorbet codebase, regulatory constraints, and $1T+ payment volume. Specialization at every layer — prompt, skills, agent harness, tech stack — creates compounding advantage that generic tools cannot replicate.</p>
+        <div class="evidence">
+          "Specialization is how you win. When you're building a great product, it is literally a specialized solution to a specialized problem."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=431s" style="color:var(--teal); text-decoration:none;">7:11</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">3</div>
+      <div class="takeaway-body">
+        <h3>Give Agents Developer-Grade Environments</h3>
+        <p>Stripe's devboxes are full EC2 instances with source code and services, spun up in 10 seconds from pre-warmed pools. Engineers run half a dozen concurrently. This mirrors how humans work and enables true parallelization of agentic tasks.</p>
+        <div class="evidence">
+          "If you want your agent to perform like you, give them the tools that you have."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=943s" style="color:var(--teal); text-decoration:none;">15:43</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">4</div>
+      <div class="takeaway-body">
+        <h3>Blueprints: Code + Agents Beats Either Alone</h3>
+        <p>Stripe's blueprint system interleaves deterministic code nodes (linting, git, tests) with agentic decision nodes. This reduces token cost, increases reliability, and enables context-constrained sub-agents at each step — a hybrid approach that outperforms pure code or pure agent workflows.</p>
+        <div class="evidence">
+          "Agents plus code beats agents alone and agents plus code beats code alone."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=1453s" style="color:var(--teal); text-decoration:none;">24:13</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">5</div>
+      <div class="takeaway-body">
+        <h3>Meta-Agentics: Build the Thing That Builds the Thing</h3>
+        <p>Stripe's Toolshed is a centralized MCP server hosting ~500 tools. It's a meta-agentic pattern: a tool that selects tools, agents that build agents, prompts that create prompts. This recursive layer of automation is where the highest leverage lives.</p>
+        <div class="evidence">
+          "It's not about what you can do anymore. It's about what you can teach your agents to do for you."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=1729s" style="color:var(--teal); text-decoration:none;">28:49</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">6</div>
+      <div class="takeaway-body">
+        <h3>Context Engineering via Scoped Rule Files</h3>
+        <p>Due to massive repo size, Stripe uses directory-scoped rule files (like Cursor's .mdc format) instead of unconditional global rules, automatically attaching context as agents traverse the filesystem. This keeps token usage efficient and context highly relevant.</p>
+        <div class="evidence">
+          "We almost exclusively give minions context from files that are scoped to specific subdirectories or patterns automatically attached as the agent traverses the file system."
+          <div class="ts"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=1622s" style="color:var(--teal); text-decoration:none;">27:02</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-badge">7</div>
+      <div class="takeaway-body">
+        <h3>Push Toward Zero Touch Engineering (ZTE)</h3>
+        <p>The speaker challenges Stripe's "end-to-end" label since humans still review PRs. True end-to-end is prompt-to-production (P2P) with no human in the loop — "zero touch engineering." He predicts a 2026 blog post from a serious-scale company achieving this milestone.</p>
+        <div class="evidence">
+          "What would it take for you to run a prompt and trust that your agentic system can deliver this to production without human oversight?"
+          <div class="ts"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=2035s" style="color:var(--teal); text-decoration:none;">33:55</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOPIC BREAKDOWN ── -->
+  <h2 class="section-heading" id="topics">Topic Breakdown</h2>
+
+  <div class="card">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>1. Introduction & Scale Context</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=0s">0:00</a> — <a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=125s">2:05</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Dan opens with the sheer scale of Stripe's agentic operation and why it matters for the broader engineering community.</p>
+        <ul>
+          <li>Stripe ships 1,300+ PRs per week with zero human-written code</li>
+          <li>$1.9T total payment volume, representing 1.6% of global GDP</li>
+          <li>Millions of lines of code running on a proprietary Ruby/Sorbet stack</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>2. Agentic Engineering vs Vibe Coding</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=126s">2:06</a> — <a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=172s">2:52</a></span>
+      </div>
+      <div class="topic-body">
+        <p>A foundational distinction that frames the rest of the video: understanding your system vs blindly trusting it.</p>
+        <ul>
+          <li>Defines agentic engineering as knowing your system so well you don't need to look</li>
+          <li>Stripe engineers are clearly doing agentic engineering, not vibe coding</li>
+          <li>Building agentic layers across prompt, skills, agents, harness, and tech stack</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>3. High-Level System Architecture</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=173s">2:53</a> — <a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=390s">6:30</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Dan walks through the full Stripe Minions architecture, mapping each component and how they connect.</p>
+        <ul>
+          <li>API layer with multiple entry points (Slack, CLI, web, internal apps)</li>
+          <li>Warm devbox pool serving as agent sandboxes</li>
+          <li>Custom agent harness forked from Goose</li>
+          <li>Blueprint engine combining deterministic code with agentic decisions</li>
+          <li>Context engineering via scoped rule files</li>
+          <li>MCP Toolshed for intelligent tool selection</li>
+          <li>CI for validation and GitHub PRs for human review</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>4. Why Build a Custom Agent</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=391s">6:31</a> — <a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=510s">8:30</a></span>
+      </div>
+      <div class="topic-body">
+        <p>The case for specialization over commodity tooling, and why Stripe's constraints demand custom solutions.</p>
+        <ul>
+          <li>Specialization thesis: custom solutions outperform out-of-the-box tools for complex domains</li>
+          <li>Stripe's unique constraints (proprietary stack, regulatory requirements, scale) require unique solutions</li>
+          <li>Distancing from commodity tooling creates compounding competitive edge</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>5. Devbox Architecture</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=511s">8:31</a> — <a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=1020s">17:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>A deep dive into Stripe's devbox infrastructure — full developer environments as agent sandboxes.</p>
+        <ul>
+          <li>Full EC2 instances with source code and running services</li>
+          <li>Pre-warmed pools enable 10-second spin-up times</li>
+          <li>One devbox per task, with engineers running half a dozen concurrently</li>
+          <li>No production access — fully isolated sandbox environments</li>
+          <li>Beats containerization and worktrees for full agent capability</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>6. Blueprints: Hybrid Deterministic + Agentic Workflows</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=1021s">17:01</a> — <a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=1620s">27:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>How Stripe's blueprint engine mixes deterministic code steps with agentic reasoning for maximum reliability.</p>
+        <ul>
+          <li>State machine mixing deterministic code nodes and agentic decision nodes</li>
+          <li>Deterministic nodes handle linting, git commits, running tests, and templates</li>
+          <li>Agentic nodes handle implementation, CI failure diagnosis, and reasoning</li>
+          <li>Enables context-constrained sub-agents scoped to each step</li>
+          <li>Meta-agentic potential: blueprints for building blueprints</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>7. Context Engineering & MCP Toolshed</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=1621s">27:01</a> — <a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=1890s">31:30</a></span>
+      </div>
+      <div class="topic-body">
+        <p>How Stripe manages context at scale with scoped rule files and a centralized tool registry.</p>
+        <ul>
+          <li>Directory-scoped rule files in .mdc format replace monolithic global configs</li>
+          <li>Glob patterns conditionally activate context as agents traverse the filesystem</li>
+          <li>Toolshed: centralized MCP server hosting ~500 tools</li>
+          <li>Curated tool subsets per task prevent token explosion</li>
+          <li>Meta-agentic pattern: tools that intelligently select other tools</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="topic-divider">
+    <div class="topic-section">
+      <div class="topic-header">
+        <h3>8. Rating & Critique</h3>
+        <span class="time-badge"><a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=1891s">31:31</a> — <a href="https://www.youtube.com/watch?v=V5A1IU8VVp4&t=2400s">40:00</a></span>
+      </div>
+      <div class="topic-body">
+        <p>Dan gives his overall assessment of Stripe's agentic system and identifies where they can push further.</p>
+        <ul>
+          <li>Rates Stripe 8/10 on their agentic layer</li>
+          <li>Critique 1: 2-round CI limit is too restrictive — agents need more iterations to self-correct</li>
+          <li>Critique 2: Not truly "end-to-end" since human PR review is still required</li>
+          <li>Advocates for ZTE (Zero Touch Engineering) as the north star for the industry</li>
+          <li>Predicts a 2026 blog post from a serious-scale company achieving prompt-to-production</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACTION ITEMS ── -->
+  <h2 class="section-heading" id="actions">Action Items</h2>
+
+  <div class="card">
+    <ul class="action-list">
+      <li>
+        <div class="action-check"></div>
+        <span>Audit your own agentic layer: map where you have API entry points, agent sandboxes, custom harnesses, context engineering, and CI feedback loops</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span>Move agents from containers/worktrees to dedicated sandbox environments (like devboxes) for full developer-equivalent capability</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span>Build blueprint-style workflows that interleave deterministic code nodes with agentic decision nodes rather than giving agents unconstrained access</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span>Implement directory-scoped rule files to manage context engineering at scale instead of dumping everything into a single global config</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span>Create a centralized tool registry (like Stripe's Toolshed) so agents get curated, task-relevant tool subsets rather than all tools at once</span>
+      </li>
+      <li>
+        <div class="action-check"></div>
+        <span>Identify low-risk tasks that could ship prompt-to-production without human review as a stepping stone toward zero touch engineering</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ── SOURCE ── -->
+  <div class="source-bar" id="source">
+    <span class="label">Source Video</span>
+    <a href="https://www.youtube.com/watch?v=V5A1IU8VVp4">https://www.youtube.com/watch?v=V5A1IU8VVp4</a>
+  </div>
+
+  <div class="footer">Generated by 23 Systems Agent</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,648 @@
+openapi: 3.0.3
+info:
+  title: Prompt Library Admin API
+  version: 1.0.0
+  description: Admin endpoints for managing the prompt library, versions, testing, and workspace overrides.
+
+servers:
+  - url: /api/v1/admin
+    description: Admin API (requires adminAuth middleware)
+
+paths:
+  /prompts:
+    get:
+      summary: List all prompts
+      description: Returns all registered prompts with their current published version info.
+      operationId: listPrompts
+      tags: [Prompts]
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [CLASSIFIER, PARSER, GENERATOR]
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name or slug
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Prompt list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prompts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PromptSummary'
+                  total:
+                    type: integer
+
+    post:
+      summary: Create a new prompt
+      operationId: createPrompt
+      tags: [Prompts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePromptRequest'
+      responses:
+        '201':
+          description: Prompt created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prompt'
+        '409':
+          description: Slug already exists
+
+  /prompts/{slug}:
+    get:
+      summary: Get prompt detail
+      description: Returns full prompt with all versions and variable mappings.
+      operationId: getPrompt
+      tags: [Prompts]
+      parameters:
+        - $ref: '#/components/parameters/PromptSlug'
+      responses:
+        '200':
+          description: Prompt detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptDetail'
+        '404':
+          description: Prompt not found
+
+    patch:
+      summary: Update prompt metadata
+      description: Updates display name, description, category, model config, or tool definitions. Does NOT modify version content.
+      operationId: updatePrompt
+      tags: [Prompts]
+      parameters:
+        - $ref: '#/components/parameters/PromptSlug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePromptRequest'
+      responses:
+        '200':
+          description: Prompt updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prompt'
+        '404':
+          description: Prompt not found
+
+  /prompts/{slug}/versions:
+    get:
+      summary: List versions for a prompt
+      operationId: listVersions
+      tags: [Versions]
+      parameters:
+        - $ref: '#/components/parameters/PromptSlug'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [DRAFT, PUBLISHED, ARCHIVED]
+      responses:
+        '200':
+          description: Version list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PromptVersion'
+                  total:
+                    type: integer
+
+    post:
+      summary: Create a new draft version
+      description: Creates a new DRAFT version. Optionally copies content from an existing version (for rollback).
+      operationId: createVersion
+      tags: [Versions]
+      parameters:
+        - $ref: '#/components/parameters/PromptSlug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVersionRequest'
+      responses:
+        '201':
+          description: Draft version created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptVersion'
+
+  /prompts/{slug}/versions/{versionId}:
+    get:
+      summary: Get a specific version
+      operationId: getVersion
+      tags: [Versions]
+      parameters:
+        - $ref: '#/components/parameters/PromptSlug'
+        - $ref: '#/components/parameters/VersionId'
+      responses:
+        '200':
+          description: Version detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptVersion'
+
+    patch:
+      summary: Update draft version content
+      description: Only DRAFT versions can be updated. Returns 409 if updatedAt mismatch (optimistic locking).
+      operationId: updateVersion
+      tags: [Versions]
+      parameters:
+        - $ref: '#/components/parameters/PromptSlug'
+        - $ref: '#/components/parameters/VersionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVersionRequest'
+      responses:
+        '200':
+          description: Version updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptVersion'
+        '409':
+          description: Conflict — version was modified by another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+        '422':
+          description: Cannot edit non-DRAFT version
+
+  /prompts/{slug}/versions/{versionId}/publish:
+    post:
+      summary: Publish a draft version
+      description: Transitions DRAFT → PUBLISHED. Archives current published version. Returns 422 if no test runs exist and testing is required (FR-018).
+      operationId: publishVersion
+      tags: [Versions]
+      parameters:
+        - $ref: '#/components/parameters/PromptSlug'
+        - $ref: '#/components/parameters/VersionId'
+      responses:
+        '200':
+          description: Version published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptVersion'
+        '422':
+          description: Cannot publish — version must be tested first, or version is not in DRAFT status
+
+  /prompts/{slug}/versions/{versionId}/test:
+    post:
+      summary: Test a draft version
+      description: Runs the prompt against sample input using the configured model. Consumes real API tokens. Persists result in PromptTestRun.
+      operationId: testVersion
+      tags: [Testing]
+      parameters:
+        - $ref: '#/components/parameters/PromptSlug'
+        - $ref: '#/components/parameters/VersionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [inputText]
+              properties:
+                inputText:
+                  type: string
+                  description: Sample message to classify/parse
+                workspaceId:
+                  type: string
+                  description: Optional workspace ID to test with workspace variable overrides
+      responses:
+        '200':
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptTestRun'
+
+  /prompts/{slug}/versions/{versionId}/test-runs:
+    get:
+      summary: List test runs for a version
+      operationId: listTestRuns
+      tags: [Testing]
+      parameters:
+        - $ref: '#/components/parameters/PromptSlug'
+        - $ref: '#/components/parameters/VersionId'
+      responses:
+        '200':
+          description: Test run list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  testRuns:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PromptTestRun'
+                  total:
+                    type: integer
+
+  /prompts/{slug}/diff:
+    get:
+      summary: Get diff between two versions
+      operationId: diffVersions
+      tags: [Versions]
+      parameters:
+        - $ref: '#/components/parameters/PromptSlug'
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Source version ID
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Target version ID
+      responses:
+        '200':
+          description: Diff result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  from:
+                    type: object
+                    properties:
+                      version: { type: integer }
+                      content: { type: string }
+                  to:
+                    type: object
+                    properties:
+                      version: { type: integer }
+                      content: { type: string }
+                  diff:
+                    type: string
+                    description: Unified diff format
+
+  /prompts/variables:
+    get:
+      summary: List all template variables
+      operationId: listVariables
+      tags: [Variables]
+      responses:
+        '200':
+          description: Variable list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  variables:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PromptVariable'
+                  total:
+                    type: integer
+
+    post:
+      summary: Create a template variable
+      operationId: createVariable
+      tags: [Variables]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVariableRequest'
+      responses:
+        '201':
+          description: Variable created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptVariable'
+        '409':
+          description: Variable name already exists
+
+  /prompts/variables/{variableId}:
+    patch:
+      summary: Update a template variable
+      operationId: updateVariable
+      tags: [Variables]
+      parameters:
+        - name: variableId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVariableRequest'
+      responses:
+        '200':
+          description: Variable updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptVariable'
+
+  /prompts/variables/overrides:
+    get:
+      summary: List workspace variable overrides
+      operationId: listOverrides
+      tags: [Variables]
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: string
+          description: Filter by workspace ID
+      responses:
+        '200':
+          description: Override list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  overrides:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkspaceOverride'
+                  total:
+                    type: integer
+
+    put:
+      summary: Set workspace variable override
+      description: Creates or updates a workspace override for a variable. Upsert behavior.
+      operationId: setOverride
+      tags: [Variables]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetOverrideRequest'
+      responses:
+        '200':
+          description: Override set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceOverride'
+
+    delete:
+      summary: Remove workspace variable override
+      operationId: deleteOverride
+      tags: [Variables]
+      parameters:
+        - name: workspaceId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: variableId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Override removed
+
+components:
+  parameters:
+    PromptSlug:
+      name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique prompt identifier (e.g., agent-intent-classifier)
+    VersionId:
+      name: versionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    PromptSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        displayName: { type: string }
+        description: { type: string }
+        category: { type: string, enum: [CLASSIFIER, PARSER, GENERATOR] }
+        currentVersion: { type: integer }
+        status: { type: string, enum: [DRAFT, PUBLISHED, ARCHIVED] }
+        lastModified: { type: string, format: date-time }
+        usageCount: { type: integer }
+
+    Prompt:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        displayName: { type: string }
+        description: { type: string }
+        category: { type: string, enum: [CLASSIFIER, PARSER, GENERATOR] }
+        modelConfig:
+          type: object
+          properties:
+            model: { type: string }
+            temperature: { type: number }
+            maxTokens: { type: integer }
+        toolDefinitions: { type: array, items: { type: object } }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    PromptDetail:
+      allOf:
+        - $ref: '#/components/schemas/Prompt'
+        - type: object
+          properties:
+            versions:
+              type: array
+              items:
+                $ref: '#/components/schemas/PromptVersion'
+            variables:
+              type: array
+              items:
+                $ref: '#/components/schemas/PromptVariable'
+            publishedVersion:
+              $ref: '#/components/schemas/PromptVersion'
+
+    PromptVersion:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        promptId: { type: string, format: uuid }
+        version: { type: integer }
+        content: { type: string }
+        status: { type: string, enum: [DRAFT, PUBLISHED, ARCHIVED] }
+        publishedBy: { type: string }
+        publishedAt: { type: string, format: date-time }
+        changeNote: { type: string }
+        testRunCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    PromptVariable:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        defaultValue: { type: string }
+        promptCount: { type: integer, description: Number of prompts using this variable }
+        createdAt: { type: string, format: date-time }
+
+    WorkspaceOverride:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspaceId: { type: string }
+        variableId: { type: string, format: uuid }
+        variableName: { type: string }
+        overrideValue: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    PromptTestRun:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        promptVersionId: { type: string, format: uuid }
+        inputText: { type: string }
+        outputResult: { type: object }
+        tokensUsed: { type: integer }
+        inputTokens: { type: integer }
+        outputTokens: { type: integer }
+        estimatedCostUsd: { type: number }
+        durationMs: { type: integer }
+        testedBy: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    ConflictError:
+      type: object
+      properties:
+        error: { type: string, example: conflict }
+        message: { type: string, example: Version was modified by another user }
+        serverUpdatedAt: { type: string, format: date-time }
+
+    CreatePromptRequest:
+      type: object
+      required: [slug, displayName, category, modelConfig]
+      properties:
+        slug: { type: string, pattern: '^[a-z0-9-]+$' }
+        displayName: { type: string }
+        description: { type: string }
+        category: { type: string, enum: [CLASSIFIER, PARSER, GENERATOR] }
+        modelConfig:
+          type: object
+          required: [model, maxTokens]
+          properties:
+            model: { type: string }
+            temperature: { type: number, minimum: 0, maximum: 1 }
+            maxTokens: { type: integer, minimum: 1 }
+        toolDefinitions: { type: array, items: { type: object } }
+        initialContent: { type: string, description: Optional initial draft content }
+
+    UpdatePromptRequest:
+      type: object
+      properties:
+        displayName: { type: string }
+        description: { type: string }
+        category: { type: string, enum: [CLASSIFIER, PARSER, GENERATOR] }
+        modelConfig:
+          type: object
+          properties:
+            model: { type: string }
+            temperature: { type: number }
+            maxTokens: { type: integer }
+        toolDefinitions: { type: array, items: { type: object } }
+
+    CreateVersionRequest:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string }
+        changeNote: { type: string }
+        copyFromVersionId:
+          type: string
+          format: uuid
+          description: Copy content from this version (for rollback)
+
+    UpdateVersionRequest:
+      type: object
+      required: [content, updatedAt]
+      properties:
+        content: { type: string }
+        changeNote: { type: string }
+        updatedAt:
+          type: string
+          format: date-time
+          description: Optimistic locking — must match server value
+
+    CreateVariableRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, pattern: '^[a-zA-Z][a-zA-Z0-9_]*$' }
+        description: { type: string }
+        defaultValue: { type: string }
+
+    UpdateVariableRequest:
+      type: object
+      properties:
+        description: { type: string }
+        defaultValue: { type: string }
+
+    SetOverrideRequest:
+      type: object
+      required: [workspaceId, variableId, overrideValue]
+      properties:
+        workspaceId: { type: string }
+        variableId: { type: string, format: uuid }
+        overrideValue: { type: string }

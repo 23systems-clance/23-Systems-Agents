@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V1: Minimal Chat-First</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --navy: #1a1a2e;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-bg: #eef0ff;
+    --white: #ffffff;
+    --light-bg: #f7f8fc;
+    --dark-text: #1e1e32;
+    --mid-text: #50506e;
+    --light-text: #8889a0;
+    --border: #e2e4ef;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--dark-text);
+    background: var(--light-bg);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--dark-text);
+  }
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: 14px;
+  }
+  .header-cta {
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 60px 40px 32px;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .hero h1 {
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    color: var(--dark-text);
+  }
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    font-size: 16px;
+    color: var(--mid-text);
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ── CHAT CONTAINER ── */
+  .chat-container {
+    flex: 1;
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .chat-window {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    flex: 1;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+  }
+  .chat-messages {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .msg {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .msg.ai {
+    background: var(--accent-bg);
+    color: var(--dark-text);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user {
+    background: var(--accent);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .msg .typing {
+    display: flex;
+    gap: 4px;
+    padding: 4px 0;
+  }
+  .msg .typing span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.4;
+    animation: blink 1.4s infinite;
+  }
+  .msg .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .msg .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 0.8; }
+  }
+
+  .chat-input-area {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .chat-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+    color: var(--dark-text);
+  }
+  .chat-input:focus {
+    border-color: var(--accent);
+  }
+  .chat-input::placeholder {
+    color: var(--light-text);
+  }
+  .send-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .send-btn:hover {
+    background: var(--accent-light);
+  }
+  .send-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ── TRUST BAR ── */
+  .trust-bar {
+    text-align: center;
+    padding: 0 40px 32px;
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    color: var(--light-text);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .trust-bar span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .trust-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  /* ── DESIGN LABEL ── */
+  .design-label {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--navy);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<div class="design-label">V1: Minimal Chat-First</div>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">23</div>
+    23 Systems
+  </div>
+  <a href="#" class="header-cta">Already have a project? Book a call &rarr;</a>
+</div>
+
+<div class="hero">
+  <h1>What should you <span>build with?</span></h1>
+  <p>Get a personalized tech stack recommendation from our AI solutions architect. Free, instant, no signup required.</p>
+</div>
+
+<div class="chat-container">
+  <div class="chat-window">
+    <div class="chat-messages">
+      <div class="msg ai">
+        Hey! I'm the 23 Systems tech advisor. I help teams figure out the best tech stack for their project. Tell me &mdash; what are you building and what problem does it solve?
+      </div>
+      <div class="msg user">
+        I'm building a marketplace for freelance designers. Think Dribbble meets Fiverr &mdash; designers showcase portfolios and clients can hire them directly.
+      </div>
+      <div class="msg ai">
+        Great concept &mdash; marketplaces are one of my favorite project types. Lots of interesting technical decisions around payments, search, and real-time messaging.<br><br>
+        Quick question: would you prefer a <strong>high-level recommendation</strong> (~2 minutes, 3-4 more questions) or a <strong>deep dive</strong> (~5 minutes, 8-10 questions covering integrations, compliance, and budget)?
+      </div>
+      <div class="msg ai">
+        <div class="typing">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" class="chat-input" placeholder="Type your response...">
+      <button class="send-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="trust-bar">
+  <span><span class="trust-dot"></span> Free consultation</span>
+  <span><span class="trust-dot"></span> No signup required</span>
+  <span><span class="trust-dot"></span> Takes 2-5 minutes</span>
+  <span><span class="trust-dot"></span> Powered by AI</span>
+</div>
+
+</body>
+</html>

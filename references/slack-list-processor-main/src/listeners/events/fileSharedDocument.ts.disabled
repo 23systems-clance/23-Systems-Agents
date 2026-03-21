@@ -1,0 +1,301 @@
+/**
+ * Document upload handling logic.
+ *
+ * Handles file uploads in recognized docs channels. For markdown/text
+ * files, immediately classifies and presents confirmation buttons. For
+ * PDF/DOCX/XLSX, posts an acknowledgment and enqueues a conversion job
+ * (handled in US2).
+ *
+ * Implements contracts section 1.1 from api-contracts.md.
+ *
+ * NOTE: This module no longer registers its own file_shared listener.
+ * Instead, handleDocumentUpload() is called from the single file_shared
+ * handler in fileShared.ts when the upload is in a docs channel.
+ */
+
+import type { KnownBlock } from '@slack/types';
+import type { DocumentType } from '@prisma/client';
+import { classifyByFilename, generateSlug } from '../../services/document/filenameClassifier.js';
+import { classifyDocument } from '../../services/ai/documentClassifier.js';
+import { uploadFile } from '../../lib/storage.js';
+import { logAudit } from '../../lib/auditLogger.js';
+import { config } from '../../config/index.js';
+import { documentProcessingQueue } from '../../services/queue/queues.js';
+import { prisma } from '../../models/index.js';
+import redis from '../../lib/redis.js';
+import logger from '../../lib/logger.js';
+import { downloadSlackFile } from '../../services/file/slackFile.js';
+
+/** MIME types that pass through directly (no conversion needed). */
+const MARKDOWN_MIME_TYPES = new Set(['text/markdown', 'text/plain']);
+
+/** All MIME types supported by the document management feature. */
+const SUPPORTED_MIME_TYPES = new Set([
+  'text/markdown',
+  'text/plain',
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+]);
+
+/** Redis key prefix for pending classification state. */
+const CLASSIFY_STATE_PREFIX = 'doc-classify';
+
+/** TTL for pending classification state (1 hour). */
+const CLASSIFY_STATE_TTL = 3600;
+
+/**
+ * Parameters for handling a document upload in a docs channel.
+ */
+export interface DocUploadParams {
+  fileId: string;
+  userId: string;
+  channelId: string;
+  teamId: string;
+  /** Slack file metadata object from files.info. */
+  file: Record<string, unknown>;
+  /** Thread timestamp resolved from file.shares. */
+  threadTs: string;
+}
+
+/**
+ * Handles a file upload in a docs channel.
+ *
+ * Called from the single file_shared handler in fileShared.ts when the
+ * upload is detected in a docs channel.
+ *
+ * @param client - Slack Web API client.
+ * @param params - Upload parameters.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function handleDocumentUpload(client: any, params: DocUploadParams): Promise<void> {
+  const { fileId, userId, channelId, teamId, file, threadTs } = params;
+
+  const mimetype = (file.mimetype as string) ?? '';
+  const fileName = (file.name as string) ?? 'unknown';
+  const fileSize = (file.size as number) ?? 0;
+
+  // Validate MIME type.
+  if (!SUPPORTED_MIME_TYPES.has(mimetype)) {
+    await client.chat.postMessage({
+      channel: channelId,
+      thread_ts: threadTs,
+      text: `Unsupported file type: \`${mimetype}\`\n\nSupported formats: \`.md\`, \`.txt\`, \`.pdf\`, \`.docx\`, \`.xlsx\``,
+    });
+    return;
+  }
+
+  // Validate file size.
+  if (fileSize > config.doc.maxFileSize) {
+    const maxMb = (config.doc.maxFileSize / (1024 * 1024)).toFixed(1);
+    await client.chat.postMessage({
+      channel: channelId,
+      thread_ts: threadTs,
+      text: `File too large (${(fileSize / (1024 * 1024)).toFixed(1)} MB). Maximum allowed size is ${maxMb} MB.`,
+    });
+    return;
+  }
+
+  // Log the upload audit event.
+  logAudit({
+    action: 'doc_upload',
+    actorUserId: userId,
+    actorTeamId: teamId,
+    targetType: 'file',
+    targetId: fileId,
+    channelId,
+    metadata: { fileName, mimetype, fileSize },
+  });
+
+  // For non-markdown MIME types, enqueue conversion job.
+  if (!MARKDOWN_MIME_TYPES.has(mimetype)) {
+    await client.chat.postMessage({
+      channel: channelId,
+      thread_ts: threadTs,
+      text: `Received *${fileName}*. Converting to markdown...`,
+    });
+
+    // Create a PROCESSING record in the database.
+    const convSlug = generateSlug(fileName);
+    await prisma.clientDocument.upsert({
+      where: {
+        slackTeamId_slackChannelId_slug: {
+          slackTeamId: teamId,
+          slackChannelId: channelId,
+          slug: convSlug,
+        },
+      },
+      create: {
+        slackTeamId: teamId,
+        slackChannelId: channelId,
+        slackUserId: userId,
+        slackFileId: fileId,
+        slug: convSlug,
+        label: convSlug,
+        documentType: 'UNKNOWN',
+        status: 'PROCESSING',
+        s3Key: `docs/${teamId}/${channelId}/${convSlug}.md`,
+        originalS3Key: null,
+        originalFileName: fileName,
+        originalMimeType: mimetype,
+        slackThreadTs: threadTs,
+      },
+      update: {
+        status: 'PROCESSING',
+        slackFileId: fileId,
+        originalMimeType: mimetype,
+        slackThreadTs: threadTs,
+        errorMessage: null as unknown as string,
+      },
+    });
+
+    // Enqueue conversion job.
+    await documentProcessingQueue.add('convert-document', {
+      teamId,
+      channelId,
+      threadTs,
+      userId,
+      slackFileId: fileId,
+      fileName,
+      mimeType: mimetype,
+    });
+
+    logger.info('Document conversion job enqueued', {
+      fileId,
+      fileName,
+      mimeType: mimetype,
+      slug: convSlug,
+    });
+    return;
+  }
+
+  // Download markdown/text content directly.
+  const downloadUrl = file.url_private_download as string | undefined;
+  if (!downloadUrl) {
+    logger.warn('No url_private_download on file', { fileId });
+    return;
+  }
+
+  const buffer = await downloadSlackFile(downloadUrl, config.slack.botToken);
+  const content = buffer.toString('utf-8');
+
+  // Generate slug from filename.
+  const slug = generateSlug(fileName);
+
+  // Classify: filename convention first, then AI fallback.
+  let suggestedType = classifyByFilename(fileName);
+  let label = slug;
+  let summary = '';
+  let classificationSource = 'filename';
+
+  if (!suggestedType) {
+    classificationSource = 'ai';
+    const aiResult = await classifyDocument(content, fileName);
+    suggestedType = aiResult.classification.documentType as DocumentType;
+    label = aiResult.classification.suggestedLabel;
+    summary = aiResult.classification.summary;
+  } else {
+    // For filename-classified docs, generate a basic label and use AI for summary.
+    label = slug;
+    try {
+      const aiResult = await classifyDocument(content, fileName);
+      summary = aiResult.classification.summary;
+      label = aiResult.classification.suggestedLabel || label;
+    } catch {
+      summary = '';
+    }
+  }
+
+  // Upload markdown to S3.
+  const s3Key = `docs/${teamId}/${channelId}/${slug}.md`;
+  await uploadFile(s3Key, Buffer.from(content, 'utf-8'), 'text/markdown');
+
+  // Upload original file to S3 for archival.
+  const ext = fileName.split('.').pop() ?? 'txt';
+  const originalS3Key = `docs/${teamId}/${channelId}/originals/${slug}-${fileId}.${ext}`;
+  await uploadFile(originalS3Key, Buffer.from(content, 'utf-8'), mimetype);
+
+  // Build classification buttons.
+  const typeLabel = suggestedType ?? 'UNKNOWN';
+  const blocks: KnownBlock[] = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `Received *${fileName}*\n\nSuggested type: *${typeLabel}* (from ${classificationSource})\n\nPlease confirm or select the correct document type:`,
+      },
+    },
+    {
+      type: 'actions',
+      block_id: `doc_classify_${fileId}`,
+      elements: [
+        {
+          type: 'button',
+          text: { type: 'plain_text', text: 'ICP' },
+          action_id: 'doc_type_icp',
+          ...(typeLabel === 'ICP' ? { style: 'primary' as const } : {}),
+        },
+        {
+          type: 'button',
+          text: { type: 'plain_text', text: 'Use Case' },
+          action_id: 'doc_type_use_case',
+          ...(typeLabel === 'USE_CASE' ? { style: 'primary' as const } : {}),
+        },
+        {
+          type: 'button',
+          text: { type: 'plain_text', text: 'Settings' },
+          action_id: 'doc_type_settings',
+          ...(typeLabel === 'SETTINGS' ? { style: 'primary' as const } : {}),
+        },
+        {
+          type: 'button',
+          text: { type: 'plain_text', text: 'One-Pager' },
+          action_id: 'doc_type_one_pager',
+          ...(typeLabel === 'ONE_PAGER' ? { style: 'primary' as const } : {}),
+        },
+        {
+          type: 'button',
+          text: { type: 'plain_text', text: 'Cancel', emoji: true },
+          action_id: 'document_type_cancel',
+          style: 'danger' as const,
+        },
+      ],
+    },
+  ];
+
+  const botReply = await client.chat.postMessage({
+    channel: channelId,
+    thread_ts: threadTs,
+    blocks,
+    text: `Received ${fileName}. Please confirm the document type.`,
+  });
+
+  // Store pending classification state in Redis.
+  const stateKey = `${CLASSIFY_STATE_PREFIX}:${channelId}:${botReply.ts ?? threadTs}`;
+  await redis.hset(stateKey, {
+    fileId,
+    slug,
+    channelId,
+    teamId,
+    userId,
+    s3Key,
+    originalS3Key,
+    suggestedType: typeLabel,
+    label,
+    summary,
+    originalFileName: fileName,
+    originalMimeType: mimetype,
+    contentSizeBytes: String(Buffer.byteLength(content, 'utf-8')),
+    threadTs,
+    messageTs: botReply.ts ?? threadTs,
+  });
+  await redis.expire(stateKey, CLASSIFY_STATE_TTL);
+
+  logger.info('Document upload detected and classification buttons posted', {
+    fileId,
+    slug,
+    suggestedType: typeLabel,
+    classificationSource,
+    channelId,
+  });
+}

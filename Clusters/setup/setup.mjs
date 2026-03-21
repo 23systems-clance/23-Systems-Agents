@@ -611,25 +611,25 @@ async function main() {
     collected.BRAVE_API_KEY = braveKey;
     clack.log.success(`Brave Search key added (${maskSecret(braveKey)})`);
 
-    // Enable brave-search skill symlink
-    const braveSymlink = path.join(process.cwd(), 'skills', 'active', 'brave-search');
+    // Enable search-web skill symlink
+    const braveSymlink = path.join(process.cwd(), 'skills', 'active', 'search-web');
     if (!fs.existsSync(braveSymlink)) {
       fs.mkdirSync(path.dirname(braveSymlink), { recursive: true });
-      createDirLink('../brave-search', braveSymlink);
-      clack.log.success('Enabled brave-search skill');
+      createDirLink('../search-web', braveSymlink);
+      clack.log.success('Enabled search-web skill');
 
       // Commit and push the symlink so the Docker agent can use it
       try {
-        execSync('git add skills/active/brave-search', { stdio: 'ignore' });
-        execSync('git commit -m "enable brave-search skill [no ci]"', { stdio: 'ignore' });
+        execSync('git add skills/active/search-web', { stdio: 'ignore' });
+        execSync('git commit -m "enable search-web skill [no ci]"', { stdio: 'ignore' });
         const remote = execSync('git remote get-url origin', { encoding: 'utf-8' }).trim();
         const authedUrl = remote.replace('https://github.com/', `https://x-access-token:${pat}@github.com/`);
         execSync(`git remote set-url origin "${authedUrl}"`, { stdio: 'ignore' });
         execSync('git push origin main', { stdio: 'ignore' });
         execSync(`git remote set-url origin "${remote}"`, { stdio: 'ignore' });
-        clack.log.success('Pushed brave-search skill to GitHub');
+        clack.log.success('Pushed search-web skill to GitHub');
       } catch {
-        clack.log.warn('Could not push brave-search symlink — you may need to push manually');
+        clack.log.warn('Could not push search-web symlink — you may need to push manually');
       }
     }
   }

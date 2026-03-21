@@ -8,7 +8,7 @@
 | Pi Coding Agent | `docker/pi-coding-agent-job/` | Lightweight Python autonomous agent |
 | Claude Code Job | `docker/claude-code-job/` | Claude Code in headless mode |
 | Claude Code Workspace | `docker/claude-code-workspace/` | Interactive terminal (ttyd on port 7681) |
-| Claude Code Cluster Worker | `docker/claude-code-cluster-worker/` | Role-based worker containers |
+| Claude Code Cluster Agent | `docker/claude-code-cluster-worker/` | Role-based agent containers |
 
 ### Build Pattern
 

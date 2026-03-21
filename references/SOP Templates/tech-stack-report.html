@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{PROJECT_NAME}} &mdash; Tech Stack Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy: #1a1a2e;
+    --navy-light: #252542;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-bg: #eef0ff;
+    --accent-border: #c7ceff;
+    --white: #ffffff;
+    --light-bg: #f3f4f8;
+    --dark-text: #1e1e32;
+    --mid-text: #50506e;
+    --light-text: #8889a0;
+    --border: #c8cde0;
+    --success: #22c55e;
+    --success-bg: #ecfdf5;
+    --warn: #eab308;
+    --warn-bg: #fefce8;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+    --teal: #0d9488;
+    --teal-bg: #f0fdfa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--dark-text);
+    background: var(--light-bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--navy);
+    overflow-y: auto;
+    z-index: 100;
+  }
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .sidebar-logo img { flex-shrink: 0; }
+  .sidebar-header .doc-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .sidebar-header .doc-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .sidebar-nav { padding: 16px 0; }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: var(--navy-light);
+    border-left-color: var(--accent);
+  }
+  .sidebar-nav a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main { margin-left: 280px; min-height: 100vh; }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(243,244,248,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--light-text);
+  }
+  .topbar .meta { display: flex; gap: 24px; }
+  .topbar .meta span { display: flex; align-items: center; gap: 6px; }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--navy);
+    padding: 64px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  }
+  .cover .doc-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+  .cover h1 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .cover .subtitle {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    max-width: 600px;
+  }
+
+  /* ── SECTIONS ── */
+  .content { padding: 40px 48px 80px; max-width: 960px; }
+  .section { margin-bottom: 48px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--accent-bg);
+  }
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .sub-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 28px 0 12px;
+    padding-left: 14px;
+    border-left: 3px solid var(--accent);
+  }
+  p { color: var(--mid-text); margin-bottom: 12px; font-size: 14px; line-height: 1.7; }
+  strong { color: var(--dark-text); font-weight: 600; }
+
+  /* ── LISTS ── */
+  ul { list-style: none; margin: 12px 0 20px; padding: 0; }
+  ul li {
+    position: relative;
+    padding: 6px 0 6px 24px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 4px; top: 13px;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  thead th {
+    background: var(--navy);
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #eef0f4;
+    color: var(--mid-text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #f8f9fc; }
+  tbody tr:hover { background: var(--accent-bg); }
+
+  /* ── INFO BOXES ── */
+  .info-box {
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+  .info-box.info { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+  .info-box.success { background: var(--success-bg); border-color: var(--success); color: #166534; }
+  .info-box.warning { background: var(--warn-bg); border-color: var(--warn); color: #854d0e; }
+
+  /* ── CODE ── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--navy);
+    color: #e0e0e0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 12px 0 20px;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+
+  /* ── STACK CARDS ── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .stack-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    background: var(--white);
+    transition: box-shadow 0.15s;
+  }
+  .stack-card:hover { box-shadow: 0 4px 20px rgba(67, 97, 238, 0.08); }
+  .stack-card .card-category {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .stack-card .card-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 4px;
+  }
+  .stack-card .card-confidence {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--teal);
+    margin-bottom: 10px;
+  }
+  .stack-card .card-why {
+    font-size: 13px;
+    color: var(--mid-text);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .stack-card .card-alts {
+    font-size: 12px;
+    color: var(--light-text);
+  }
+  .stack-card .card-alts span {
+    background: var(--light-bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 4px;
+  }
+  .stack-card .card-tradeoff {
+    font-size: 12px;
+    color: var(--light-text);
+    font-style: italic;
+    margin-top: 8px;
+  }
+
+  /* ── STAT CARDS ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .stat-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    background: var(--white);
+    text-align: center;
+  }
+  .stat-card .stat-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--light-text);
+    font-weight: 500;
+  }
+
+  /* ── PARTNER CARDS ── */
+  .partner-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .partner-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    background: var(--white);
+  }
+  .partner-card .partner-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--teal);
+    margin-bottom: 6px;
+  }
+  .partner-card .partner-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 4px;
+  }
+  .partner-card .partner-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .partner-card .partner-desc {
+    font-size: 12px;
+    color: var(--mid-text);
+    line-height: 1.5;
+  }
+
+  /* ── ARCHITECTURE DIAGRAM ── */
+  .arch-diagram {
+    background: var(--navy);
+    color: #e0e0e0;
+    padding: 24px;
+    border-radius: 12px;
+    margin: 16px 0 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* ── CTA SECTION ── */
+  .cta-section {
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    margin: 32px 0;
+  }
+  .cta-section h3 {
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 12px;
+  }
+  .cta-section p {
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 24px;
+    font-size: 15px;
+  }
+  .cta-btn {
+    display: inline-block;
+    background: white;
+    color: var(--accent);
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.15s;
+  }
+  .cta-btn:hover { transform: translateY(-1px); }
+
+  /* ── PRINT ── */
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .topbar { display: none; }
+    .cover { padding: 40px 32px; }
+    .content { padding: 24px 32px; }
+    .cta-section { display: none; }
+  }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .topbar { padding: 12px 20px; }
+    .cover { padding: 40px 20px; }
+    .content { padding: 24px 20px; }
+    .stack-grid, .stat-grid, .partner-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <img src="../uploads/23 Systems Logo.png" alt="23 Systems" width="32" height="32">
+    </div>
+    <div class="doc-type">Tech Stack Report</div>
+    <div class="doc-title">{{PROJECT_NAME}}</div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="#s1"><span class="num">1</span> Project Profile</a>
+    <a href="#s2"><span class="num">2</span> Recommended Stack</a>
+    <a href="#s3"><span class="num">3</span> Architecture</a>
+    <a href="#s4"><span class="num">4</span> Alternatives</a>
+    <!-- {{PARTNER_NAV}} -->
+    <a href="#s6"><span class="num">6</span> Next Steps</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="meta">
+      <span>Prepared by 23 Systems</span>
+      <span>{{DATE}}</span>
+    </div>
+    <div>CONFIDENTIAL</div>
+  </div>
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="doc-badge">Custom Tech Stack Report</div>
+    <h1>{{PROJECT_NAME}}</h1>
+    <div class="subtitle">{{PROJECT_SUMMARY}}</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ SECTION 1: PROJECT PROFILE ═══ -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>Project Profile</h2>
+      </div>
+
+      <p>{{PROJECT_DESCRIPTION}}</p>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">{{PROJECT_STAGE}}</div>
+          <div class="stat-label">Project Stage</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{TEAM_SIZE}}</div>
+          <div class="stat-label">Team Size</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{TIMELINE}}</div>
+          <div class="stat-label">Timeline</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{SCALE}}</div>
+          <div class="stat-label">Expected Scale</div>
+        </div>
+      </div>
+
+      <!-- {{CONSTRAINTS_SECTION}} -->
+    </div>
+
+    <!-- ═══ SECTION 2: RECOMMENDED STACK ═══ -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>Recommended Stack</h2>
+      </div>
+
+      <p>Based on your project requirements, here is our recommended technology stack across all relevant categories. Each recommendation includes a confidence score and detailed reasoning.</p>
+
+      <div class="stack-grid">
+        <!-- {{STACK_CARDS}} -->
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 3: ARCHITECTURE ═══ -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>Suggested Architecture</h2>
+      </div>
+
+      <p>How the recommended components connect and communicate.</p>
+
+      <div class="arch-diagram">{{ARCHITECTURE_DIAGRAM}}</div>
+
+      <!-- {{ARCHITECTURE_NOTES}} -->
+    </div>
+
+    <!-- ═══ SECTION 4: ALTERNATIVES ═══ -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <h2>Alternative Options</h2>
+      </div>
+
+      <p>For each category, we considered multiple options. Here are the runners-up with their tradeoffs.</p>
+
+      <table>
+        <thead>
+          <tr><th>Category</th><th>Primary</th><th>Alternatives</th><th>Key Tradeoff</th></tr>
+        </thead>
+        <tbody>
+          <!-- {{ALTERNATIVES_TABLE_ROWS}} -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ SECTION 5: PARTNERS (CONDITIONAL) ═══ -->
+    <!-- {{PARTNERS_SECTION_START}} -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <h2>Partners &amp; Resources</h2>
+      </div>
+
+      <p>Based on your recommended stack, these programs offer credits, tools, and support that can accelerate your build.</p>
+
+      <div class="partner-grid">
+        <!-- {{PARTNER_CARDS}} -->
+      </div>
+
+      <div class="info-box success"><strong>Total potential savings:</strong> {{TOTAL_PARTNER_VALUE}} in credits and resources across all matched programs.</div>
+    </div>
+    <!-- {{PARTNERS_SECTION_END}} -->
+
+    <!-- ═══ SECTION 6: NEXT STEPS ═══ -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <h2>Next Steps</h2>
+      </div>
+
+      <p>You have a solid technical foundation mapped out. Here's how to move forward.</p>
+
+      <ul>
+        <li><strong>Review this report</strong> with your team and identify any questions or concerns about specific recommendations</li>
+        <li><strong>Validate constraints</strong> &mdash; confirm that the recommended stack aligns with any vendor, compliance, or infrastructure requirements we may not have covered</li>
+        <li><strong>Start with the core</strong> &mdash; set up your Frontend + Backend + Database first, then layer in Auth, Payments, and Monitoring</li>
+        <li><strong>Apply for partner programs</strong> &mdash; many cloud credit programs take 1-2 weeks to activate, so apply early</li>
+      </ul>
+
+      <div class="cta-section">
+        <h3>Want to build this the right way?</h3>
+        <p>Schedule a free consultation with 23 Systems. We'll walk through this report together, answer your questions, and help you get started.</p>
+        <a href="{{CALENDAR_URL}}" class="cta-btn">Schedule a Consultation</a>
+      </div>
+
+      <div class="info-box info"><strong>This report was generated by the 23 Systems Tech Stack Advisor.</strong> Our AI analyzed your project requirements and validated recommendations against real-world adoption data. For the most up-to-date advice, we recommend pairing this report with a human consultation.</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

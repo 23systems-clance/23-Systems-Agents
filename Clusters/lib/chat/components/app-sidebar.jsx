@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CirclePlusIcon, PanelLeftIcon, MessageIcon, ClusterIcon, BellIcon, RunnersIcon, ArrowUpCircleIcon, LifeBuoyIcon, GitPullRequestIcon } from './icons.js';
+import { CirclePlusIcon, PanelLeftIcon, MessageIcon, ClusterIcon, BellIcon, RunnersIcon, ArrowUpCircleIcon, LifeBuoyIcon, GitPullRequestIcon, GlobeIcon } from './icons.js';
 import { getUnreadNotificationCount, getPullRequestCount, getAppVersion } from '../actions.js';
 import { SidebarHistory } from './sidebar-history.js';
 import { SidebarUserNav } from './sidebar-user-nav.js';
@@ -217,6 +217,24 @@ export function AppSidebar({ user }) {
                 </TooltipTrigger>
                 {collapsed && (
                   <TooltipContent side="right">Notifications</TooltipContent>
+                )}
+              </Tooltip>
+            </SidebarMenuItem>
+
+            {/* Public Pages */}
+            <SidebarMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarMenuButton
+                    href="/settings/public"
+                    className={collapsed ? 'justify-center' : ''}
+                  >
+                    <GlobeIcon size={16} />
+                    {!collapsed && <span>Public Pages</span>}
+                  </SidebarMenuButton>
+                </TooltipTrigger>
+                {collapsed && (
+                  <TooltipContent side="right">Public Pages</TooltipContent>
                 )}
               </Tooltip>
             </SidebarMenuItem>

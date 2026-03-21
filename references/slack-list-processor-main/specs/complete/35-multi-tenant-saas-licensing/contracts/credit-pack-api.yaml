@@ -1,0 +1,183 @@
+openapi: "3.0.3"
+info:
+  title: Credit Pack Management API
+  description: Platform owner endpoints for managing credit packs and Stripe webhook for purchases
+  version: "1.0.0"
+
+paths:
+  /api/v1/admin/credit-packs:
+    get:
+      summary: List all credit packs
+      operationId: listCreditPacks
+      tags: [CreditPacks]
+      security:
+        - adminAuth: []
+      parameters:
+        - name: activeOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: List of credit packs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  packs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CreditPack"
+
+    post:
+      summary: Create a new credit pack
+      operationId: createCreditPack
+      tags: [CreditPacks]
+      security:
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, creditAmount, priceUsd]
+              properties:
+                name:
+                  type: string
+                  description: "Display name (e.g., '200 Credit Pack')"
+                creditAmount:
+                  type: integer
+                  minimum: 1
+                priceUsd:
+                  type: number
+                  format: decimal
+                  minimum: 0.01
+                sortOrder:
+                  type: integer
+                  default: 0
+      responses:
+        "201":
+          description: Credit pack created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditPack"
+
+  /api/v1/admin/credit-packs/{id}:
+    patch:
+      summary: Update a credit pack
+      operationId: updateCreditPack
+      tags: [CreditPacks]
+      security:
+        - adminAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                creditAmount:
+                  type: integer
+                priceUsd:
+                  type: number
+                  format: decimal
+                active:
+                  type: boolean
+                sortOrder:
+                  type: integer
+      responses:
+        "200":
+          description: Credit pack updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditPack"
+
+    delete:
+      summary: Soft-delete a credit pack (deactivate)
+      operationId: deactivateCreditPack
+      tags: [CreditPacks]
+      security:
+        - adminAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Credit pack deactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  # Webhook endpoint (called by Stripe)
+  /api/webhooks/stripe/credit-pack:
+    post:
+      summary: Stripe webhook for credit pack purchase completion
+      operationId: handleCreditPackWebhook
+      tags: [Webhooks]
+      description: >
+        Handles `checkout.session.completed` events for credit pack purchases.
+        Adds credits to workspace balance and creates transaction record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Stripe Event payload
+      responses:
+        "200":
+          description: Webhook processed
+
+components:
+  securitySchemes:
+    adminAuth:
+      type: apiKey
+      in: header
+      name: X-Admin-Key
+
+  schemas:
+    CreditPack:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        creditAmount:
+          type: integer
+        priceUsd:
+          type: number
+          format: decimal
+        stripePriceId:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time

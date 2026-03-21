@@ -1,0 +1,449 @@
+openapi: "3.0.3"
+info:
+  title: Client Dashboard API
+  description: Client-facing endpoints for workspace billing, usage, and settings
+  version: "1.0.0"
+
+paths:
+  /api/v1/client/auth/login:
+    get:
+      summary: Initiate Slack OAuth login for client dashboard
+      operationId: clientLogin
+      tags: [ClientAuth]
+      responses:
+        "302":
+          description: Redirect to Slack OAuth authorize URL
+
+  /api/v1/client/auth/callback:
+    get:
+      summary: Slack OAuth callback for client dashboard
+      operationId: clientAuthCallback
+      tags: [ClientAuth]
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to client dashboard with session cookie
+
+  /api/v1/client/auth/me:
+    get:
+      summary: Get current authenticated client user
+      operationId: getClientUser
+      tags: [ClientAuth]
+      security:
+        - clientSession: []
+      responses:
+        "200":
+          description: Authenticated user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientUser"
+
+  /api/v1/client/overview:
+    get:
+      summary: Get workspace overview (credit balance, stats, recent activity)
+      operationId: getClientOverview
+      tags: [ClientDashboard]
+      security:
+        - clientSession: []
+      responses:
+        "200":
+          description: Workspace overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientOverview"
+
+  /api/v1/client/billing:
+    get:
+      summary: Get billing details for workspace
+      operationId: getClientBilling
+      tags: [ClientBilling]
+      security:
+        - clientSession: []
+      responses:
+        "200":
+          description: Billing details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientBilling"
+
+  /api/v1/client/billing/credit-packs:
+    get:
+      summary: List available credit packs for purchase
+      operationId: listCreditPacks
+      tags: [ClientBilling]
+      security:
+        - clientSession: []
+      responses:
+        "200":
+          description: Available credit packs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  packs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CreditPack"
+
+  /api/v1/client/billing/credit-packs/{packId}/checkout:
+    post:
+      summary: Create Stripe Checkout session for credit pack purchase
+      operationId: purchaseCreditPack
+      tags: [ClientBilling]
+      security:
+        - clientSession: []
+      parameters:
+        - name: packId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Stripe Checkout session URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkoutUrl:
+                    type: string
+                    format: uri
+
+  /api/v1/client/billing/manage:
+    post:
+      summary: Create Stripe Billing Portal session for subscription management
+      operationId: manageSubscription
+      tags: [ClientBilling]
+      security:
+        - clientSession: []
+      responses:
+        "200":
+          description: Stripe Billing Portal URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  portalUrl:
+                    type: string
+                    format: uri
+
+  /api/v1/client/enrichments:
+    get:
+      summary: Get enrichment job history for workspace
+      operationId: getEnrichmentHistory
+      tags: [ClientDashboard]
+      security:
+        - clientSession: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 25
+        - name: userId
+          in: query
+          schema:
+            type: string
+          description: Filter by Slack user ID (admin only)
+      responses:
+        "200":
+          description: Enrichment history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/EnrichmentJobSummary"
+                  total:
+                    type: integer
+
+  /api/v1/client/channels:
+    get:
+      summary: List registered enrichment channels for workspace
+      operationId: listEnrichmentChannels
+      tags: [ClientChannels]
+      security:
+        - clientSession: []
+      responses:
+        "200":
+          description: Enrichment channels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  channels:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/EnrichmentChannelInfo"
+
+  /api/v1/client/channels/{channelId}/deactivate:
+    post:
+      summary: Deactivate an enrichment channel (admin only)
+      operationId: deactivateEnrichmentChannel
+      tags: [ClientChannels]
+      security:
+        - clientSession: []
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Channel deactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/v1/client/settings:
+    get:
+      summary: Get workspace settings
+      operationId: getClientSettings
+      tags: [ClientSettings]
+      security:
+        - clientSession: []
+      responses:
+        "200":
+          description: Workspace settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientSettings"
+
+    patch:
+      summary: Update workspace settings (admin only)
+      operationId: updateClientSettings
+      tags: [ClientSettings]
+      security:
+        - clientSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                defaultEnrichmentType:
+                  type: string
+                  enum: [TECHNOGRAPHIC, CONTACT, COMBINED, TECH_REPORT]
+                notificationPreferences:
+                  type: object
+                  properties:
+                    jobComplete:
+                      type: boolean
+                    lowBalance:
+                      type: boolean
+                    weeklyReport:
+                      type: boolean
+      responses:
+        "200":
+          description: Settings updated
+
+components:
+  securitySchemes:
+    clientSession:
+      type: apiKey
+      in: cookie
+      name: client_session
+
+  schemas:
+    ClientUser:
+      type: object
+      properties:
+        slackUserId:
+          type: string
+        slackTeamId:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        isAdmin:
+          type: boolean
+          description: "Slack workspace admin (from users.info is_admin)"
+        role:
+          type: string
+          enum: [admin, user]
+          description: "admin = full access, user = read-only enrichment history"
+
+    ClientOverview:
+      type: object
+      properties:
+        workspaceName:
+          type: string
+        creditBalance:
+          type: integer
+        monthlyAllowance:
+          type: integer
+        creditsUsedThisMonth:
+          type: integer
+        subscriptionTier:
+          type: string
+        enrichmentJobsThisMonth:
+          type: integer
+        totalRowsEnrichedThisMonth:
+          type: integer
+        enabledFeatures:
+          type: array
+          items:
+            type: string
+
+    ClientBilling:
+      type: object
+      properties:
+        creditBalance:
+          type: integer
+        monthlyAllowance:
+          type: integer
+        creditsUsedThisMonth:
+          type: integer
+        nextResetDate:
+          type: string
+          format: date-time
+        subscriptionTier:
+          type: string
+        paymentMethodLast4:
+          type: string
+          nullable: true
+        paymentMethodBrand:
+          type: string
+          nullable: true
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreditTransactionSummary"
+
+    CreditPack:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        creditAmount:
+          type: integer
+        priceUsd:
+          type: number
+          format: decimal
+
+    CreditTransactionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - MONTHLY_ALLOCATION
+            - ENRICHMENT_DEDUCTION
+            - OVERAGE_CHARGE
+            - MANUAL_ADJUSTMENT
+            - CREDIT_PACK_PURCHASE
+            - LICENSE_ACTIVATION
+        amount:
+          type: integer
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    EnrichmentJobSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        jobType:
+          type: string
+          enum: [TECHNOGRAPHIC, CONTACT, COMBINED, TECH_REPORT]
+        status:
+          type: string
+        rowCount:
+          type: integer
+        creditsUsed:
+          type: integer
+        slackUserId:
+          type: string
+        slackUserName:
+          type: string
+        slackChannelName:
+          type: string
+        downloadUrl:
+          type: string
+          format: uri
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    EnrichmentChannelInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        slackChannelId:
+          type: string
+        slackChannelName:
+          type: string
+        assignedUserId:
+          type: string
+        assignedUserName:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+        registeredAt:
+          type: string
+          format: date-time
+
+    ClientSettings:
+      type: object
+      properties:
+        defaultEnrichmentType:
+          type: string
+          enum: [TECHNOGRAPHIC, CONTACT, COMBINED, TECH_REPORT]
+          nullable: true
+        enabledFeatures:
+          type: array
+          items:
+            type: string
+          description: Read-only list of enabled feature names
+        notificationPreferences:
+          type: object
+          properties:
+            jobComplete:
+              type: boolean
+            lowBalance:
+              type: boolean
+            weeklyReport:
+              type: boolean

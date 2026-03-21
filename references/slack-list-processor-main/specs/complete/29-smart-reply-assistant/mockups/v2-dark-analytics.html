@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V2 - Dark Analytics | Contact Profile</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e4e4e7; line-height: 1.5; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #1a1b2e 0%, #16182b 100%); border: 1px solid #2a2d3e; border-radius: 16px; padding: 28px 32px; margin-bottom: 16px; display: flex; align-items: center; gap: 20px; }
+  .avatar { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; font-weight: 700; flex-shrink: 0; }
+  .header-info h1 { font-size: 22px; font-weight: 700; color: #f4f4f5; }
+  .header-info .subtitle { font-size: 14px; color: #71717a; }
+  .header-links { display: flex; gap: 12px; margin-top: 8px; }
+  .header-links a { color: #818cf8; text-decoration: none; font-size: 12px; padding: 4px 10px; border: 1px solid #3730a3; border-radius: 6px; transition: all .15s; }
+  .header-links a:hover { background: #3730a3; color: #fff; }
+  .header-right { margin-left: auto; text-align: right; }
+  .header-right .campaign-name { font-size: 13px; color: #a1a1aa; }
+  .header-right .client-name { font-size: 12px; color: #52525b; }
+  .header-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-sm { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; border: none; cursor: pointer; transition: all .15s; }
+  .btn-hubspot { background: #ff7a59; color: #fff; }
+  .btn-hubspot:hover { background: #e5684a; }
+  .btn-csv { background: transparent; color: #a1a1aa; border: 1px solid #3f3f46; }
+  .btn-csv:hover { background: #27272a; color: #fff; }
+
+  /* Grid */
+  .grid-3 { display: grid; grid-template-columns: 260px 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-full { margin-bottom: 16px; }
+
+  /* Cards */
+  .card { background: #1a1b2e; border: 1px solid #2a2d3e; border-radius: 14px; padding: 20px; }
+  .card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #52525b; margin-bottom: 14px; }
+
+  /* Archetype */
+  .archetype-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .archetype-ring { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(#6366f1 0% 100%, #2a2d3e 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; position: relative; }
+  .archetype-ring-inner { width: 100px; height: 100px; border-radius: 50%; background: #1a1b2e; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .archetype-ring-inner .score { font-size: 28px; font-weight: 800; color: #a78bfa; }
+  .archetype-ring-inner .label { font-size: 10px; color: #71717a; }
+  .archetype-name { font-size: 20px; font-weight: 700; color: #c4b5fd; }
+  .archetype-desc { font-size: 12px; color: #52525b; margin-top: 4px; }
+
+  /* Bar Charts - Horizontal Pill Style */
+  .bar-row { display: flex; align-items: center; margin-bottom: 10px; }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-label { width: 22px; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .bar-name { width: 100px; font-size: 11px; color: #71717a; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 8px; background: #27272a; border-radius: 4px; overflow: hidden; margin-right: 10px; }
+  .bar-fill { height: 100%; border-radius: 4px; }
+  .bar-score { font-size: 13px; font-weight: 600; width: 36px; text-align: right; flex-shrink: 0; }
+  .bar-level { font-size: 10px; color: #52525b; width: 60px; text-align: right; flex-shrink: 0; }
+
+  /* DISC neon colors */
+  .disc-d .bar-fill { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+  .disc-d .bar-label, .disc-d .bar-score { color: #ef4444; }
+  .disc-i .bar-fill { background: #eab308; box-shadow: 0 0 8px rgba(234,179,8,0.4); }
+  .disc-i .bar-label, .disc-i .bar-score { color: #eab308; }
+  .disc-s .bar-fill { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
+  .disc-s .bar-label, .disc-s .bar-score { color: #22c55e; }
+  .disc-c .bar-fill { background: #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.4); }
+  .disc-c .bar-label, .disc-c .bar-score { color: #3b82f6; }
+
+  /* OCEAN neon colors */
+  .ocean-o .bar-fill { background: #a78bfa; box-shadow: 0 0 8px rgba(167,139,250,0.4); }
+  .ocean-o .bar-label, .ocean-o .bar-score { color: #a78bfa; }
+  .ocean-c .bar-fill { background: #22d3ee; box-shadow: 0 0 8px rgba(34,211,238,0.4); }
+  .ocean-c .bar-label, .ocean-c .bar-score { color: #22d3ee; }
+  .ocean-e .bar-fill { background: #fb923c; box-shadow: 0 0 8px rgba(251,146,60,0.4); }
+  .ocean-e .bar-label, .ocean-e .bar-score { color: #fb923c; }
+  .ocean-a .bar-fill { background: #f472b6; box-shadow: 0 0 8px rgba(244,114,182,0.4); }
+  .ocean-a .bar-label, .ocean-a .bar-score { color: #f472b6; }
+  .ocean-n .bar-fill { background: #2dd4bf; box-shadow: 0 0 8px rgba(45,212,191,0.4); }
+  .ocean-n .bar-label, .ocean-n .bar-score { color: #2dd4bf; }
+
+  /* Tags */
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+  .tag-purple { background: #2e1065; color: #c4b5fd; border: 1px solid #3b0764; }
+
+  /* Traits */
+  .trait-row { display: flex; gap: 12px; margin-bottom: 12px; }
+  .trait-row:last-child { margin-bottom: 0; }
+  .trait-dot { width: 8px; height: 8px; border-radius: 50%; background: #6366f1; margin-top: 6px; flex-shrink: 0; }
+  .trait-content .trait-label { font-size: 11px; color: #52525b; text-transform: uppercase; font-weight: 600; }
+  .trait-content .trait-value { font-size: 13px; color: #d4d4d8; }
+
+  /* Say / Avoid */
+  .guidance-item { padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+  .guidance-item:last-child { margin-bottom: 0; }
+  .guidance-say { background: rgba(34,197,94,0.08); border-left: 3px solid #22c55e; color: #86efac; }
+  .guidance-avoid { background: rgba(239,68,68,0.08); border-left: 3px solid #ef4444; color: #fca5a5; }
+
+  /* Email Guide */
+  .email-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .email-chip { background: #27272a; border: 1px solid #3f3f46; border-radius: 8px; padding: 8px 14px; }
+  .email-chip-label { font-size: 10px; color: #52525b; text-transform: uppercase; font-weight: 600; }
+  .email-chip-value { font-size: 12px; color: #d4d4d8; margin-top: 2px; }
+
+  /* Timeline */
+  .timeline-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #27272a; }
+  .timeline-item:last-child { border-bottom: none; }
+  .tl-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .tl-icon.reply { background: rgba(99,102,241,0.15); color: #818cf8; }
+  .tl-icon.sent { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .tl-icon.import { background: rgba(161,161,170,0.1); color: #71717a; }
+  .tl-date { font-size: 11px; color: #52525b; }
+  .tl-title { font-size: 13px; color: #e4e4e7; font-weight: 500; }
+  .tl-body { font-size: 12px; color: #71717a; margin-top: 2px; }
+  .tl-tags { display: flex; gap: 6px; margin-top: 6px; }
+  .tl-tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+  .tl-tag-intent { background: #1e1b4b; color: #a5b4fc; }
+  .tl-tag-status { background: #052e16; color: #86efac; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="avatar">SN</div>
+    <div class="header-info">
+      <h1>Satya Nadella</h1>
+      <div class="subtitle">Chairman and CEO at Microsoft</div>
+      <div class="header-links">
+        <a href="#">LinkedIn</a>
+        <a href="#">Email</a>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="campaign-name">Enterprise Tech Leaders Q1</div>
+      <div class="client-name">Client: Acme Corp</div>
+      <div class="header-actions">
+        <button class="btn-sm btn-hubspot">Push to HubSpot</button>
+        <button class="btn-sm btn-csv">Export CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 1: Archetype + DISC + OCEAN -->
+  <div class="grid-3">
+    <div class="card archetype-card">
+      <div class="card-title">Archetype</div>
+      <div class="archetype-ring">
+        <div class="archetype-ring-inner">
+          <span class="score">100</span>
+          <span class="label">SCORE</span>
+        </div>
+      </div>
+      <div class="archetype-name">Trailblazer</div>
+      <div class="archetype-desc">Visionary leader, data-driven</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">DISC Profile</div>
+      <div class="bar-row disc-d">
+        <span class="bar-label">D</span>
+        <span class="bar-name">Dominance</span>
+        <div class="bar-track"><div class="bar-fill" style="width:91.9%"></div></div>
+        <span class="bar-score">9.19</span>
+        <span class="bar-level">Very High</span>
+      </div>
+      <div class="bar-row disc-i">
+        <span class="bar-label">I</span>
+        <span class="bar-name">Influence</span>
+        <div class="bar-track"><div class="bar-fill" style="width:64.8%"></div></div>
+        <span class="bar-score">6.48</span>
+        <span class="bar-level">High</span>
+      </div>
+      <div class="bar-row disc-s">
+        <span class="bar-label">S</span>
+        <span class="bar-name">Steadiness</span>
+        <div class="bar-track"><div class="bar-fill" style="width:64.6%"></div></div>
+        <span class="bar-score">6.46</span>
+        <span class="bar-level">High</span>
+      </div>
+      <div class="bar-row disc-c">
+        <span class="bar-label">C</span>
+        <span class="bar-name">Calculativeness</span>
+        <div class="bar-track"><div class="bar-fill" style="width:74.8%"></div></div>
+        <span class="bar-score">7.48</span>
+        <span class="bar-level">High</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">OCEAN / Big Five</div>
+      <div class="bar-row ocean-o">
+        <span class="bar-label">O</span>
+        <span class="bar-name">Openness</span>
+        <div class="bar-track"><div class="bar-fill" style="width:85%"></div></div>
+        <span class="bar-score">8.50</span>
+        <span class="bar-level">Very High</span>
+      </div>
+      <div class="bar-row ocean-c">
+        <span class="bar-label">C</span>
+        <span class="bar-name">Conscientious</span>
+        <div class="bar-track"><div class="bar-fill" style="width:86.1%"></div></div>
+        <span class="bar-score">8.61</span>
+        <span class="bar-level">Very High</span>
+      </div>
+      <div class="bar-row ocean-e">
+        <span class="bar-label">E</span>
+        <span class="bar-name">Extraversion</span>
+        <div class="bar-track"><div class="bar-fill" style="width:49%"></div></div>
+        <span class="bar-score">4.90</span>
+        <span class="bar-level">Moderate</span>
+      </div>
+      <div class="bar-row ocean-a">
+        <span class="bar-label">A</span>
+        <span class="bar-name">Agreeableness</span>
+        <div class="bar-track"><div class="bar-fill" style="width:51.3%"></div></div>
+        <span class="bar-score">5.13</span>
+        <span class="bar-level">Moderate</span>
+      </div>
+      <div class="bar-row ocean-n">
+        <span class="bar-label">N</span>
+        <span class="bar-name">Emo. Stability</span>
+        <div class="bar-track"><div class="bar-fill" style="width:68.5%"></div></div>
+        <span class="bar-score">6.85</span>
+        <span class="bar-level">High</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Communication + Traits -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Communication Style</div>
+      <div class="tag-row" style="margin-bottom:14px;">
+        <span class="tag tag-purple">Medium Calculativeness</span>
+        <span class="tag tag-purple">Skeptical</span>
+        <span class="tag tag-purple">Cost-Conscious</span>
+        <span class="tag tag-purple">Methodical</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <div style="font-size:11px;color:#52525b;margin-bottom:6px;font-weight:600;">WHAT TO SAY</div>
+          <div class="guidance-say">Highlight competitive pricing</div>
+          <div class="guidance-say">Provide comprehensive details</div>
+          <div class="guidance-say">Support with data and statistics</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#52525b;margin-bottom:6px;font-weight:600;">WHAT TO AVOID</div>
+          <div class="guidance-avoid">Avoid being overly friendly</div>
+          <div class="guidance-avoid">Avoid rushing them</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Key Decision Traits</div>
+      <div class="trait-row">
+        <div class="trait-dot"></div>
+        <div class="trait-content">
+          <div class="trait-label">Risk Tolerance</div>
+          <div class="trait-value">Willing to take risks if they've examined circumstances</div>
+        </div>
+      </div>
+      <div class="trait-row">
+        <div class="trait-dot" style="background:#eab308"></div>
+        <div class="trait-content">
+          <div class="trait-label">Ability to Say No</div>
+          <div class="trait-value">Can decline if unconvinced</div>
+        </div>
+      </div>
+      <div class="trait-row">
+        <div class="trait-dot" style="background:#22c55e"></div>
+        <div class="trait-content">
+          <div class="trait-label">Decision Speed</div>
+          <div class="trait-value">Moderate pace with necessary information</div>
+        </div>
+      </div>
+      <div class="trait-row">
+        <div class="trait-dot" style="background:#ef4444"></div>
+        <div class="trait-content">
+          <div class="trait-label">Decision Drivers</div>
+          <div class="trait-value">ROI confidence, pricing, process adherence</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: Email Guide -->
+  <div class="grid-full">
+    <div class="card">
+      <div class="card-title">Email Approach Guide</div>
+      <div class="email-chips">
+        <div class="email-chip"><div class="email-chip-label">Tone</div><div class="email-chip-value">Objective & informative</div></div>
+        <div class="email-chip"><div class="email-chip-label">Length</div><div class="email-chip-value">100-120 words</div></div>
+        <div class="email-chip"><div class="email-chip-label">Greeting</div><div class="email-chip-value">"Hi" or first name</div></div>
+        <div class="email-chip"><div class="email-chip-label">Subject</div><div class="email-chip-value">Maintain objectivity</div></div>
+        <div class="email-chip"><div class="email-chip-label">Messaging</div><div class="email-chip-value">Resolve queries & deliver ROI</div></div>
+        <div class="email-chip"><div class="email-chip-label">Closing</div><div class="email-chip-value">Sum up or pose a question</div></div>
+        <div class="email-chip"><div class="email-chip-label">Bullet Points</div><div class="email-chip-value">Suggested to include</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conversation History -->
+  <div class="grid-full">
+    <div class="card">
+      <div class="card-title">Conversation History</div>
+      <div class="timeline-item">
+        <div class="tl-icon reply">&#x2709;</div>
+        <div>
+          <div class="tl-date">Mar 14, 2026 &middot; 2:30 PM</div>
+          <div class="tl-title">Reply Received (Email)</div>
+          <div class="tl-body">Re: Improving your tech stack &mdash; "Interesting, can you tell me more about pricing?"</div>
+          <div class="tl-tags">
+            <span class="tl-tag tl-tag-intent">question</span>
+            <span class="tl-tag tl-tag-status">Draft: SENT</span>
+          </div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-icon sent">&#x2191;</div>
+        <div>
+          <div class="tl-date">Mar 12, 2026 &middot; 10:00 AM</div>
+          <div class="tl-title">Email Sent (Step 1)</div>
+          <div class="tl-body">Initial outreach &mdash; "Hi Satya, I noticed Microsoft is evaluating..."</div>
+          <div class="tl-tags"><span class="tl-tag tl-tag-status">COMPLETED</span></div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-icon import">&#x2B07;</div>
+        <div>
+          <div class="tl-date">Mar 10, 2026 &middot; 9:00 AM</div>
+          <div class="tl-title">Contact Imported</div>
+          <div class="tl-body">Imported from HubSpot &middot; Personality enrichment completed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:12px;font-size:11px;color:#3f3f46;">
+    AI Ark Personality Analysis &middot; Enriched Mar 10, 2026
+  </div>
+</div>
+</body>
+</html>

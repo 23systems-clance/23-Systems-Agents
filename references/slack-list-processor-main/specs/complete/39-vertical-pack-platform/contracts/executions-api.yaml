@@ -1,0 +1,403 @@
+openapi: 3.0.3
+info:
+  title: Execution Logs & Analytics API
+  version: 1.0.0
+  description: Execution trace viewing, analytics, and workspace usage tracking.
+
+paths:
+  /api/admin/executions:
+    get:
+      summary: List skill executions with filters
+      tags: [Executions - Admin]
+      parameters:
+        - name: skillId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: slackTeamId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [QUEUED, RUNNING, COMPLETED, FAILED, CANCELLED, SPEND_LIMIT_BLOCKED]
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Execution list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  executions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExecutionSummary'
+                  total:
+                    type: integer
+
+  /api/admin/executions/{executionId}:
+    get:
+      summary: Get full execution trace
+      tags: [Executions - Admin]
+      parameters:
+        - name: executionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Full execution trace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionTrace'
+
+  /api/admin/analytics/skills:
+    get:
+      summary: Aggregate analytics per skill
+      tags: [Analytics - Admin]
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Skill analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SkillAnalytics'
+
+  /api/admin/analytics/packs:
+    get:
+      summary: Aggregate analytics per pack
+      tags: [Analytics - Admin]
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Pack analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  packs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PackAnalytics'
+
+  /api/admin/analytics/workspaces:
+    get:
+      summary: Aggregate analytics per workspace
+      tags: [Analytics - Admin]
+      responses:
+        '200':
+          description: Workspace analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workspaces:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkspaceAnalytics'
+
+  /api/client/usage:
+    get:
+      summary: Client workspace usage dashboard
+      tags: [Usage - Client]
+      responses:
+        '200':
+          description: Workspace usage summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceUsage'
+
+  /api/client/executions:
+    get:
+      summary: Client execution history
+      tags: [Usage - Client]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Workspace execution history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  executions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClientExecutionSummary'
+                  total:
+                    type: integer
+
+components:
+  schemas:
+    ExecutionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        skillName:
+          type: string
+        slackTeamId:
+          type: string
+        slackTeamName:
+          type: string
+        status:
+          type: string
+        triggerType:
+          type: string
+        creditsCost:
+          type: number
+        durationMs:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    ExecutionTrace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        skillName:
+          type: string
+        skillId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        triggerType:
+          type: string
+        triggerSource:
+          type: string
+        input:
+          type: object
+        output:
+          type: object
+        creditsCost:
+          type: number
+        packSubscriptionId:
+          type: string
+        errorMessage:
+          type: string
+        retryCount:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        agentInvocations:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              agentName:
+                type: string
+              agentVersion:
+                type: integer
+              input:
+                type: object
+              output:
+                type: object
+              tokensInput:
+                type: integer
+              tokensOutput:
+                type: integer
+              costUsd:
+                type: number
+              durationMs:
+                type: integer
+              toolCallsMade:
+                type: array
+                items:
+                  type: object
+
+    SkillAnalytics:
+      type: object
+      properties:
+        skillId:
+          type: string
+          format: uuid
+        skillName:
+          type: string
+        totalExecutions:
+          type: integer
+        successRate:
+          type: number
+        avgDurationMs:
+          type: integer
+        totalCreditsConsumed:
+          type: number
+        totalCostUsd:
+          type: number
+        trend:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              executions:
+                type: integer
+              credits:
+                type: number
+
+    PackAnalytics:
+      type: object
+      properties:
+        packId:
+          type: string
+          format: uuid
+        packName:
+          type: string
+        subscriberCount:
+          type: integer
+        activeUsers:
+          type: integer
+        totalCreditsUsed:
+          type: integer
+        totalCreditsIncluded:
+          type: integer
+        overageRevenue:
+          type: number
+        churnRate:
+          type: number
+        monthlyRecurringRevenue:
+          type: number
+
+    WorkspaceAnalytics:
+      type: object
+      properties:
+        slackTeamId:
+          type: string
+        teamName:
+          type: string
+        activePacks:
+          type: integer
+        totalExecutions:
+          type: integer
+        totalCreditsUsed:
+          type: integer
+        dailySpendUsedUsd:
+          type: number
+        dailySpendLimitUsd:
+          type: number
+
+    WorkspaceUsage:
+      type: object
+      properties:
+        subscriptions:
+          type: array
+          items:
+            type: object
+            properties:
+              packName:
+                type: string
+              creditsRemaining:
+                type: integer
+              creditsUsed:
+                type: integer
+              creditsIncluded:
+                type: integer
+              periodEnd:
+                type: string
+                format: date-time
+        dailySpend:
+          type: object
+          properties:
+            usedUsd:
+              type: number
+            limitUsd:
+              type: number
+        recentExecutions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientExecutionSummary'
+
+    ClientExecutionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        skillName:
+          type: string
+        status:
+          type: string
+        creditsCost:
+          type: number
+        packName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time

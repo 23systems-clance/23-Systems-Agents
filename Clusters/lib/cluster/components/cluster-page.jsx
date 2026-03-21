@@ -655,7 +655,7 @@ function RoleTabContent({ role, clusterId, status, onUpdate, onDelete, available
       {/* Role Instructions */}
       <div className="mb-6">
         <label className="text-sm font-medium block mb-1">Role Instructions</label>
-        <p className="text-xs text-muted-foreground mb-2">System-level context appended to every worker run. Describes who this role is and how it should behave.</p>
+        <p className="text-xs text-muted-foreground mb-2">System-level context appended to every agent run. Describes who this role is and how it should behave.</p>
         <textarea
           value={rolePromptValue}
           onChange={(e) => setRolePromptValue(e.target.value)}
@@ -681,7 +681,7 @@ function RoleTabContent({ role, clusterId, status, onUpdate, onDelete, available
       {/* Prompt */}
       <div className="mb-6">
         <label className="text-sm font-medium block mb-1">Prompt</label>
-        <p className="text-xs text-muted-foreground mb-2">The task passed to the worker each time it runs.</p>
+        <p className="text-xs text-muted-foreground mb-2">The task passed to the agent each time it runs.</p>
         <textarea
           value={promptValue}
           onChange={(e) => setPromptValue(e.target.value)}
@@ -720,16 +720,16 @@ function RoleTabContent({ role, clusterId, status, onUpdate, onDelete, available
         />
       </div>
 
-      {/* Cleanup Worker Dirs */}
+      {/* Cleanup Agent Dirs */}
       <div className="mb-6">
-        <label className="text-sm font-medium block mb-1">Cleanup Worker Dirs</label>
+        <label className="text-sm font-medium block mb-1">Cleanup Agent Dirs</label>
         <button
           type="button"
           onClick={toggleCleanup}
           className="inline-flex items-center gap-2 group"
           role="switch"
           aria-checked={cleanupWorkerDir}
-          aria-label="Cleanup worker directories after run"
+          aria-label="Cleanup agent directories after run"
         >
           <span
             className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ${
@@ -928,8 +928,8 @@ const PLACEHOLDER_ROWS = [
   { name: '{{CLUSTER_SHARED_DIR}}', example: '/home/claude-code/workspace/shared/', desc: 'Cluster shared directory' },
   { name: '{{CLUSTER_SHARED_FOLDERS}}', example: '[".../shared/inbox/",".../shared/outbox/"]', desc: 'Cluster shared folders as absolute paths (JSON)' },
   { name: '{{SELF_ROLE_NAME}}', example: 'Tech Lead', desc: "Current role's name" },
-  { name: '{{SELF_WORKER_ID}}', example: 'a1b2c3d4', desc: "This worker's unique ID" },
-  { name: '{{SELF_WORK_DIR}}', example: '/home/claude-code/workspace/role-db4d21c0/worker-a1b2c3d4/', desc: "Worker's private dir (where claude starts)" },
+  { name: '{{SELF_WORKER_ID}}', example: 'a1b2c3d4', desc: "This agent's unique ID" },
+  { name: '{{SELF_WORK_DIR}}', example: '/home/claude-code/workspace/role-db4d21c0/worker-a1b2c3d4/', desc: "Agent's private dir (where claude starts)" },
   { name: '{{SELF_TMP_DIR}}', example: '/home/claude-code/workspace/role-db4d21c0/worker-a1b2c3d4/tmp/', desc: 'Scratch space' },
   { name: '{{DATETIME}}', example: '2026-03-07T20:00:01Z', desc: 'Current UTC timestamp' },
   { name: '{{WORKSPACE}}', example: '(full JSON manifest)', desc: 'Entire workspace manifest as JSON' },

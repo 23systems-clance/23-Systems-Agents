@@ -38,7 +38,7 @@ project-root/
 │   ├── JOB_AGENT.md                   # Agent runtime environment docs
 │   ├── JOB_SUMMARY.md                 # Prompt for summarizing completed jobs
 │   ├── HEARTBEAT.md                   # Self-monitoring behavior
-│   ├── CLUSTER_SYSTEM_PROMPT.md       # System prompt for cluster workers
+│   ├── CLUSTER_SYSTEM_PROMPT.md       # System prompt for cluster agents
 │   ├── CLUSTER_ROLE_PROMPT.md         # Default prompt for cluster roles
 │   ├── PATTERN_GUIDE.md              # 6 canonical automation patterns
 │   ├── SKILL_BUILDING_GUIDE.md        # Guide for building new specialties
@@ -87,15 +87,15 @@ project-root/
 │
 ├── skills/                            # Agent specialty plugins
 │   ├── active/                        # Symlinks to enabled specialties
-│   │   ├── brave-search → ../brave-search/
-│   │   ├── youtube-transcript → ../youtube-transcript/
-│   │   ├── notebooklm → ../notebooklm/
-│   │   ├── sop-generator → ../sop-generator/
-│   │   └── browser-tools → (browser automation)
-│   ├── brave-search/                  # Brave Search API
-│   ├── youtube-transcript/            # YouTube transcript fetcher
-│   ├── notebooklm/                    # Google NotebookLM
-│   └── sop-generator/                 # HTML document generator
+│   │   ├── search-web → ../search-web/
+│   │   ├── fetch-transcript → ../fetch-transcript/
+│   │   ├── sync-notebooklm → ../sync-notebooklm/
+│   │   ├── generate-sop → ../generate-sop/
+│   │   └── automate-browser → (browser automation)
+│   ├── search-web/                  # Brave Search API
+│   ├── fetch-transcript/            # YouTube transcript fetcher
+│   ├── sync-notebooklm/                    # Google NotebookLM
+│   └── generate-sop/                 # HTML document generator
 │
 ├── .pi/skills → skills/active         # Pi agent reads skills from here
 ├── .claude/skills → skills/active     # Claude Code reads skills from here
@@ -113,7 +113,7 @@ project-root/
 │   ├── pi-coding-agent-job/           # Pi autonomous agent
 │   ├── claude-code-job/               # Claude Code headless
 │   ├── claude-code-workspace/         # Interactive terminal
-│   └── claude-code-cluster-worker/    # Cluster worker container
+│   └── claude-code-cluster-worker/    # Cluster agent container
 │
 ├── .github/workflows/                 # GitHub Actions (MANAGED)
 │   ├── run-job.yml                    # Execute Docker agent jobs

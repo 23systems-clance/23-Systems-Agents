@@ -1,0 +1,207 @@
+openapi: "3.0.3"
+info:
+  title: Feature Toggle Management API
+  description: Platform owner endpoints for managing per-workspace feature toggles
+  version: "1.0.0"
+
+paths:
+  /api/v1/admin/workspaces:
+    get:
+      summary: List all client workspaces with feature flags and status
+      operationId: listWorkspaces
+      tags: [WorkspaceManagement]
+      security:
+        - adminAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE, all]
+        - name: onboardingStatus
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, LICENSE_KEY, BILLING, CHANNELS, COMPLETE]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 25
+      responses:
+        "200":
+          description: List of workspaces with feature flags
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workspaces:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WorkspaceOverview"
+                  total:
+                    type: integer
+
+  /api/v1/admin/workspaces/{slackTeamId}/features:
+    get:
+      summary: Get feature flags for a workspace
+      operationId: getWorkspaceFeatures
+      tags: [FeatureToggles]
+      security:
+        - adminAuth: []
+      parameters:
+        - name: slackTeamId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Current feature flags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatureFlags"
+
+    patch:
+      summary: Update feature flags for a workspace
+      operationId: updateWorkspaceFeatures
+      tags: [FeatureToggles]
+      security:
+        - adminAuth: []
+      parameters:
+        - name: slackTeamId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeatureFlags"
+              description: Partial update — only include flags to change
+      responses:
+        "200":
+          description: Feature flags updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  featureFlags:
+                    $ref: "#/components/schemas/FeatureFlags"
+                  updatedAt:
+                    type: string
+                    format: date-time
+
+  /api/v1/admin/workspaces/{slackTeamId}/credits:
+    post:
+      summary: Manual credit adjustment for a workspace
+      operationId: adjustCredits
+      tags: [WorkspaceManagement]
+      security:
+        - adminAuth: []
+      parameters:
+        - name: slackTeamId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, reason]
+              properties:
+                amount:
+                  type: integer
+                  description: Positive to add, negative to deduct
+                reason:
+                  type: string
+                  description: Audit trail reason for the adjustment
+      responses:
+        "200":
+          description: Credits adjusted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newBalance:
+                    type: integer
+                  transactionId:
+                    type: string
+
+components:
+  securitySchemes:
+    adminAuth:
+      type: apiKey
+      in: header
+      name: X-Admin-Key
+
+  schemas:
+    WorkspaceOverview:
+      type: object
+      properties:
+        slackTeamId:
+          type: string
+        slackTeamName:
+          type: string
+        workspaceType:
+          type: string
+          enum: [PLATFORM_OWNER, CLIENT]
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+        onboardingStatus:
+          type: string
+          enum: [PENDING, LICENSE_KEY, BILLING, CHANNELS, COMPLETE]
+        featureFlags:
+          $ref: "#/components/schemas/FeatureFlags"
+        creditBalance:
+          type: integer
+        subscriptionTier:
+          type: string
+        licenseKey:
+          type: string
+          nullable: true
+          description: Masked key (e.g., SLKP-****-****-****-4F6A)
+        lastActivity:
+          type: string
+          format: date-time
+          nullable: true
+        installedAt:
+          type: string
+          format: date-time
+
+    FeatureFlags:
+      type: object
+      properties:
+        enrichment:
+          type: boolean
+        campaigns:
+          type: boolean
+        workflows:
+          type: boolean
+        onboarding:
+          type: boolean
+        dialer:
+          type: boolean
+        analytics:
+          type: boolean
+        icpAnalysis:
+          type: boolean
+        personalityAnalysis:
+          type: boolean
+        aiAgent:
+          type: boolean

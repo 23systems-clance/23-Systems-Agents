@@ -606,7 +606,7 @@ function RoleTabContent({ role, clusterId, status, onUpdate, onDelete, available
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "mb-6", children: [
       /* @__PURE__ */ jsx("label", { className: "text-sm font-medium block mb-1", children: "Role Instructions" }),
-      /* @__PURE__ */ jsx("p", { className: "text-xs text-muted-foreground mb-2", children: "System-level context appended to every worker run. Describes who this role is and how it should behave." }),
+      /* @__PURE__ */ jsx("p", { className: "text-xs text-muted-foreground mb-2", children: "System-level context appended to every agent run. Describes who this role is and how it should behave." }),
       /* @__PURE__ */ jsx(
         "textarea",
         {
@@ -637,7 +637,7 @@ function RoleTabContent({ role, clusterId, status, onUpdate, onDelete, available
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "mb-6", children: [
       /* @__PURE__ */ jsx("label", { className: "text-sm font-medium block mb-1", children: "Prompt" }),
-      /* @__PURE__ */ jsx("p", { className: "text-xs text-muted-foreground mb-2", children: "The task passed to the worker each time it runs." }),
+      /* @__PURE__ */ jsx("p", { className: "text-xs text-muted-foreground mb-2", children: "The task passed to the agent each time it runs." }),
       /* @__PURE__ */ jsx(
         "textarea",
         {
@@ -685,7 +685,7 @@ function RoleTabContent({ role, clusterId, status, onUpdate, onDelete, available
       )
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "mb-6", children: [
-      /* @__PURE__ */ jsx("label", { className: "text-sm font-medium block mb-1", children: "Cleanup Worker Dirs" }),
+      /* @__PURE__ */ jsx("label", { className: "text-sm font-medium block mb-1", children: "Cleanup Agent Dirs" }),
       /* @__PURE__ */ jsxs(
         "button",
         {
@@ -694,7 +694,7 @@ function RoleTabContent({ role, clusterId, status, onUpdate, onDelete, available
           className: "inline-flex items-center gap-2 group",
           role: "switch",
           "aria-checked": cleanupWorkerDir,
-          "aria-label": "Cleanup worker directories after run",
+          "aria-label": "Cleanup agent directories after run",
           children: [
             /* @__PURE__ */ jsx(
               "span",
@@ -878,8 +878,8 @@ const PLACEHOLDER_ROWS = [
   { name: "{{CLUSTER_SHARED_DIR}}", example: "/home/claude-code/workspace/shared/", desc: "Cluster shared directory" },
   { name: "{{CLUSTER_SHARED_FOLDERS}}", example: '[".../shared/inbox/",".../shared/outbox/"]', desc: "Cluster shared folders as absolute paths (JSON)" },
   { name: "{{SELF_ROLE_NAME}}", example: "Tech Lead", desc: "Current role's name" },
-  { name: "{{SELF_WORKER_ID}}", example: "a1b2c3d4", desc: "This worker's unique ID" },
-  { name: "{{SELF_WORK_DIR}}", example: "/home/claude-code/workspace/role-db4d21c0/worker-a1b2c3d4/", desc: "Worker's private dir (where claude starts)" },
+  { name: "{{SELF_WORKER_ID}}", example: "a1b2c3d4", desc: "This agent's unique ID" },
+  { name: "{{SELF_WORK_DIR}}", example: "/home/claude-code/workspace/role-db4d21c0/worker-a1b2c3d4/", desc: "Agent's private dir (where claude starts)" },
   { name: "{{SELF_TMP_DIR}}", example: "/home/claude-code/workspace/role-db4d21c0/worker-a1b2c3d4/tmp/", desc: "Scratch space" },
   { name: "{{DATETIME}}", example: "2026-03-07T20:00:01Z", desc: "Current UTC timestamp" },
   { name: "{{WORKSPACE}}", example: "(full JSON manifest)", desc: "Entire workspace manifest as JSON" },

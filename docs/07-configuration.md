@@ -14,8 +14,8 @@ All user-editable configuration lives in `config/`. These files control agent pe
 | `JOB_AGENT.md` | Docker agents | Runtime environment documentation. Tells the agent what tools/capabilities it has |
 | `JOB_SUMMARY.md` | Docker agents | Prompt template for summarizing completed job results |
 | `HEARTBEAT.md` | Event Handler | Self-monitoring and health check behavior |
-| `CLUSTER_SYSTEM_PROMPT.md` | Cluster workers | Default system prompt injected into all cluster worker containers |
-| `CLUSTER_ROLE_PROMPT.md` | Cluster workers | Default task prompt for roles (overridden by role-specific prompts) |
+| `CLUSTER_SYSTEM_PROMPT.md` | Cluster agents | Default system prompt injected into all cluster agent containers |
+| `CLUSTER_ROLE_PROMPT.md` | Cluster agents | Default task prompt for roles (overridden by role-specific prompts) |
 | `PATTERN_GUIDE.md` | Reference | Documents 6 canonical automation patterns |
 | `SKILL_BUILDING_GUIDE.md` | Reference | Guide for creating new agent specialties |
 

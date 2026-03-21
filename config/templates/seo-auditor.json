@@ -1,6 +1,6 @@
 {
   "id": "seo-auditor",
-  "name": "SEO Auditor",
+  "name": "SEO Audit Team",
   "description": "Audit a website's SEO and get actionable recommendations to improve search rankings.",
   "icon": "bar_chart",
   "category": "marketing",
@@ -47,25 +47,25 @@
     "folders": ["crawl", "analysis", "reports"],
     "roles": [
       {
-        "roleName": "Crawler",
+        "roleName": "Crawler Agent",
         "role": "You are a website crawler and technical analyzer. Examine the target website's structure, speed, meta tags, heading hierarchy, internal links, and technical SEO elements. Document everything systematically.",
         "prompt": "Audit this website: {{input.website}}\nFocus: {{input.focus}}\nTarget keywords: {{input.target_keywords}}\n\nAnalyze:\n1. Homepage meta title, description, and headings\n2. Site structure (key pages, navigation, URL patterns)\n3. Technical elements (robots.txt, sitemap, canonical tags, schema markup)\n4. Page speed indicators (image sizes, scripts, render-blocking resources)\n5. Mobile friendliness\n6. Internal linking structure\n7. Content quality signals (word count, keyword usage, freshness)\n\nFor competitive focus, also check: {{input.competitors}}\n\nSave detailed crawl data to {{CLUSTER_SHARED_DIR}}crawl/site-data.md",
         "maxConcurrency": 1,
         "dependsOn": null
       },
       {
-        "roleName": "Analyzer",
+        "roleName": "Analyzer Agent",
         "role": "You are an SEO analyst. Take crawl data and identify issues, opportunities, and quick wins. Score each finding by impact (high/medium/low) and effort (easy/medium/hard). Prioritize easy + high-impact items.",
         "prompt": "Read crawl data from {{CLUSTER_SHARED_DIR}}crawl/site-data.md.\n\nWebsite: {{input.website}}\nTarget keywords: {{input.target_keywords}}\nCompetitors: {{input.competitors}}\n\nAnalyze:\n1. Critical issues (things actively hurting rankings)\n2. Quick wins (easy fixes with high impact)\n3. Content gaps (topics/keywords competitors rank for that we don't)\n4. Technical improvements (speed, structure, schema)\n5. Competitive advantages (what we do better)\n\nFor each finding: issue, impact (high/med/low), effort (easy/med/hard), specific fix.\n\nSave to {{CLUSTER_SHARED_DIR}}analysis/seo-analysis.md",
         "maxConcurrency": 1,
-        "dependsOn": "Crawler"
+        "dependsOn": "Crawler Agent"
       },
       {
-        "roleName": "Reporter",
+        "roleName": "Reporter Agent",
         "role": "You are an SEO reporting specialist. Take the analysis and produce a clear, prioritized action plan that a marketing team or business owner can follow step by step.",
         "prompt": "Read analysis from {{CLUSTER_SHARED_DIR}}analysis/seo-analysis.md.\n\nProduce an SEO audit report for {{input.website}}:\n\n1. **SEO Health Score** — Overall rating (A-F) with brief explanation\n2. **Top 3 Quick Wins** — Easy fixes with biggest impact (do these first)\n3. **Critical Issues** — Must-fix problems hurting rankings now\n4. **Content Recommendations** — What to write, update, or optimize\n5. **Technical Checklist** — Prioritized technical fixes\n6. **Competitive Insights** — How we compare, where to differentiate\n7. **90-Day Action Plan** — Week-by-week priorities\n\nMake it actionable — every item should say exactly what to do.\n\nSave to {{CLUSTER_SHARED_DIR}}reports/seo-report.md",
         "maxConcurrency": 1,
-        "dependsOn": "Analyzer"
+        "dependsOn": "Analyzer Agent"
       }
     ]
   }

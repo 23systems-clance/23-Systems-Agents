@@ -1,0 +1,87 @@
+/**
+ * Assistant Thread Context Changed Event Handler
+ * Feature 23: Dynamic Suggested Prompts - T035-T037
+ */
+
+import { App } from '@slack/bolt';
+import { logger } from '../../lib/logger';
+import { promptGenerator } from '../../services/agent/promptGenerator';
+import { promptContextBuilder } from '../../services/agent/promptContext';
+import { DEFAULT_PROMPTS } from '../../constants/defaultPrompts';
+import { promptMetrics } from '../../utils/promptMetrics';
+
+export function registerAssistantThreadContextChangedHandler(app: App): void {
+  app.assistant({
+    threadContextChanged: async ({ event, setSuggestedPrompts }): Promise<void> => {
+      const startTime = Date.now();
+
+      try {
+        logger.info('Assistant thread context changed', {
+          userId: event.assistant_thread.user_id,
+          teamId: event.assistant_thread.team_id,
+          channelId: event.assistant_thread.channel_id,
+          threadTs: event.assistant_thread.thread_ts,
+        });
+
+        const slackContext = {
+          userId: event.assistant_thread.user_id,
+          teamId: event.assistant_thread.team_id,
+          channelId: event.assistant_thread.channel_id,
+          threadTs: event.assistant_thread.thread_ts,
+        };
+
+        // T036: Last-write-wins handled by Slack's DefaultThreadContextStore
+        // Build context with new channel info
+        const context = await promptContextBuilder.build(slackContext);
+
+        // T035: Generate prompts
+        const prompts = await promptGenerator.generate(context);
+
+        // Set suggested prompts in Slack
+        await setSuggestedPrompts({
+          prompts,
+        });
+
+        const totalDuration = Date.now() - startTime;
+        logger.info('Context-aware prompts updated', {
+          userId: slackContext.userId,
+          teamId: slackContext.teamId,
+          channelId: slackContext.channelId,
+          duration: totalDuration,
+          promptTitles: prompts.map(p => p.title),
+        });
+
+        promptMetrics.recordGenerationLatency(totalDuration, slackContext.teamId, false);
+      } catch (error) {
+        const duration = Date.now() - startTime;
+
+        logger.error('Failed to update context-aware prompts', {
+          error,
+          userId: event.assistant_thread.user_id,
+          teamId: event.assistant_thread.team_id,
+          duration,
+        });
+
+        // T037: Fallback to default prompts on error
+        try {
+          await setSuggestedPrompts({
+            prompts: DEFAULT_PROMPTS,
+          });
+
+          promptMetrics.recordFallback(
+            event.assistant_thread.team_id,
+            error instanceof Error ? error.name : 'Unknown'
+          );
+        } catch (fallbackError) {
+          logger.error('Fallback on context change also failed', {
+            error: fallbackError,
+            userId: event.assistant_thread.user_id,
+            teamId: event.assistant_thread.team_id,
+          });
+        }
+      }
+    },
+  });
+
+  logger.info('Assistant thread context changed handler registered');
+}

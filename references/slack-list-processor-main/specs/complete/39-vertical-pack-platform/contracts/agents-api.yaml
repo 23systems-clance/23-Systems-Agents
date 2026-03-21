@@ -1,0 +1,334 @@
+openapi: 3.0.3
+info:
+  title: Agent Registry API
+  version: 1.0.0
+  description: Admin CRUD for AI agents with versioning, testing, and lifecycle management.
+
+paths:
+  /api/admin/agents:
+    get:
+      summary: List all agents
+      tags: [Agents]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [DRAFT, TESTING, PUBLISHED, DEPRECATED]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Agent list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AgentSummary'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+
+    post:
+      summary: Create a new agent
+      tags: [Agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAgentRequest'
+      responses:
+        '201':
+          description: Agent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+
+  /api/admin/agents/{agentId}:
+    get:
+      summary: Get agent details with version history
+      tags: [Agents]
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Agent with versions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentWithVersions'
+
+    put:
+      summary: Update agent (creates new version if published)
+      tags: [Agents]
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAgentRequest'
+      responses:
+        '200':
+          description: Agent updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+
+  /api/admin/agents/{agentId}/test:
+    post:
+      summary: Test agent in sandbox with sample input
+      tags: [Agents]
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [input]
+              properties:
+                input:
+                  type: object
+                  description: Sample input matching the agent's input schema
+                versionId:
+                  type: string
+                  format: uuid
+                  description: Specific version to test (defaults to latest)
+      responses:
+        '200':
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentTestResult'
+
+  /api/admin/agents/{agentId}/publish:
+    post:
+      summary: Publish agent (set current version to PUBLISHED)
+      tags: [Agents]
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Agent published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+
+  /api/admin/agents/{agentId}/deprecate:
+    post:
+      summary: Deprecate agent
+      tags: [Agents]
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Agent deprecated
+
+components:
+  schemas:
+    CreateAgentRequest:
+      type: object
+      required: [name, slug, modelId, systemPrompt, maxTokens, creditCost]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        modelId:
+          type: string
+        systemPrompt:
+          type: string
+        maxTokens:
+          type: integer
+          minimum: 1
+          maximum: 200000
+        creditCost:
+          type: number
+        inputSchema:
+          type: object
+        outputSchema:
+          type: object
+        toolIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    UpdateAgentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        modelId:
+          type: string
+        systemPrompt:
+          type: string
+        maxTokens:
+          type: integer
+        creditCost:
+          type: number
+        toolIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        changeNote:
+          type: string
+
+    AgentSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, TESTING, PUBLISHED, DEPRECATED]
+        modelId:
+          type: string
+        currentVersion:
+          type: integer
+        totalInvocations:
+          type: integer
+        averageCostUsd:
+          type: number
+
+    Agent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        modelId:
+          type: string
+        maxTokens:
+          type: integer
+        creditCost:
+          type: number
+        inputSchema:
+          type: object
+        outputSchema:
+          type: object
+        toolIds:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AgentWithVersions:
+      allOf:
+        - $ref: '#/components/schemas/Agent'
+        - type: object
+          properties:
+            versions:
+              type: array
+              items:
+                $ref: '#/components/schemas/AgentVersion'
+
+    AgentVersion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        status:
+          type: string
+        modelId:
+          type: string
+        maxTokens:
+          type: integer
+        changeNote:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    AgentTestResult:
+      type: object
+      properties:
+        output:
+          type: object
+        tokensInput:
+          type: integer
+        tokensOutput:
+          type: integer
+        costUsd:
+          type: number
+        durationMs:
+          type: integer
+        toolCallsMade:
+          type: array
+          items:
+            type: object

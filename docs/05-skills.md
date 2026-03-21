@@ -50,21 +50,21 @@ The `description` from frontmatter populates the `{{skills}}` template variable 
 
 | Specialty | Description | Type |
 |-----------|-------------|------|
-| `brave-search` | Web search + content extraction via Brave Search API | Node.js |
-| `youtube-transcript` | Fetch YouTube video transcripts for summarization | Node.js |
-| `browser-tools` | Chrome DevTools Protocol automation (navigate, eval, screenshot, click) | Bash/Node.js |
-| `notebooklm` | Google NotebookLM — create notebooks, add sources, generate artifacts | Node.js |
-| `sop-generator` | Generate branded HTML SOP documents using Dev Labs template system | Bash/Node.js |
-| `llm-secrets` | List available LLM-accessible credentials (auto-included) | Built-in |
+| `search-web` | Web search + content extraction via Brave Search API | Node.js |
+| `fetch-transcript` | Fetch YouTube video transcripts for summarization | Node.js |
+| `automate-browser` | Chrome DevTools Protocol automation (navigate, eval, screenshot, click) | Bash/Node.js |
+| `sync-notebooklm` | Google NotebookLM — create notebooks, add sources, generate artifacts | Node.js |
+| `generate-sop` | Generate branded HTML SOP documents using Dev Labs template system | Bash/Node.js |
+| `list-secrets` | List available LLM-accessible credentials (auto-included) | Built-in |
 | `modify-self` | Self-modification of config, cron, triggers, specialties (auto-included) | Built-in |
 
 ## Available but Inactive Specialties
 
 | Specialty | Description |
 |-----------|-------------|
-| `google-docs` | Google Docs API integration |
-| `google-drive` | Google Drive file management |
-| `kie-ai` | KIE AI integration |
+| `manage-google-docs` | Google Docs API integration |
+| `manage-google-drive` | Google Drive file management |
+| `generate-media` | KIE AI integration |
 
 ## Building a New Specialty
 

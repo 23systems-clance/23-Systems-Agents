@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V2: Dark Hero + Split Layout</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy: #0f0f1a;
+    --navy-mid: #1a1a2e;
+    --navy-light: #252542;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-glow: rgba(67, 97, 238, 0.15);
+    --accent-bg: #eef0ff;
+    --teal: #0d9488;
+    --white: #ffffff;
+    --light-bg: #f7f8fc;
+    --dark-text: #1e1e32;
+    --mid-text: #50506e;
+    --light-text: #8889a0;
+    --border: #e2e4ef;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--dark-text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding: 24px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    color: white;
+  }
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: 14px;
+  }
+  .header-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  .header-links a {
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .header-links a:hover { color: white; }
+  .header-links .btn-outline {
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 8px 16px;
+    border-radius: 8px;
+    color: white;
+  }
+  .header-links .btn-outline:hover {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  /* ── HERO (FULL DARK) ── */
+  .hero {
+    background: var(--navy);
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    left: -100px;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(13, 148, 136, 0.08), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* LEFT SIDE */
+  .hero-content {
+    padding: 140px 60px 60px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 24px;
+  }
+  .hero-content h1 {
+    font-size: 48px;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .hero-content h1 .gradient-text {
+    background: linear-gradient(135deg, var(--accent-light), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-content .subtitle {
+    font-size: 17px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.7;
+    max-width: 440px;
+    margin-bottom: 36px;
+  }
+
+  .features {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .feature {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .feature-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--navy-light);
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+  .feature-text {
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+  }
+  .feature-text strong {
+    color: white;
+  }
+
+  /* RIGHT SIDE (CHAT) */
+  .hero-chat {
+    padding: 120px 48px 40px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+  .chat-window {
+    width: 100%;
+    max-width: 440px;
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 480px;
+  }
+  .chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .chat-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .chat-header-info {
+    flex: 1;
+  }
+  .chat-header-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark-text);
+  }
+  .chat-header-status {
+    font-size: 11px;
+    color: var(--teal);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .chat-header-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+
+  .chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .msg {
+    max-width: 85%;
+    padding: 11px 15px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .msg.ai {
+    background: #f4f5f9;
+    color: var(--dark-text);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user {
+    background: var(--accent);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .msg .typing {
+    display: flex;
+    gap: 4px;
+    padding: 4px 0;
+  }
+  .msg .typing span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mid-text);
+    opacity: 0.4;
+    animation: blink 1.4s infinite;
+  }
+  .msg .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .msg .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 0.8; }
+  }
+
+  .chat-input-area {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .chat-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    color: var(--dark-text);
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--light-text); }
+  .send-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { background: var(--accent-light); }
+  .send-btn svg { width: 16px; height: 16px; }
+
+  /* ── SOCIAL PROOF BAR ── */
+  .proof-bar {
+    background: var(--navy-mid);
+    border-top: 1px solid rgba(255,255,255,0.04);
+    padding: 20px 48px;
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .proof-bar .stat-num {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent-light);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  /* ── DESIGN LABEL ── */
+  .design-label {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--accent);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    z-index: 100;
+  }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-content { padding: 120px 24px 40px; }
+    .hero-chat { padding: 0 24px 40px; }
+    .proof-bar { flex-wrap: wrap; gap: 24px; padding: 20px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="design-label">V2: Dark Hero + Split</div>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">23</div>
+    23 Systems
+  </div>
+  <div class="header-links">
+    <a href="#">Services</a>
+    <a href="#">Case Studies</a>
+    <a href="#" class="btn-outline">Book a Call</a>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">Free AI Consultation</div>
+    <h1>Find your perfect<br><span class="gradient-text">tech stack</span></h1>
+    <p class="subtitle">Our AI solutions architect analyzes your project requirements and recommends the optimal technology stack &mdash; with research-backed reasoning for every choice.</p>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">&#x1F3AF;</div>
+        <div class="feature-text"><strong>Personalized recommendations</strong> across 8 categories</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F50D;</div>
+        <div class="feature-text"><strong>Research-validated</strong> against real-world adoption data</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F4CB;</div>
+        <div class="feature-text"><strong>Branded report</strong> with architecture diagrams &amp; alternatives</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F91D;</div>
+        <div class="feature-text"><strong>Partner resources</strong> &mdash; cloud credits &amp; startup programs</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-chat">
+    <div class="chat-window">
+      <div class="chat-header">
+        <div class="chat-avatar">23</div>
+        <div class="chat-header-info">
+          <div class="chat-header-name">23 Systems Advisor</div>
+          <div class="chat-header-status">Online</div>
+        </div>
+      </div>
+      <div class="chat-messages">
+        <div class="msg ai">
+          Hey! I'm the 23 Systems tech advisor. I help teams figure out the right tech stack for their project.<br><br>
+          Tell me &mdash; what are you building and what problem does it solve?
+        </div>
+        <div class="msg user">
+          Building a marketplace for freelance designers. Portfolio showcase + direct hiring.
+        </div>
+        <div class="msg ai">
+          Great concept &mdash; marketplaces are one of my favorites. Lots of interesting decisions around payments, search, and messaging.<br><br>
+          Would you prefer a <strong>high-level recommendation</strong> (~2 min) or a <strong>deep dive</strong> (~5 min)?
+        </div>
+        <div class="msg ai">
+          <div class="typing">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" class="chat-input" placeholder="Type your response...">
+        <button class="send-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="proof-bar">
+  <div><span class="stat-num">500+</span> consultations completed</div>
+  <div><span class="stat-num">8</span> stack categories analyzed</div>
+  <div><span class="stat-num">2-5 min</span> average conversation</div>
+  <div><span class="stat-num">Free</span> no signup required</div>
+</div>
+
+</body>
+</html>

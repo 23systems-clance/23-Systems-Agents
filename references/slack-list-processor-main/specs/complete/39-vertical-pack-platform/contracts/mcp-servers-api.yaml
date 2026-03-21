@@ -1,0 +1,323 @@
+openapi: 3.0.3
+info:
+  title: MCP Server Registry API
+  version: 1.0.0
+  description: Admin CRUD for MCP server connections, tools, health checks, and BYOK credentials.
+
+paths:
+  /api/admin/mcp-servers:
+    get:
+      summary: List all MCP servers
+      tags: [MCP Servers]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [HEALTHY, ERROR, UNKNOWN]
+      responses:
+        '200':
+          description: MCP server list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  servers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/McpServerSummary'
+
+    post:
+      summary: Register a new MCP server
+      tags: [MCP Servers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMcpServerRequest'
+      responses:
+        '201':
+          description: MCP server created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpServer'
+
+  /api/admin/mcp-servers/{serverId}:
+    get:
+      summary: Get MCP server details with tools
+      tags: [MCP Servers]
+      parameters:
+        - name: serverId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: MCP server with tools
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpServerWithTools'
+
+    put:
+      summary: Update MCP server
+      tags: [MCP Servers]
+      parameters:
+        - name: serverId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMcpServerRequest'
+      responses:
+        '200':
+          description: MCP server updated
+
+  /api/admin/mcp-servers/{serverId}/health:
+    post:
+      summary: Run health check on MCP server
+      tags: [MCP Servers]
+      parameters:
+        - name: serverId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Health check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [HEALTHY, ERROR]
+                  latencyMs:
+                    type: integer
+                  error:
+                    type: string
+
+  /api/admin/mcp-servers/{serverId}/tools:
+    get:
+      summary: List tools for an MCP server
+      tags: [MCP Tools]
+      parameters:
+        - name: serverId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tool list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tools:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/McpTool'
+
+    post:
+      summary: Add a tool to an MCP server
+      tags: [MCP Tools]
+      parameters:
+        - name: serverId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMcpToolRequest'
+      responses:
+        '201':
+          description: Tool created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpTool'
+
+  /api/client/mcp-servers/{serverId}/byok:
+    put:
+      summary: Set BYOK credentials for a workspace
+      tags: [BYOK]
+      parameters:
+        - name: serverId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [credentials]
+              properties:
+                credentials:
+                  type: object
+                  description: Provider-specific credential object
+      responses:
+        '200':
+          description: BYOK credentials saved
+
+components:
+  schemas:
+    CreateMcpServerRequest:
+      type: object
+      required: [name, slug, provider, baseUrl, authType]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        provider:
+          type: string
+        baseUrl:
+          type: string
+          format: uri
+        authType:
+          type: string
+          enum: [API_KEY, OAUTH2, BEARER_TOKEN, BASIC_AUTH, NONE]
+        credentials:
+          type: object
+        byokEnabled:
+          type: boolean
+          default: false
+        rateLimitRpm:
+          type: integer
+
+    UpdateMcpServerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        baseUrl:
+          type: string
+        credentials:
+          type: object
+        byokEnabled:
+          type: boolean
+        rateLimitRpm:
+          type: integer
+
+    McpServerSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        provider:
+          type: string
+        status:
+          type: string
+          enum: [HEALTHY, ERROR, UNKNOWN]
+        byokEnabled:
+          type: boolean
+        toolCount:
+          type: integer
+        lastHealthCheck:
+          type: string
+          format: date-time
+
+    McpServer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        provider:
+          type: string
+        baseUrl:
+          type: string
+        authType:
+          type: string
+        status:
+          type: string
+        byokEnabled:
+          type: boolean
+        rateLimitRpm:
+          type: integer
+        lastHealthCheck:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    McpServerWithTools:
+      allOf:
+        - $ref: '#/components/schemas/McpServer'
+        - type: object
+          properties:
+            tools:
+              type: array
+              items:
+                $ref: '#/components/schemas/McpTool'
+
+    CreateMcpToolRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        inputSchema:
+          type: object
+        outputSchema:
+          type: object
+        creditCost:
+          type: number
+
+    McpTool:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        serverId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        inputSchema:
+          type: object
+        outputSchema:
+          type: object
+        creditCost:
+          type: number

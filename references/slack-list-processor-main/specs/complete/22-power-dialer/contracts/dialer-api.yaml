@@ -1,0 +1,986 @@
+openapi: 3.0.3
+info:
+  title: Power Dialer API
+  version: 1.0.0
+  description: |
+    Browser-based power dialer for BDRs. All BDR routes require magic link JWT auth.
+    All admin routes require admin API key auth.
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Dialer Session
+    description: Start/stop/manage dialer sessions (BDR auth)
+  - name: Dialer Queue
+    description: Queue management (BDR auth)
+  - name: Dialer Calls
+    description: Call controls and disposition (BDR auth)
+  - name: Dialer Token
+    description: Twilio capability token generation (BDR auth)
+  - name: Recordings
+    description: Recording library and playback (admin auth)
+  - name: Recording Reviews
+    description: Favorite, flag, coaching notes (admin auth)
+  - name: Active Calls
+    description: Live call monitoring (admin auth)
+  - name: Dialer Config
+    description: Phone number pool and client config (admin auth)
+  - name: Webhooks
+    description: Twilio and Deepgram callbacks (signature-verified)
+
+paths:
+  # ============================================================
+  # BDR Routes: /api/v1/dialer/*
+  # ============================================================
+
+  /dialer/token:
+    post:
+      tags: [Dialer Token]
+      summary: Generate Twilio Client capability token
+      description: |
+        Returns a short-lived Twilio access token for the Twilio Voice SDK in the browser.
+        Token grants outbound calling capability via the TwiML App.
+      responses:
+        "200":
+          description: Capability token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Twilio access token (JWT, 1-hour expiry)
+                  identity:
+                    type: string
+                    description: BDR identity used for the Twilio Device
+
+  /dialer/sessions:
+    post:
+      tags: [Dialer Session]
+      summary: Start a new dialer session
+      description: |
+        Creates a new dialer session and populates the queue from a campaign's
+        pending phone steps or a manual contact list. Runs compliance pre-checks
+        (TCPA window, opt-out list) on all contacts before adding to queue.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source]
+              properties:
+                source:
+                  type: string
+                  enum: [campaign, manual]
+                campaignId:
+                  type: string
+                  description: Required if source=campaign
+                contactIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Required if source=manual (CampaignContact IDs)
+      responses:
+        "201":
+          description: Session created with queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DialerSessionWithQueue"
+        "400":
+          description: No eligible contacts (all opted out or outside TCPA window)
+
+    get:
+      tags: [Dialer Session]
+      summary: Get active dialer session
+      description: Returns the BDR's current active or paused session, if any.
+      responses:
+        "200":
+          description: Active session (or null)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DialerSessionWithQueue"
+        "204":
+          description: No active session
+
+  /dialer/sessions/{sessionId}/pause:
+    post:
+      tags: [Dialer Session]
+      summary: Pause the dialer session
+      description: Stops auto-advance after the current call ends.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session paused
+
+  /dialer/sessions/{sessionId}/resume:
+    post:
+      tags: [Dialer Session]
+      summary: Resume a paused session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session resumed
+
+  /dialer/sessions/{sessionId}/complete:
+    post:
+      tags: [Dialer Session]
+      summary: End the dialer session
+      description: Marks session as complete. Returns session stats summary.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session completed with stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStats"
+
+  # ---- Queue ----
+
+  /dialer/sessions/{sessionId}/queue:
+    get:
+      tags: [Dialer Queue]
+      summary: Get queue items for a session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ordered queue items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DialerQueueItem"
+                  currentIndex:
+                    type: integer
+                  totalRemaining:
+                    type: integer
+
+  /dialer/sessions/{sessionId}/queue/{itemId}/skip:
+    post:
+      tags: [Dialer Queue]
+      summary: Skip a contact in the queue
+      description: Moves contact to end of queue or marks as skipped.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contact skipped, next item returned
+
+  # ---- Calls ----
+
+  /dialer/calls/dial:
+    post:
+      tags: [Dialer Calls]
+      summary: Initiate a call to the next queue item
+      description: |
+        Dials the next contact in the queue. Creates a Twilio Conference,
+        connects the BDR via WebRTC, and dials the contact's phone number.
+        Returns call session details for the UI to track.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionId, queueItemId]
+              properties:
+                sessionId:
+                  type: string
+                queueItemId:
+                  type: string
+      responses:
+        "200":
+          description: Call initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallSession"
+        "409":
+          description: BDR already has an active call
+        "422":
+          description: Contact is opted out or outside TCPA window
+
+  /dialer/calls/{callSessionId}/hangup:
+    post:
+      tags: [Dialer Calls]
+      summary: End the current call
+      parameters:
+        - name: callSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Call terminated
+
+  /dialer/calls/{callSessionId}/mute:
+    post:
+      tags: [Dialer Calls]
+      summary: Toggle mute on the BDR's conference leg
+      parameters:
+        - name: callSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                muted:
+                  type: boolean
+      responses:
+        "200":
+          description: Mute toggled
+
+  /dialer/calls/{callSessionId}/hold:
+    post:
+      tags: [Dialer Calls]
+      summary: Toggle hold (plays hold music to contact)
+      parameters:
+        - name: callSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                held:
+                  type: boolean
+      responses:
+        "200":
+          description: Hold toggled
+
+  # ---- Disposition ----
+
+  /dialer/calls/{callSessionId}/disposition:
+    post:
+      tags: [Dialer Calls]
+      summary: Submit call disposition
+      description: |
+        Records the disposition for a completed call. Triggers CRM sync
+        (HubSpot engagement creation) and advances the campaign contact
+        to the next step if applicable.
+      parameters:
+        - name: callSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [disposition]
+              properties:
+                disposition:
+                  $ref: "#/components/schemas/DispositionType"
+                notes:
+                  type: string
+                  description: Free-text BDR notes
+      responses:
+        "200":
+          description: Disposition recorded, CRM sync queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nextQueueItem:
+                    $ref: "#/components/schemas/DialerQueueItem"
+                    description: Next contact to dial (null if queue complete)
+                  sessionStats:
+                    $ref: "#/components/schemas/SessionStats"
+
+  # ============================================================
+  # Admin Routes: /api/v1/admin/*
+  # ============================================================
+
+  /admin/recordings:
+    get:
+      tags: [Recordings]
+      summary: List call recordings (recording library)
+      description: |
+        Searchable, filterable list of all call recordings.
+        Role-based: managers see their BDRs' recordings, admins see all.
+      parameters:
+        - name: bdrId
+          in: query
+          schema:
+            type: string
+        - name: campaignId
+          in: query
+          schema:
+            type: string
+        - name: clientId
+          in: query
+          schema:
+            type: string
+        - name: disposition
+          in: query
+          schema:
+            $ref: "#/components/schemas/DispositionType"
+        - name: minDuration
+          in: query
+          schema:
+            type: integer
+            description: Minimum call duration in seconds
+        - name: maxDuration
+          in: query
+          schema:
+            type: integer
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: reviewStatus
+          in: query
+          schema:
+            type: string
+            enum: [NONE, FLAGGED, REVIEWED]
+        - name: favoritesOnly
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 25
+      responses:
+        "200":
+          description: Paginated recording list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recordings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RecordingListItem"
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  totalPages:
+                    type: integer
+
+  /admin/recordings/{recordingId}:
+    get:
+      tags: [Recordings]
+      summary: Get recording detail (playback + transcript + notes)
+      parameters:
+        - name: recordingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Full recording detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordingDetail"
+
+  /admin/recordings/{recordingId}/audio-url:
+    get:
+      tags: [Recordings]
+      summary: Get pre-signed S3 URL for audio playback
+      description: Returns a time-limited (24h) pre-signed URL for the recording audio file.
+      parameters:
+        - name: recordingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pre-signed audio URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  audioUrl:
+                    type: string
+                    format: uri
+                  expiresAt:
+                    type: string
+                    format: date-time
+
+  /admin/recordings/{recordingId}/favorite:
+    post:
+      tags: [Recording Reviews]
+      summary: Toggle favorite on a recording
+      parameters:
+        - name: recordingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isFavorited:
+                  type: boolean
+      responses:
+        "200":
+          description: Favorite toggled
+
+  /admin/recordings/{recordingId}/review:
+    post:
+      tags: [Recording Reviews]
+      summary: Flag or mark recording as reviewed
+      parameters:
+        - name: recordingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reviewStatus:
+                  type: string
+                  enum: [FLAGGED, REVIEWED]
+      responses:
+        "200":
+          description: Review status updated
+
+  /admin/recordings/{recordingId}/coaching-notes:
+    post:
+      tags: [Recording Reviews]
+      summary: Add a coaching note to a recording
+      parameters:
+        - name: recordingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                timestampSeconds:
+                  type: integer
+                  description: Optional timestamp in recording the note refers to
+      responses:
+        "201":
+          description: Coaching note created
+
+  # ---- Active Calls (Manager Monitoring) ----
+
+  /admin/active-calls:
+    get:
+      tags: [Active Calls]
+      summary: List all active calls across BDRs
+      description: Real-time view for managers. Shows BDR name, contact, duration, status.
+      responses:
+        "200":
+          description: Active calls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActiveCall"
+
+  /admin/active-calls/{callSessionId}/listen:
+    post:
+      tags: [Active Calls]
+      summary: Join call in listen-only (coach) mode
+      description: |
+        Generates a Twilio token for the manager to join the conference
+        in muted/listen-only mode. Manager hears both parties.
+      parameters:
+        - name: callSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Listen token for Twilio Conference
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  conferenceSid:
+                    type: string
+
+  /admin/active-calls/{callSessionId}/barge:
+    post:
+      tags: [Active Calls]
+      summary: Escalate from listen to barge-in mode
+      description: Unmutes the manager so both BDR and contact can hear them.
+      parameters:
+        - name: callSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Barge-in activated
+
+  # ---- Dialer Config ----
+
+  /admin/dialer-config/phone-numbers:
+    get:
+      tags: [Dialer Config]
+      summary: List all Twilio phone numbers in the pool
+      responses:
+        "200":
+          description: Phone number pool
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TwilioPhoneNumber"
+    post:
+      tags: [Dialer Config]
+      summary: Provision a new phone number from Twilio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [areaCode]
+              properties:
+                areaCode:
+                  type: string
+                  description: Desired area code
+                clientId:
+                  type: string
+                  description: Assign to client (optional)
+      responses:
+        "201":
+          description: Phone number provisioned
+
+  /admin/dialer-config/phone-numbers/{numberId}/assign:
+    post:
+      tags: [Dialer Config]
+      summary: Assign a phone number to a client
+      parameters:
+        - name: numberId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [clientId]
+              properties:
+                clientId:
+                  type: string
+                isPrimary:
+                  type: boolean
+                  default: false
+      responses:
+        "200":
+          description: Number assigned
+
+  # ============================================================
+  # Webhook Routes: /api/webhooks/*
+  # ============================================================
+
+  /webhooks/twilio/status:
+    post:
+      tags: [Webhooks]
+      summary: Twilio call status callback
+      description: |
+        Receives call status events (ringing, answered, completed) and AMD results.
+        Validated via Twilio request signature.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Acknowledged
+
+  /webhooks/twilio/recording:
+    post:
+      tags: [Webhooks]
+      summary: Twilio recording ready callback
+      description: |
+        Fired when a call recording is available. Triggers S3 copy and
+        Deepgram transcription submission.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Acknowledged
+
+  /webhooks/deepgram/transcript:
+    post:
+      tags: [Webhooks]
+      summary: Deepgram transcription complete callback
+      description: |
+        Receives completed transcript from Deepgram. Stores transcript,
+        updates CRM engagement with transcript (deferred sync).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Acknowledged
+
+  # ---- Public Recording Permalink ----
+
+  /recordings/{callSessionId}/audio:
+    get:
+      tags: [Recordings]
+      summary: Recording permalink (for CRM embedding)
+      description: |
+        Public-ish endpoint that redirects to a pre-signed S3 URL.
+        Used in HubSpot hs_call_recording_url and other CRM activity records.
+        No auth required (URL itself is the secret via callSessionId UUID).
+      parameters:
+        - name: callSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to pre-signed S3 audio URL
+
+# ============================================================
+# Components
+# ============================================================
+
+components:
+  schemas:
+    DispositionType:
+      type: string
+      enum:
+        - CONNECTED_INTERESTED
+        - CONNECTED_NOT_INTERESTED
+        - CONNECTED_CALLBACK_REQUESTED
+        - VOICEMAIL_AUTO_SKIPPED
+        - VOICEMAIL_LEFT_MESSAGE
+        - NO_ANSWER
+        - WRONG_NUMBER
+        - DO_NOT_CALL
+        - INVALID_NUMBER
+        - DROPPED_CALL
+
+    DialerSessionWithQueue:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED, COMPLETED]
+        campaignId:
+          type: string
+        totalDialed:
+          type: integer
+        totalConnected:
+          type: integer
+        totalVoicemail:
+          type: integer
+        totalNoAnswer:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        queue:
+          type: array
+          items:
+            $ref: "#/components/schemas/DialerQueueItem"
+        currentIndex:
+          type: integer
+
+    DialerQueueItem:
+      type: object
+      properties:
+        id:
+          type: string
+        position:
+          type: integer
+        status:
+          type: string
+          enum: [PENDING, DIALING, COMPLETED, SKIPPED]
+        contactName:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        companyName:
+          type: string
+        jobTitle:
+          type: string
+        hubspotContactId:
+          type: string
+        tcpaEligible:
+          type: boolean
+        optedOut:
+          type: boolean
+        lastCalledAt:
+          type: string
+          format: date-time
+
+    CallSession:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        contactName:
+          type: string
+        contactPhone:
+          type: string
+        companyName:
+          type: string
+        callerIdNumber:
+          type: string
+        amdResult:
+          type: string
+        dialedAt:
+          type: string
+          format: date-time
+        answeredAt:
+          type: string
+          format: date-time
+        durationSeconds:
+          type: integer
+        disposition:
+          $ref: "#/components/schemas/DispositionType"
+
+    SessionStats:
+      type: object
+      properties:
+        totalDialed:
+          type: integer
+        totalConnected:
+          type: integer
+        totalVoicemail:
+          type: integer
+        totalNoAnswer:
+          type: integer
+        totalSkipped:
+          type: integer
+        avgTalkTimeSeconds:
+          type: number
+        sessionDurationMinutes:
+          type: number
+        connectRate:
+          type: number
+          description: Percentage of dials that connected
+
+    RecordingListItem:
+      type: object
+      properties:
+        id:
+          type: string
+        callSessionId:
+          type: string
+        bdrName:
+          type: string
+        contactName:
+          type: string
+        companyName:
+          type: string
+        disposition:
+          $ref: "#/components/schemas/DispositionType"
+        durationSeconds:
+          type: integer
+        isFavorited:
+          type: boolean
+        reviewStatus:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    RecordingDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        callSessionId:
+          type: string
+        bdrName:
+          type: string
+        contactName:
+          type: string
+        contactPhone:
+          type: string
+        companyName:
+          type: string
+        disposition:
+          $ref: "#/components/schemas/DispositionType"
+        dispositionNotes:
+          type: string
+        durationSeconds:
+          type: integer
+        talkTimeSeconds:
+          type: integer
+        audioUrl:
+          type: string
+          format: uri
+        transcript:
+          type: string
+        transcriptJson:
+          type: object
+          description: Structured transcript with word-level timestamps
+        isFavorited:
+          type: boolean
+        reviewStatus:
+          type: string
+        coachingNotes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CoachingNote"
+        createdAt:
+          type: string
+          format: date-time
+
+    CoachingNote:
+      type: object
+      properties:
+        id:
+          type: string
+        authorName:
+          type: string
+        content:
+          type: string
+        timestampSeconds:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    ActiveCall:
+      type: object
+      properties:
+        callSessionId:
+          type: string
+        bdrName:
+          type: string
+        contactName:
+          type: string
+        companyName:
+          type: string
+        contactPhone:
+          type: string
+        status:
+          type: string
+        durationSeconds:
+          type: integer
+        dialedAt:
+          type: string
+          format: date-time
+        conferenceSid:
+          type: string
+
+    TwilioPhoneNumber:
+      type: object
+      properties:
+        id:
+          type: string
+        phoneNumber:
+          type: string
+        areaCode:
+          type: string
+        state:
+          type: string
+        clientId:
+          type: string
+        clientName:
+          type: string
+        isPrimary:
+          type: boolean
+        isActive:
+          type: boolean

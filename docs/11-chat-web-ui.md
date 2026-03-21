@@ -13,8 +13,8 @@ The web interface is built with Next.js 15 + React 19. All UI components live in
 | `/chats` | ChatsPage | Chat history list |
 | `/code/[codeWorkspaceId]` | CodePage | Interactive code workspace (xterm.js terminal) |
 | `/cluster/[clusterId]` | ClusterPage | View cluster roles and controls |
-| `/cluster/[clusterId]/logs` | ClusterLogsPage | Live worker execution logs |
-| `/clusters` | ClustersPage | List all worker clusters |
+| `/cluster/[clusterId]/logs` | ClusterLogsPage | Live agent execution logs |
+| `/clusters` | ClustersPage | List all agent clusters |
 | `/mcp` | MCPServersPage | MCP server configuration |
 | `/settings/crons` | CronsPage | Manage scheduled cron jobs |
 | `/settings/triggers` | TriggersPage | Manage webhook triggers |

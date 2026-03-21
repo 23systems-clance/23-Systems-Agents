@@ -51,25 +51,25 @@
     "folders": ["research", "drafts", "final"],
     "roles": [
       {
-        "roleName": "Researcher",
+        "roleName": "Research Agent",
         "role": "You are a content researcher. Find relevant facts, statistics, examples, and angles for the content topic. Look for unique insights that will make the content stand out. Save structured research notes with source links.",
         "prompt": "Research this content topic: {{input.topic}}\n\nTarget content type: {{input.content_type}}\nTarget audience: {{input.audience}}\n\nFind:\n- 5-10 key facts or statistics\n- 2-3 real-world examples or case studies\n- Expert quotes or industry insights\n- Trending angles or hooks\n\nSave to {{CLUSTER_SHARED_DIR}}research/notes.md",
         "maxConcurrency": 1,
         "dependsOn": null
       },
       {
-        "roleName": "Writer",
+        "roleName": "Writer Agent",
         "role": "You are a skilled content writer. Take research notes and produce a well-structured first draft that matches the requested content type and tone. Include a compelling headline and clear structure.",
         "prompt": "Read the research in {{CLUSTER_SHARED_DIR}}research/notes.md.\n\nWrite a {{input.content_type}} about: {{input.topic}}\nTone: {{input.tone}}\nAudience: {{input.audience}}\n\nRequirements by type:\n- blog: 800-1200 words, 3-5 sections, compelling intro\n- article: 1500-2500 words, detailed sections, expert tone\n- social: 3 LinkedIn posts + 5 tweets, with hashtags\n- newsletter: Subject line, preview text, 3-4 sections, CTA\n\nSave draft to {{CLUSTER_SHARED_DIR}}drafts/draft.md",
         "maxConcurrency": 1,
-        "dependsOn": "Researcher"
+        "dependsOn": "Research Agent"
       },
       {
-        "roleName": "Editor",
+        "roleName": "Editor Agent",
         "role": "You are a professional editor. Review the draft for clarity, grammar, flow, and engagement. Tighten prose, improve headlines, and ensure the content delivers on its promise. Output the polished final version.",
         "prompt": "Review and edit the draft at {{CLUSTER_SHARED_DIR}}drafts/draft.md.\n\nCheck for:\n- Grammar, spelling, punctuation\n- Clear structure and logical flow\n- Engaging headline and intro\n- Consistent tone ({{input.tone}})\n- Appropriate length for {{input.content_type}}\n- Strong conclusion or call-to-action\n\nSave the polished version to {{CLUSTER_SHARED_DIR}}final/content.md\nSave a brief editor's note (what you changed and why) to {{CLUSTER_SHARED_DIR}}final/editors-note.md",
         "maxConcurrency": 1,
-        "dependsOn": "Writer"
+        "dependsOn": "Writer Agent"
       }
     ]
   }

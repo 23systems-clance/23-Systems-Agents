@@ -6,7 +6,7 @@
 |---|---|---|
 | **What** | Third-party coding agent (@mariozechner) | Anthropic's official coding agent |
 | **LLM providers** | Anthropic, OpenAI, Google, custom/local | Anthropic only (Claude models) |
-| **Tools** | Custom skills (brave-search, browser-tools, etc.) | Built-in (Read, Edit, Bash, Glob, Grep, WebSearch, WebFetch) + MCP |
+| **Tools** | Custom skills (search-web, automate-browser, etc.) | Built-in (Read, Edit, Bash, Glob, Grep, WebSearch, WebFetch) + MCP |
 | **Auth** | API key (pay-per-token) | OAuth token (subscription) or API key |
 | **Billing** | API credits | Pro/Max subscription (shared with Claude.ai) or API credits |
 | **Choose when** | Non-Anthropic LLMs, custom Pi skills | Subscription billing, official Anthropic tooling |

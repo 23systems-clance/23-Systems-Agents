@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infrastructure Migration Spec &mdash; GitHub Actions to GKE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy: #1a1a2e;
+    --navy-light: #252542;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-bg: #eef0ff;
+    --accent-border: #c7ceff;
+    --white: #ffffff;
+    --light-bg: #f3f4f8;
+    --dark-text: #1e1e32;
+    --mid-text: #50506e;
+    --light-text: #8889a0;
+    --border: #c8cde0;
+    --success: #22c55e;
+    --success-bg: #ecfdf5;
+    --warn: #eab308;
+    --warn-bg: #fefce8;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--dark-text);
+    background: var(--light-bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--navy);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0;
+  }
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .sidebar-header .doc-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .sidebar-header .doc-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .sidebar-nav {
+    padding: 16px 0;
+  }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: var(--navy-light);
+    border-left-color: var(--accent);
+  }
+  .sidebar-nav a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .sidebar-nav .nav-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 10px 24px;
+  }
+  .sidebar-nav .nav-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 8px 24px 4px;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 280px;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(243,244,248,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--light-text);
+  }
+  .topbar .meta {
+    display: flex;
+    gap: 24px;
+  }
+  .topbar .meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--navy);
+    padding: 64px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  }
+  .cover .doc-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+  .cover h1 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .cover .subtitle {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 400;
+    max-width: 600px;
+  }
+
+  /* ── SECTIONS ── */
+  .content {
+    padding: 40px 48px 80px;
+    max-width: 960px;
+  }
+
+  .section {
+    margin-bottom: 48px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--accent-bg);
+  }
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .sub-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 28px 0 12px;
+    padding-left: 14px;
+    border-left: 3px solid var(--accent);
+  }
+
+  p {
+    color: var(--mid-text);
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── LISTS ── */
+  ul {
+    list-style: none;
+    margin: 12px 0 20px;
+    padding: 0;
+  }
+  ul li {
+    position: relative;
+    padding: 6px 0 6px 24px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 13px;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 16px 0 20px;
+    padding: 0;
+  }
+  ol.steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 8px 0 8px 44px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 4px;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  thead th {
+    background: var(--navy);
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #eef0f4;
+    color: var(--mid-text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #f8f9fc; }
+  tbody tr:hover { background: var(--accent-bg); }
+
+  /* ── INFO BOXES ── */
+  .info-box {
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+  .info-box.info {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .info-box.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+    color: #166534;
+  }
+  .info-box.warning {
+    background: var(--warn-bg);
+    border-color: var(--warn);
+    color: #854d0e;
+  }
+  .info-box.danger {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+    color: #991b1b;
+  }
+
+  /* ── CODE ── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--navy);
+    color: #e0e0e0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 12px 0 20px;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+
+  /* ── STRONG ── */
+  strong { color: var(--dark-text); font-weight: 600; }
+
+  /* ── TIER CARDS ── */
+  .tier-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin: 20px 0 28px;
+  }
+  .tier-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    background: var(--white);
+    transition: box-shadow 0.15s;
+  }
+  .tier-card:hover {
+    box-shadow: 0 4px 20px rgba(67, 97, 238, 0.08);
+  }
+  .tier-card.featured {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .tier-card .tier-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .tier-card .tier-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 4px;
+  }
+  .tier-card .tier-price {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--dark-text);
+    margin-bottom: 4px;
+  }
+  .tier-card .tier-price span {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--light-text);
+  }
+  .tier-card .tier-desc {
+    font-size: 13px;
+    color: var(--mid-text);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .tier-card ul {
+    margin: 0;
+  }
+  .tier-card ul li {
+    font-size: 13px;
+    padding: 4px 0 4px 20px;
+  }
+  .tier-card ul li::before {
+    top: 11px;
+    width: 6px;
+    height: 6px;
+  }
+
+  /* ── PHASE TIMELINE ── */
+  .phase-block {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0;
+    background: var(--white);
+    position: relative;
+  }
+  .phase-block::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 12px 0 0 12px;
+    background: var(--accent);
+  }
+  .phase-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .phase-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 8px;
+  }
+  .phase-meta {
+    font-size: 12px;
+    color: var(--light-text);
+    margin-bottom: 12px;
+  }
+
+  /* ── ARCH DIAGRAM ── */
+  .arch-box {
+    background: var(--navy);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #c0c0d0;
+    line-height: 1.8;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* ── COST HIGHLIGHT ── */
+  .cost-highlight {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .cost-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    background: var(--white);
+    text-align: center;
+  }
+  .cost-card .cost-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--light-text);
+    margin-bottom: 8px;
+  }
+  .cost-card .cost-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--dark-text);
+  }
+  .cost-card .cost-value span {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--light-text);
+  }
+  .cost-card .cost-detail {
+    font-size: 12px;
+    color: var(--mid-text);
+    margin-top: 4px;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    .sidebar, .topbar { display: none; }
+    .main { margin-left: 0; }
+    .cover { padding: 32px; }
+    .content { padding: 24px; }
+    .section { page-break-inside: avoid; }
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover { padding: 32px 20px; }
+    .cover h1 { font-size: 26px; }
+    .content { padding: 24px 20px; }
+    .topbar { padding: 10px 20px; }
+    .tier-grid, .cost-highlight { grid-template-columns: 1fr !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <img src="../../references/uploads/23 Systems Logo.png" alt="23 Systems" style="height:32px;width:auto;border-radius:6px;">
+      <span style="font-size:14px;font-weight:700;color:#fff;letter-spacing:0.5px;">23 Systems</span>
+    </div>
+    <div class="doc-type">Infrastructure Spec</div>
+    <div class="doc-title">GitHub &rarr; GKE Migration</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-label">Overview</div>
+    <a href="#s1"><span class="num">1</span> Executive Summary</a>
+    <a href="#s2"><span class="num">2</span> Why Migrate</a>
+    <a href="#s3"><span class="num">3</span> Target Architecture</a>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Cost Analysis</div>
+    <a href="#s4"><span class="num">4</span> Phase 0: Mac Mini Dev</a>
+    <a href="#s5"><span class="num">5</span> Phase 1: GKE Production</a>
+    <a href="#s6"><span class="num">6</span> Idle vs Active Costs</a>
+    <a href="#s7"><span class="num">7</span> Per-Run Breakdown</a>
+    <div class="nav-divider"></div>
+    <div class="nav-label">LLM Strategy</div>
+    <a href="#s8"><span class="num">8</span> Hybrid Model Routing</a>
+    <a href="#s9"><span class="num">9</span> SOC 2 Model Stack</a>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Execution</div>
+    <a href="#s10"><span class="num">10</span> Migration Phases</a>
+    <a href="#s11"><span class="num">11</span> Risk &amp; Mitigation</a>
+    <a href="#s12"><span class="num">12</span> Decision Log</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="meta">
+      <span>v1.0</span>
+      <span>2026-03-20</span>
+      <span>Owner: Clance Hoskin</span>
+    </div>
+  </div>
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="doc-badge">Infrastructure Specification</div>
+    <h1>Multi-Tenant Infrastructure Migration</h1>
+    <div class="subtitle">Replacing GitHub Actions with Kubernetes + local LLM inference for SOC 2-compliant, cost-efficient agent execution at scale.</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ S1: EXECUTIVE SUMMARY ═══ -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>Executive Summary</h2>
+      </div>
+      <p>The current 23WF architecture uses GitHub Actions to orchestrate Docker agent containers. This works for single-tenant usage but hits hard limits for multi-tenant production: 20 concurrent job cap, 30-60s cold starts, no tenant isolation, and linear cost scaling.</p>
+      <p>This spec defines a two-phase migration:</p>
+      <ul>
+        <li><strong>Phase 0 &mdash; Mac Mini M4 (16GB)</strong>: Build and validate the new architecture locally. Run the event handler, job queue, and local LLM inference on a single Mac Mini. Agent execution stays on Claude Sonnet via API. Target: 1-10 tenants, 20-50 tasks/month.</li>
+        <li><strong>Phase 1 &mdash; GKE Autopilot</strong>: Migrate to Google Kubernetes Engine when demand exceeds Mac Mini capacity. Same architecture, swapping Docker Desktop for managed K8s. Target: 10-100+ tenants, 100-1,000+ tasks/month.</li>
+      </ul>
+      <div class="info-box success"><strong>Key outcome:</strong> Per-run cost drops from ~$0.26 (all-cloud) to ~$0.15 (hybrid with local LLM), with the ability to scale to thousands of concurrent tenants without architectural changes.</div>
+    </div>
+
+    <!-- ═══ S2: WHY MIGRATE ═══ -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>Why Migrate Off GitHub Actions</h2>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Limitation</th>
+            <th>GitHub Actions</th>
+            <th>Target Architecture</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Concurrency</strong></td>
+            <td>20 parallel jobs per org (hard limit)</td>
+            <td>Unlimited (constrained only by compute)</td>
+          </tr>
+          <tr>
+            <td><strong>Cold start</strong></td>
+            <td>30-60 seconds (runner provisioning)</td>
+            <td>&lt;5s (warm pod pools), 300ms (Mac Mini local)</td>
+          </tr>
+          <tr>
+            <td><strong>Tenant isolation</strong></td>
+            <td>None &mdash; all jobs share one org</td>
+            <td>K8s namespaces + network policies + resource quotas</td>
+          </tr>
+          <tr>
+            <td><strong>Cost model</strong></td>
+            <td>Per-minute billing, no bin-packing</td>
+            <td>Shared compute, spot instances, scale-to-zero</td>
+          </tr>
+          <tr>
+            <td><strong>Observability</strong></td>
+            <td>Basic workflow logs</td>
+            <td>Prometheus, per-tenant metrics, tracing</td>
+          </tr>
+          <tr>
+            <td><strong>Noisy neighbor</strong></td>
+            <td>No protection &mdash; shared concurrency pool</td>
+            <td>Per-tenant CPU/memory quotas</td>
+          </tr>
+          <tr>
+            <td><strong>SOC 2 audit</strong></td>
+            <td>Limited control over execution environment</td>
+            <td>Full RBAC, network policies, audit logging</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ S3: TARGET ARCHITECTURE ═══ -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>Target Architecture</h2>
+      </div>
+      <p>The architecture replaces GitHub Actions as the orchestration layer while keeping the existing Docker agent image unchanged. Git is retained for code artifacts (PRs, commits) but decoupled from job scheduling.</p>
+
+      <div class="sub-header">Phase 0: Mac Mini (Development &amp; Early Production)</div>
+      <div class="arch-box">
+Tenant Request (Web UI / API / Telegram)
+        |
+        v
+  Next.js Event Handler  (Mac Mini, port 3000)
+        |
+        v
+  BullMQ Queue  (Redis on Mac Mini)
+        |
+        v
+  Worker Process  (Mac Mini, Docker Desktop)
+        |
+        +---> Agent Container (your existing Docker image)
+        |       |
+        |       +---> Claude Sonnet API (coding/reasoning)
+        |       +---> Git push + PR (results)
+        |
+        +---> Ollama  (Mac Mini, port 11434)
+                |
+                +---> Mistral Small 24B (job planning, chat)
+                +---> Phi-4 14B (summaries)</div>
+
+      <div class="sub-header">Phase 1: GKE (Production Scale)</div>
+      <div class="arch-box">
+Tenant Request (Web UI / API / Telegram)
+        |
+        v
+  Next.js Event Handler  (Cloud Run or GKE pod)
+        |
+        v
+  BullMQ Queue  (Redis / Memorystore)
+        |
+        v
+  K8s Job Controller  (GKE Autopilot)
+        |
+        +---> namespace: tenant-abc  (quota: 4 CPU, 8GB)
+        |       +---> Agent Pod (same Docker image)
+        |               +---> Claude Sonnet API
+        |               +---> Git push + PR
+        |
+        +---> namespace: tenant-xyz  (quota: 8 CPU, 16GB)
+        |       +---> Agent Pod
+        |       +---> Agent Pod (concurrent)
+        |
+        +---> Ollama Pod or Mac Mini via Tailscale
+                +---> Mistral Small 24B
+                +---> Phi-4 14B</div>
+
+      <div class="info-box info"><strong>Key insight:</strong> Your existing Docker agent image does not change. You are only replacing <em>how</em> a container gets scheduled and isolated. The migration is an orchestration swap, not a rewrite.</div>
+
+      <div class="sub-header">GitHub Feature Migration Map</div>
+      <p>Every GitHub Actions feature must have a direct equivalent. Git itself is retained for code storage and PRs &mdash; only the orchestration layer changes.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Feature</th>
+            <th>Current (GitHub)</th>
+            <th>New Implementation</th>
+            <th>Phase</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>Job dispatch</strong></td>
+            <td><code>job/*</code> branch creation triggers <code>run-job.yml</code></td>
+            <td>BullMQ + Redis queue. <code>createJob()</code> enqueues directly.</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>Agent execution</strong></td>
+            <td><code>run-job.yml</code> spins up Docker container on GH runner</td>
+            <td>Worker pulls from BullMQ, spawns container locally (0) or K8s Job (1)</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>Auto-merge</strong></td>
+            <td><code>auto-merge.yml</code> squash-merges within ALLOWED_PATHS</td>
+            <td>Worker calls <code>gh pr merge</code> after path validation</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>Completion notification</strong></td>
+            <td><code>notify-pr-complete.yml</code> POSTs to event handler</td>
+            <td>Worker calls notification API directly (in-process)</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>Failure notification</strong></td>
+            <td><code>notify-job-failed.yml</code> POSTs on failure</td>
+            <td>Worker catches container exit code, calls notification API</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><strong>Secrets injection</strong></td>
+            <td><code>AGENT_*</code> / <code>AGENT_LLM_*</code> GitHub secrets &rarr; env vars</td>
+            <td>Secrets from Postgres settings table, injected by worker</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><strong>LLM config overrides</strong></td>
+            <td><code>vars.LLM_PROVIDER</code>, per-job <code>job.config.json</code></td>
+            <td>Same config in BullMQ job payload, worker reads and applies</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><strong>Auto-merge kill switch</strong></td>
+            <td><code>vars.AUTO_MERGE = "false"</code></td>
+            <td>Config flag in settings table or env var</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td><strong>Allowed paths whitelist</strong></td>
+            <td><code>vars.ALLOWED_PATHS</code> comma-separated</td>
+            <td>Same config, read by worker process</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td><strong>Heartbeat</strong></td>
+            <td><code>heartbeat</code> cron &rarr; agent job (branch + Docker + PR)</td>
+            <td>Same cron, dispatches to BullMQ. Ollama for lightweight tasks.</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td><strong>Job status API</strong></td>
+            <td><code>/api/jobs/status</code> queries GitHub API</td>
+            <td>Queries BullMQ + Postgres directly (faster, no rate limits)</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>12</td>
+            <td><strong>Health checks</strong></td>
+            <td>Webhook crons (disabled)</td>
+            <td>Native container health checks + worker monitoring</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td>13</td>
+            <td><strong>CD / rebuild on push</strong></td>
+            <td><code>rebuild-event-handler.yml</code> on self-hosted runner</td>
+            <td>Webhook on main push &rarr; self-restart. Cloud Build (Phase 1).</td>
+            <td>0.5</td>
+          </tr>
+          <tr>
+            <td>14</td>
+            <td><strong>Package upgrade</strong></td>
+            <td><code>upgrade-event-handler.yml</code> manual dispatch</td>
+            <td>CLI command or web UI button</td>
+            <td>0.5</td>
+          </tr>
+          <tr>
+            <td>15</td>
+            <td><strong>Git identity</strong></td>
+            <td><code>gh auth setup-git</code> + <code>gh api user</code></td>
+            <td>RETAINED &mdash; containers still use GH_TOKEN</td>
+            <td>N/A</td>
+          </tr>
+          <tr>
+            <td>16</td>
+            <td><strong>PR creation</strong></td>
+            <td><code>gh pr create</code> in entrypoint</td>
+            <td>RETAINED &mdash; no change needed</td>
+            <td>N/A</td>
+          </tr>
+          <tr>
+            <td>17</td>
+            <td><strong>Audit log</strong></td>
+            <td>Job output at LOG_SHA in git history</td>
+            <td>RETAINED + structured job logs in Postgres</td>
+            <td>0.5</td>
+          </tr>
+          <tr>
+            <td>18</td>
+            <td><strong>Container registry</strong></td>
+            <td>GHCR with GITHUB_TOKEN auth</td>
+            <td>Docker Hub (public) or GCP Artifact Registry (Phase 1)</td>
+            <td>0</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box success"><strong>What stays on GitHub:</strong> Git repository, pull requests, commit history, GH_TOKEN for git operations. The migration only replaces the compute/orchestration layer &mdash; GitHub remains the source of truth for code.</div>
+    </div>
+
+    <!-- ═══ S4: PHASE 0 MAC MINI ═══ -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <h2>Phase 0: Mac Mini M4 (16GB)</h2>
+      </div>
+      <p>Build and validate the full architecture on a single Mac Mini M4 before committing to cloud infrastructure. This is your development environment and early production host for the first 1-10 tenants.</p>
+
+      <div class="sub-header">Hardware</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Spec</th>
+            <th>Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Mac Mini M4</strong></td>
+            <td>10-core CPU, 10-core GPU, 16GB unified memory</td>
+            <td>$599 (one-time)</td>
+          </tr>
+          <tr>
+            <td>External SSD (optional)</td>
+            <td>1TB NVMe for database + logs</td>
+            <td>~$80</td>
+          </tr>
+          <tr>
+            <td><strong>Total hardware</strong></td>
+            <td></td>
+            <td><strong>$599 - $679</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Software Stack</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Software</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Container runtime</td>
+            <td>Docker Desktop / OrbStack</td>
+            <td>Run agent containers locally</td>
+          </tr>
+          <tr>
+            <td>Job queue</td>
+            <td>BullMQ + Redis (Docker or Homebrew)</td>
+            <td>Replace GH Actions trigger</td>
+          </tr>
+          <tr>
+            <td>Local LLM</td>
+            <td>Ollama</td>
+            <td>Serve Mistral Small 24B + Phi-4 14B</td>
+          </tr>
+          <tr>
+            <td>Event handler</td>
+            <td>Next.js (existing)</td>
+            <td>Web UI, API, Telegram, crons</td>
+          </tr>
+          <tr>
+            <td>Database</td>
+            <td>SQLite (existing) or Postgres</td>
+            <td>Job tracking, tenant data</td>
+          </tr>
+          <tr>
+            <td>Tunnel</td>
+            <td>Tailscale or Cloudflare Tunnel</td>
+            <td>Expose to internet for webhooks</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">LLM Capacity on 16GB M4</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Quantization</th>
+            <th>VRAM Used</th>
+            <th>Speed</th>
+            <th>Fits?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Mistral Small 24B</td>
+            <td>Q4_K_M</td>
+            <td>~14GB</td>
+            <td>~12-15 tok/s</td>
+            <td>Yes, tight &mdash; only one model loaded at a time</td>
+          </tr>
+          <tr>
+            <td>Phi-4 14B</td>
+            <td>Q5_K_M</td>
+            <td>~10GB</td>
+            <td>~25-30 tok/s</td>
+            <td>Yes, comfortable</td>
+          </tr>
+          <tr>
+            <td>Both simultaneously</td>
+            <td>&mdash;</td>
+            <td>~24GB</td>
+            <td>&mdash;</td>
+            <td>No &mdash; Ollama will swap, adding latency</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="info-box warning"><strong>16GB constraint:</strong> You can only run one model at a time without swapping. Ollama handles hot-swapping automatically (~2-3s to swap models). For planning + summaries this is fine &mdash; they don't run concurrently. If you want both models loaded simultaneously, upgrade to M4 Pro 24GB ($1,399).</div>
+
+      <div class="sub-header">Monthly Operating Cost (Phase 0)</div>
+      <div class="cost-highlight">
+        <div class="cost-card">
+          <div class="cost-label">Idle (0 tasks)</div>
+          <div class="cost-value">$5<span>/mo</span></div>
+          <div class="cost-detail">Electricity only (~15W idle)</div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-label">Active (20-50 tasks)</div>
+          <div class="cost-value">$3 - $8<span>/mo</span></div>
+          <div class="cost-detail">LLM API only (Claude Sonnet)</div>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Line Item</th>
+            <th>0 Tasks/mo</th>
+            <th>20 Tasks/mo</th>
+            <th>50 Tasks/mo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Mac Mini electricity (~15W idle, ~40W active)</td>
+            <td>$1.60</td>
+            <td>$1.80</td>
+            <td>$2.00</td>
+          </tr>
+          <tr>
+            <td>Cloudflare Tunnel / Tailscale</td>
+            <td>Free</td>
+            <td>Free</td>
+            <td>Free</td>
+          </tr>
+          <tr>
+            <td>Domain + DNS</td>
+            <td>~$1</td>
+            <td>~$1</td>
+            <td>~$1</td>
+          </tr>
+          <tr>
+            <td>Claude Sonnet API (agent execution)</td>
+            <td>$0</td>
+            <td>~$3.00</td>
+            <td>~$7.50</td>
+          </tr>
+          <tr>
+            <td>Local LLM (Ollama &mdash; planning, summaries)</td>
+            <td>$0</td>
+            <td>$0</td>
+            <td>$0</td>
+          </tr>
+          <tr>
+            <td>GitHub (code storage, PRs)</td>
+            <td>Free</td>
+            <td>Free</td>
+            <td>Free</td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>~$2.60</strong></td>
+            <td><strong>~$5.80</strong></td>
+            <td><strong>~$10.50</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="info-box success"><strong>Idle cost: ~$2.60/month.</strong> The Mac Mini draws 15W at idle. Combined with a free Cloudflare tunnel, your fixed operating cost when no tasks are running is essentially just electricity and a domain.</div>
+    </div>
+
+    <!-- ═══ S5: PHASE 1 GKE ═══ -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <h2>Phase 1: GKE Production</h2>
+      </div>
+      <p>When you outgrow the Mac Mini (>10 concurrent tenants, need HA, or SOC 2 audit requires cloud hosting), migrate to GKE Autopilot. The architecture is identical &mdash; you're swapping Docker Desktop for managed Kubernetes.</p>
+
+      <div class="sub-header">When to Migrate</div>
+      <ul>
+        <li>Mac Mini is saturated (&gt;5 concurrent agent containers)</li>
+        <li>SOC 2 auditor requires cloud-hosted infrastructure with formal SLAs</li>
+        <li>Need per-tenant resource isolation (noisy neighbor protection)</li>
+        <li>Need high availability (Mac Mini is a single point of failure)</li>
+        <li>Exceeding 100 tasks/month consistently</li>
+      </ul>
+
+      <div class="sub-header">Monthly Operating Cost (GKE)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Line Item</th>
+            <th>0 Tasks/mo (Idle)</th>
+            <th>20 Tasks/mo</th>
+            <th>50 Tasks/mo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GKE Autopilot control plane</td>
+            <td>$74</td>
+            <td>$74</td>
+            <td>$74</td>
+          </tr>
+          <tr>
+            <td>Compute (agent pods, spot)</td>
+            <td>$0 (scale-to-zero)</td>
+            <td>~$8</td>
+            <td>~$20</td>
+          </tr>
+          <tr>
+            <td>Redis (Memorystore, 1GB basic)</td>
+            <td>$35</td>
+            <td>$35</td>
+            <td>$35</td>
+          </tr>
+          <tr>
+            <td>Event handler (Cloud Run, min 1 instance)</td>
+            <td>$15</td>
+            <td>$18</td>
+            <td>$22</td>
+          </tr>
+          <tr>
+            <td>Networking / Load balancer</td>
+            <td>$18</td>
+            <td>$18</td>
+            <td>$18</td>
+          </tr>
+          <tr>
+            <td>Artifact Registry</td>
+            <td>$2</td>
+            <td>$2</td>
+            <td>$3</td>
+          </tr>
+          <tr>
+            <td>Claude Sonnet API</td>
+            <td>$0</td>
+            <td>~$3.00</td>
+            <td>~$7.50</td>
+          </tr>
+          <tr>
+            <td>Local LLM (keep Mac Mini via Tailscale)</td>
+            <td>$0</td>
+            <td>$0</td>
+            <td>$0</td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>~$144</strong></td>
+            <td><strong>~$158</strong></td>
+            <td><strong>~$180</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="info-box warning"><strong>Idle cost: ~$144/month.</strong> GKE has a $74/mo control plane fee regardless of usage. This is the main reason to start on Mac Mini &mdash; you avoid this fixed cost until you actually need multi-tenant isolation. If $144/mo idle is too high, consider Cloud Run Jobs (no control plane fee) as an intermediate step before full K8s.</div>
+
+      <div class="sub-header">Cloud Run Jobs Alternative (Lower Idle Cost)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Line Item</th>
+            <th>0 Tasks/mo (Idle)</th>
+            <th>20 Tasks/mo</th>
+            <th>50 Tasks/mo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloud Run Jobs (agent execution)</td>
+            <td>$0</td>
+            <td>~$5</td>
+            <td>~$12</td>
+          </tr>
+          <tr>
+            <td>Cloud Run Service (event handler)</td>
+            <td>$0 (scale-to-zero)</td>
+            <td>~$5</td>
+            <td>~$8</td>
+          </tr>
+          <tr>
+            <td>Redis (Memorystore or Upstash)</td>
+            <td>$0 (Upstash free tier)</td>
+            <td>$0</td>
+            <td>$10</td>
+          </tr>
+          <tr>
+            <td>Claude Sonnet API</td>
+            <td>$0</td>
+            <td>~$3.00</td>
+            <td>~$7.50</td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>~$0</strong></td>
+            <td><strong>~$13</strong></td>
+            <td><strong>~$37.50</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="info-box info"><strong>Cloud Run Jobs</strong> offer true scale-to-zero with no control plane fee. You lose K8s-level tenant isolation (namespaces, network policies) but gain near-zero idle costs. This is the recommended intermediate step if GKE's $144/mo idle is too high for your current stage.</div>
+    </div>
+
+    <!-- ═══ S6: IDLE VS ACTIVE ═══ -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <h2>Idle vs Active Cost Comparison</h2>
+      </div>
+      <p>Side-by-side view of all three hosting options at your target volumes.</p>
+
+      <div class="tier-grid">
+        <div class="tier-card featured">
+          <div class="tier-name">Recommended Start</div>
+          <div class="tier-title">Mac Mini M4</div>
+          <div class="tier-price">$2.60<span>/mo idle</span></div>
+          <div class="tier-desc">Build locally, validate architecture, serve first tenants.</div>
+          <ul>
+            <li>0 tasks: $2.60/mo</li>
+            <li>20 tasks: $5.80/mo</li>
+            <li>50 tasks: $10.50/mo</li>
+            <li>One-time: $599</li>
+            <li>Capacity: ~5 concurrent jobs</li>
+          </ul>
+        </div>
+        <div class="tier-card">
+          <div class="tier-name">Intermediate</div>
+          <div class="tier-title">Cloud Run Jobs</div>
+          <div class="tier-price">$0<span>/mo idle</span></div>
+          <div class="tier-desc">True scale-to-zero. No control plane fee. Limited tenant isolation.</div>
+          <ul>
+            <li>0 tasks: ~$0/mo</li>
+            <li>20 tasks: ~$13/mo</li>
+            <li>50 tasks: ~$37.50/mo</li>
+            <li>No upfront cost</li>
+            <li>Capacity: ~50 concurrent jobs</li>
+          </ul>
+        </div>
+        <div class="tier-card">
+          <div class="tier-name">Enterprise Scale</div>
+          <div class="tier-title">GKE Autopilot</div>
+          <div class="tier-price">$144<span>/mo idle</span></div>
+          <div class="tier-desc">Full tenant isolation, RBAC, network policies. SOC 2 ready.</div>
+          <ul>
+            <li>0 tasks: ~$144/mo</li>
+            <li>20 tasks: ~$158/mo</li>
+            <li>50 tasks: ~$180/mo</li>
+            <li>No upfront cost</li>
+            <li>Capacity: unlimited</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ S7: PER-RUN BREAKDOWN ═══ -->
+    <div class="section" id="s7">
+      <div class="section-header">
+        <div class="section-number">7</div>
+        <h2>Per-Run Cost Breakdown</h2>
+      </div>
+      <p>Each agent task run has four LLM touchpoints. The hybrid routing strategy runs the expensive work (agent execution) on Claude Sonnet and everything else on local models for free.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Touchpoint</th>
+            <th>Model</th>
+            <th>Where</th>
+            <th>Tokens</th>
+            <th>Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Job Planning</td>
+            <td>Mistral Small 24B</td>
+            <td>Mac Mini (Ollama)</td>
+            <td>~2K</td>
+            <td>$0.00</td>
+          </tr>
+          <tr>
+            <td>Agent Execution</td>
+            <td>Claude Sonnet</td>
+            <td>Anthropic API</td>
+            <td>~50K</td>
+            <td>~$0.15</td>
+          </tr>
+          <tr>
+            <td>Job Summary</td>
+            <td>Phi-4 14B</td>
+            <td>Mac Mini (Ollama)</td>
+            <td>~3K</td>
+            <td>$0.00</td>
+          </tr>
+          <tr>
+            <td>Chat UI</td>
+            <td>Mistral Small 24B</td>
+            <td>Mac Mini (Ollama)</td>
+            <td>~5K</td>
+            <td>$0.00</td>
+          </tr>
+          <tr>
+            <td><strong>Total per run</strong></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td><strong>~$0.15</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Monthly LLM Cost at Target Volumes</div>
+      <div class="cost-highlight">
+        <div class="cost-card">
+          <div class="cost-label">20 Tasks / Month</div>
+          <div class="cost-value">$3.00<span> LLM cost</span></div>
+          <div class="cost-detail">$0.15 x 20 runs (Claude Sonnet only)</div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-label">50 Tasks / Month</div>
+          <div class="cost-value">$7.50<span> LLM cost</span></div>
+          <div class="cost-detail">$0.15 x 50 runs (Claude Sonnet only)</div>
+        </div>
+      </div>
+
+      <div class="sub-header">Cost Optimization Levers</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Strategy</th>
+            <th>Savings</th>
+            <th>Per-Run After</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Use Claude Haiku for simple agent tasks</td>
+            <td>~60% on those runs</td>
+            <td>~$0.06</td>
+          </tr>
+          <tr>
+            <td>Prompt caching (repeated patterns)</td>
+            <td>~50% on cached runs</td>
+            <td>~$0.08</td>
+          </tr>
+          <tr>
+            <td>Smart routing (Haiku for simple, Sonnet for complex)</td>
+            <td>~40% blended</td>
+            <td>~$0.09</td>
+          </tr>
+          <tr>
+            <td>All optimizations combined</td>
+            <td>~60-70%</td>
+            <td>~$0.04 - $0.06</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ S8: HYBRID MODEL ROUTING ═══ -->
+    <div class="section" id="s8">
+      <div class="section-header">
+        <div class="section-number">8</div>
+        <h2>Hybrid Model Routing</h2>
+      </div>
+      <p>The architecture uses four LLM touchpoints. Only one &mdash; agent execution &mdash; requires a frontier model. The other three are routed to local models running on the Mac Mini via Ollama.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Touchpoint</th>
+            <th>Complexity</th>
+            <th>Model</th>
+            <th>Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Job Planning</td>
+            <td>Medium</td>
+            <td>Mistral Small 24B (local)</td>
+            <td>Structured decision-making, small context window. Quality is sufficient.</td>
+          </tr>
+          <tr>
+            <td>Agent Execution</td>
+            <td>High</td>
+            <td>Claude Sonnet (API)</td>
+            <td>Coding, multi-step reasoning, tool use. No local model matches quality.</td>
+          </tr>
+          <tr>
+            <td>Job Summary</td>
+            <td>Low</td>
+            <td>Phi-4 14B (local)</td>
+            <td>Straightforward summarization. Phi-4 is fast and MIT-licensed.</td>
+          </tr>
+          <tr>
+            <td>Chat UI</td>
+            <td>Medium</td>
+            <td>Mistral Small 24B (local)</td>
+            <td>Conversational Q&amp;A. Cloud fallback for complex requests.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Fallback Strategy</div>
+      <p>If the Mac Mini goes offline or is under heavy load, all local LLM calls fall back to Claude Haiku via API. This adds ~$0.01-0.02 per affected call but ensures zero downtime.</p>
+      <pre>
+// Routing pseudocode (event handler)
+async function routeLLM(task, prompt) {
+  if (task === 'agent_execution') {
+    return callClaude('sonnet', prompt);
+  }
+
+  try {
+    const model = task === 'summary' ? 'phi4:14b' : 'mistral-small:24b';
+    return await callOllama(model, prompt, { timeout: 10000 });
+  } catch (err) {
+    // Fallback to cloud if local is unavailable
+    return callClaude('haiku', prompt);
+  }
+}</pre>
+    </div>
+
+    <!-- ═══ S9: SOC 2 MODEL STACK ═══ -->
+    <div class="section" id="s9">
+      <div class="section-header">
+        <div class="section-number">9</div>
+        <h2>SOC 2 Compliant Model Stack</h2>
+      </div>
+      <p>All models are from US or EU companies with permissive open-source licenses. No Chinese-origin models. This simplifies vendor risk assessments and SOC 2 audit narratives.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Vendor</th>
+            <th>Origin</th>
+            <th>License</th>
+            <th>Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Claude Sonnet</strong></td>
+            <td>Anthropic</td>
+            <td>US</td>
+            <td>Commercial API</td>
+            <td>Agent execution (coding, reasoning)</td>
+          </tr>
+          <tr>
+            <td><strong>Mistral Small 24B</strong></td>
+            <td>Mistral AI</td>
+            <td>France (EU)</td>
+            <td>Apache 2.0</td>
+            <td>Job planning, chat UI</td>
+          </tr>
+          <tr>
+            <td><strong>Phi-4 14B</strong></td>
+            <td>Microsoft</td>
+            <td>US</td>
+            <td>MIT</td>
+            <td>Job summaries</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box success">
+        <strong>Audit narrative:</strong> "Our AI infrastructure uses Anthropic (US) for complex agent reasoning, Mistral AI (EU) for lightweight inference tasks, and Microsoft (US) for summarization. Local models run on-premise via Ollama with no external network access. All vendors are domiciled in jurisdictions with adequate data protection frameworks."
+      </div>
+
+      <div class="sub-header">Security Controls</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Control</th>
+            <th>Implementation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Data isolation</td>
+            <td>K8s namespaces + network policies per tenant</td>
+          </tr>
+          <tr>
+            <td>Encryption at rest</td>
+            <td>GKE node-level encryption + Cloud SQL encryption</td>
+          </tr>
+          <tr>
+            <td>Encryption in transit</td>
+            <td>TLS everywhere, WireGuard (Tailscale) for Mac Mini link</td>
+          </tr>
+          <tr>
+            <td>Local LLM network isolation</td>
+            <td>Mac Mini firewall: block all outbound except Tailscale</td>
+          </tr>
+          <tr>
+            <td>Audit logging</td>
+            <td>Log every job creation, model invocation, data access per tenant</td>
+          </tr>
+          <tr>
+            <td>Model inventory</td>
+            <td>Document model name, version, SHA checksum, source in asset register</td>
+          </tr>
+          <tr>
+            <td>Access control</td>
+            <td>RBAC on K8s, per-tenant API keys, role-based web UI</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ S10: MIGRATION PHASES ═══ -->
+    <div class="section" id="s10">
+      <div class="section-header">
+        <div class="section-number">10</div>
+        <h2>Migration Phases</h2>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 0 &mdash; Week 1-2</div>
+        <div class="phase-title">Mac Mini Setup &amp; Local Orchestration</div>
+        <div class="phase-meta">Hardware: $599 | Monthly: ~$3-10 | Effort: 1-2 weeks</div>
+        <ol class="steps">
+          <li>Purchase and set up Mac Mini M4 (16GB)</li>
+          <li>Install Docker Desktop (or OrbStack), Redis, Ollama</li>
+          <li>Pull Mistral Small 24B (Q4_K_M) and Phi-4 14B (Q5_K_M) via Ollama</li>
+          <li>Set up Cloudflare Tunnel or Tailscale for external access</li>
+          <li>Add BullMQ job queue to the event handler &mdash; replace GitHub Actions trigger with queue-based dispatch</li>
+          <li>Add worker process that pulls from BullMQ, spawns Docker containers locally</li>
+          <li>Wire LLM routing: planning/summaries to Ollama, agent execution to Claude Sonnet API</li>
+          <li>Test end-to-end: web UI &rarr; queue &rarr; local container &rarr; Claude API &rarr; Git PR</li>
+        </ol>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 0.5 &mdash; Week 3-4</div>
+        <div class="phase-title">Multi-Tenant Foundations</div>
+        <div class="phase-meta">No additional cost | Effort: 1-2 weeks</div>
+        <ol class="steps">
+          <li>Add tenant isolation to the job queue (per-tenant queues or priority)</li>
+          <li>Add per-tenant rate limiting in BullMQ</li>
+          <li>Migrate from SQLite to Postgres for multi-tenant data</li>
+          <li>Add tenant-scoped API keys and authentication</li>
+          <li>Add job logging and per-tenant metrics</li>
+          <li>Validate with 2-5 beta tenants</li>
+        </ol>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 1 &mdash; When Needed</div>
+        <div class="phase-title">GKE Migration</div>
+        <div class="phase-meta">Monthly: ~$144-180 | Effort: 1-2 weeks</div>
+        <ol class="steps">
+          <li>Create GKE Autopilot cluster on GCP</li>
+          <li>Deploy Redis (Memorystore) and Postgres (Cloud SQL)</li>
+          <li>Deploy event handler to Cloud Run or GKE pod</li>
+          <li>Create K8s Job manifests for agent pods (reuse existing Docker image)</li>
+          <li>Set up per-tenant namespaces, resource quotas, and network policies</li>
+          <li>Connect Mac Mini via Tailscale for local LLM inference</li>
+          <li>Configure monitoring (Prometheus + Grafana)</li>
+          <li>Cut over: point DNS, migrate database, decommission Mac Mini as primary host</li>
+        </ol>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 1.5 &mdash; Optional</div>
+        <div class="phase-title">Cloud Run Jobs (Lower-Cost Intermediate)</div>
+        <div class="phase-meta">Monthly: ~$0-38 | Effort: 1 week</div>
+        <ol class="steps">
+          <li>Deploy event handler to Cloud Run</li>
+          <li>Configure Cloud Run Jobs for agent container execution</li>
+          <li>Use Upstash Redis (serverless, free tier) instead of Memorystore</li>
+          <li>Skip GKE entirely until tenant isolation requirements demand it</li>
+        </ol>
+        <p style="margin-top:8px;">This path gives you cloud hosting with near-zero idle cost, at the expense of K8s-level tenant isolation. Recommended if SOC 2 audit timeline is &gt;6 months away.</p>
+      </div>
+    </div>
+
+    <!-- ═══ S11: RISKS ═══ -->
+    <div class="section" id="s11">
+      <div class="section-header">
+        <div class="section-number">11</div>
+        <h2>Risk &amp; Mitigation</h2>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Risk</th>
+            <th>Severity</th>
+            <th>Likelihood</th>
+            <th>Mitigation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Mac Mini goes offline (power, network)</td>
+            <td>High</td>
+            <td>Medium</td>
+            <td>LLM routing falls back to Claude Haiku API. Agent execution is already cloud-based. Only planning/summaries are affected.</td>
+          </tr>
+          <tr>
+            <td>16GB RAM insufficient for concurrent local LLM + Docker</td>
+            <td>Medium</td>
+            <td>Medium</td>
+            <td>Ollama swaps models automatically. Docker containers share remaining RAM. Monitor with <code>htop</code>. Upgrade to M4 Pro 24GB if needed ($1,399).</td>
+          </tr>
+          <tr>
+            <td>Mistral Small quality too low for planning</td>
+            <td>Low</td>
+            <td>Low</td>
+            <td>Planning is a structured task (routing decisions). Few-shot prompting with 2-3 examples closes most quality gaps. Fallback to Claude Haiku if needed.</td>
+          </tr>
+          <tr>
+            <td>GKE migration takes longer than expected</td>
+            <td>Low</td>
+            <td>Medium</td>
+            <td>Mac Mini can serve 1-10 tenants indefinitely. GKE migration is not blocking. Cloud Run Jobs is a simpler intermediate step.</td>
+          </tr>
+          <tr>
+            <td>SOC 2 auditor rejects Mac Mini as production</td>
+            <td>Medium</td>
+            <td>Low</td>
+            <td>Mac Mini only runs local LLM inference (no tenant data processing). Agent execution and tenant data are on GKE/Cloud Run. Document the split clearly.</td>
+          </tr>
+          <tr>
+            <td>Claude API cost spikes</td>
+            <td>Medium</td>
+            <td>Low</td>
+            <td>Per-tenant rate limits in BullMQ. Max tokens cap per job. Smart routing to Haiku for simple tasks.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ S12: DECISIONS ═══ -->
+    <div class="section" id="s12">
+      <div class="section-header">
+        <div class="section-number">12</div>
+        <h2>Decision Log</h2>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Decision</th>
+            <th>Chosen</th>
+            <th>Rejected</th>
+            <th>Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Start on Mac Mini vs cloud</td>
+            <td>Mac Mini M4 (16GB)</td>
+            <td>GKE from day one</td>
+            <td>$599 one-time vs $144/mo idle. Validates architecture with real tenants before committing to cloud spend.</td>
+          </tr>
+          <tr>
+            <td>Local LLM for planning</td>
+            <td>Mistral Small 24B</td>
+            <td>Qwen 2.5 Coder 32B</td>
+            <td>SOC 2 compliance requires US/EU model provenance. Qwen (Alibaba, China) adds audit friction. Mistral is 15% lower quality but sufficient for planning tasks.</td>
+          </tr>
+          <tr>
+            <td>Local LLM for summaries</td>
+            <td>Phi-4 14B</td>
+            <td>Mistral Small 24B</td>
+            <td>Phi-4 is faster, smaller, and purpose-fit for summarization. MIT license (Microsoft). Frees RAM for other processes.</td>
+          </tr>
+          <tr>
+            <td>Agent execution model</td>
+            <td>Claude Sonnet (cloud)</td>
+            <td>Local model</td>
+            <td>No local model matches Claude's quality for multi-step coding and tool use. This is where quality directly impacts product value.</td>
+          </tr>
+          <tr>
+            <td>Job queue</td>
+            <td>BullMQ + Redis</td>
+            <td>SQS, Cloud Tasks, RabbitMQ</td>
+            <td>BullMQ runs locally on Mac Mini and on cloud. Same code, no vendor lock-in. Rich job lifecycle (delayed, retries, priority).</td>
+          </tr>
+          <tr>
+            <td>Cloud provider</td>
+            <td>Google Cloud (GKE)</td>
+            <td>AWS (EKS), Azure (AKS)</td>
+            <td>Best managed K8s (Autopilot), aggressive spot pricing, strong AI ecosystem. Cloud Run Jobs as intermediate step.</td>
+          </tr>
+          <tr>
+            <td>Tunnel for Mac Mini</td>
+            <td>Cloudflare Tunnel + Tailscale</td>
+            <td>Port forwarding, ngrok</td>
+            <td>Cloudflare Tunnel is free and production-grade. Tailscale for GKE-to-Mac Mini private link (WireGuard).</td>
+          </tr>
+          <tr>
+            <td>Knowledge distillation (Qwen &rarr; Mistral)</td>
+            <td>Not worth it</td>
+            <td>Distill Qwen outputs into Mistral</td>
+            <td>Legally gray, 3-5% quality gain for weeks of engineering. Few-shot prompting gives 10-15% gain for free.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box info"><strong>Total cost to start:</strong> $599 hardware (one-time) + ~$5.80/mo at 20 tasks/month. Idle cost: ~$2.60/mo. This is the cheapest path to validate a multi-tenant agent platform before investing in cloud infrastructure.</div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+</body>
+</html>

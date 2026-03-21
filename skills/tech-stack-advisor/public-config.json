@@ -1,0 +1,49 @@
+{
+  "title": "Find your perfect tech stack",
+  "subtitle": "Answer a few questions, get a complete technology recommendation with architecture diagrams, alternatives, and tradeoff analysis.",
+  "badge": "AI-Powered Consultation",
+  "agentName": "Tech Stack Advisor",
+  "accent": "#4361ee",
+  "teal": "#3ec6e0",
+  "calendarUrl": "https://cal.com/23systems",
+  "reportCta": "Get My Tech Stack Report",
+  "reportReadyTitle": "Your Tech Stack Report is Ready!",
+  "reportReadyText": "We've sent a copy to your email. You can also view it now:",
+
+  "personas": {
+    "simple": {
+      "label": "I'm a founder or PM",
+      "description": "Plain language, business-focused recommendations with cost and timeline guidance."
+    },
+    "dev": {
+      "label": "I'm a developer or CTO",
+      "description": "Technical deep-dive with architecture patterns, library choices, and performance tradeoffs."
+    }
+  },
+
+  "features": [
+    { "title": "Personalized Recommendations", "description": "Tailored to your project, team, and timeline" },
+    { "title": "8 Technology Categories", "description": "Frontend, backend, database, hosting, and more" },
+    { "title": "Branded PDF Report", "description": "Architecture diagrams and detailed reasoning" },
+    { "title": "Partner Resources", "description": "Cloud credits and startup programs matched to your stack" }
+  ],
+
+  "devPreview": {
+    "tagline": "// tech-stack-advisor",
+    "json": {
+      "categories": ["Frontend", "Backend", "Database", "Hosting", "Auth", "Payments", "DevOps", "Monitoring"],
+      "output": "architecture + alternatives + tradeoffs",
+      "confidence": "0.0 - 1.0 per category"
+    },
+    "metrics": [
+      { "value": "8", "label": "Categories" },
+      { "value": "2-5m", "label": "Duration" },
+      { "value": "Free", "label": "Cost" },
+      { "value": "PDF", "label": "Report" }
+    ]
+  },
+
+  "systemPrompt": "You are a senior solutions architect. Given a project profile collected from a prospective client, generate technology stack recommendations.\n\nRespond with a JSON object matching this exact structure:\n{\n  \"projectProfile\": {\n    \"name\": \"short project name\",\n    \"description\": \"one-paragraph summary\",\n    \"stage\": \"mvp\" | \"production\" | \"unsure\" | \"migration\",\n    \"teamSize\": \"solo\" | \"small_team\" | \"large_team\" | \"no_team\" | free text,\n    \"timeline\": \"weeks\" | \"months\" | \"long\" | \"ongoing\",\n    \"scale\": \"brief scale description\",\n    \"constraints\": [\"array of constraints\"]\n  },\n  \"recommendations\": [\n    {\n      \"category\": \"Frontend\" | \"Backend\" | \"Database\" | \"Hosting / Infra\" | \"Auth\" | \"Payments\" | \"DevOps / CI\" | \"Monitoring\",\n      \"recommendation\": \"specific technology name\",\n      \"confidence\": 0.0-1.0,\n      \"why\": \"one sentence reasoning\",\n      \"alternatives\": [\"alt1\", \"alt2\"],\n      \"tradeoffs\": \"one sentence tradeoff\"\n    }\n  ]\n}\n\nCover all applicable categories. Skip categories that don't apply. Be specific — name exact technologies. Confidence reflects how strongly you recommend this choice given the constraints.",
+
+  "reportCommand": "node skills/tech-stack-advisor/generate-report.js --recommendations {{recommendations}} --include-partners {{includePartners}} --output {{output}}"
+}

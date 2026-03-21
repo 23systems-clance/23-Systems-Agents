@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="devlabs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>23WF Platform Productization Spec</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy: #1a1a2e;
+    --navy-light: #252542;
+    --accent: #4361ee;
+    --accent-light: #6380f5;
+    --accent-bg: #eef0ff;
+    --accent-border: #c7ceff;
+    --white: #ffffff;
+    --light-bg: #f3f4f8;
+    --dark-text: #1e1e32;
+    --mid-text: #50506e;
+    --light-text: #8889a0;
+    --border: #c8cde0;
+    --success: #22c55e;
+    --success-bg: #ecfdf5;
+    --warn: #eab308;
+    --warn-bg: #fefce8;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--dark-text);
+    background: var(--light-bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--navy);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0;
+  }
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .sidebar-logo img {
+    flex-shrink: 0;
+  }
+  .sidebar-header .doc-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .sidebar-header .doc-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .sidebar-nav {
+    padding: 16px 0;
+  }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover {
+    color: #fff;
+    background: var(--navy-light);
+    border-left-color: var(--accent);
+  }
+  .sidebar-nav a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .sidebar-nav .nav-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 10px 24px;
+  }
+
+  .sidebar-nav .nav-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 8px 24px 4px;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 280px;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(243,244,248,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--light-text);
+  }
+  .topbar .meta {
+    display: flex;
+    gap: 24px;
+  }
+  .topbar .meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--navy);
+    padding: 64px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  }
+  .cover .doc-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+  .cover h1 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .cover .subtitle {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 400;
+    max-width: 600px;
+  }
+
+  /* ── SECTIONS ── */
+  .content {
+    padding: 40px 48px 80px;
+    max-width: 960px;
+  }
+
+  .section {
+    margin-bottom: 48px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--accent-bg);
+  }
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .sub-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 28px 0 12px;
+    padding-left: 14px;
+    border-left: 3px solid var(--accent);
+  }
+
+  p {
+    color: var(--mid-text);
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── LISTS ── */
+  ul {
+    list-style: none;
+    margin: 12px 0 20px;
+    padding: 0;
+  }
+  ul li {
+    position: relative;
+    padding: 6px 0 6px 24px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 13px;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 16px 0 20px;
+    padding: 0;
+  }
+  ol.steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 8px 0 8px 44px;
+    color: var(--mid-text);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 4px;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  thead th {
+    background: var(--navy);
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #eef0f4;
+    color: var(--mid-text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #f8f9fc; }
+  tbody tr:hover { background: var(--accent-bg); }
+
+  /* ── INFO BOXES ── */
+  .info-box {
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+  .info-box.info {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .info-box.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+    color: #166534;
+  }
+  .info-box.warning {
+    background: var(--warn-bg);
+    border-color: var(--warn);
+    color: #854d0e;
+  }
+  .info-box.danger {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+    color: #991b1b;
+  }
+
+  /* ── CODE ── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--navy);
+    color: #e0e0e0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 12px 0 20px;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+
+  /* ── STRONG / BOLD ── */
+  strong { color: var(--dark-text); font-weight: 600; }
+
+  /* ── TIER CARDS ── */
+  .tier-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin: 20px 0 28px;
+  }
+  .tier-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    background: var(--white);
+    transition: box-shadow 0.15s;
+  }
+  .tier-card:hover {
+    box-shadow: 0 4px 20px rgba(67, 97, 238, 0.08);
+  }
+  .tier-card.featured {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .tier-card .tier-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .tier-card .tier-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 4px;
+  }
+  .tier-card .tier-price {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--dark-text);
+    margin-bottom: 4px;
+  }
+  .tier-card .tier-price span {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--light-text);
+  }
+  .tier-card .tier-desc {
+    font-size: 13px;
+    color: var(--mid-text);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .tier-card ul {
+    margin: 0;
+  }
+  .tier-card ul li {
+    font-size: 13px;
+    padding: 4px 0 4px 20px;
+  }
+  .tier-card ul li::before {
+    top: 11px;
+    width: 6px;
+    height: 6px;
+  }
+
+  /* ── PHASE TIMELINE ── */
+  .phase-block {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0;
+    background: var(--white);
+    position: relative;
+  }
+  .phase-block::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 12px 0 0 12px;
+    background: var(--accent);
+  }
+  .phase-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .phase-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 8px;
+  }
+  .phase-meta {
+    font-size: 12px;
+    color: var(--light-text);
+    margin-bottom: 12px;
+  }
+
+  /* ── PERSONA CARDS ── */
+  .persona-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 16px 0 24px;
+  }
+  .persona-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    background: var(--white);
+  }
+  .persona-card .persona-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .persona-card .persona-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 4px;
+  }
+  .persona-card .persona-desc {
+    font-size: 12px;
+    color: var(--mid-text);
+    line-height: 1.5;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    .sidebar, .topbar { display: none; }
+    .main { margin-left: 0; }
+    .cover { padding: 32px; }
+    .content { padding: 24px; }
+    .section { page-break-inside: avoid; }
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover { padding: 32px 20px; }
+    .cover h1 { font-size: 26px; }
+    .content { padding: 24px 20px; }
+    .topbar { padding: 10px 20px; }
+    .tier-grid, .persona-grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <img src="../../references/uploads/23 Systems Logo.png" alt="23 Systems" style="height:32px;width:auto;border-radius:6px;">
+      <span style="font-size:14px;font-weight:700;color:#fff;letter-spacing:0.5px;">23 Systems</span>
+    </div>
+    <div class="doc-type">Product Spec</div>
+    <div class="doc-title">23WF Platform Productization</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-label">Vision</div>
+    <a href="#s1"><span class="num">1</span> Executive Summary</a>
+    <a href="#s2"><span class="num">2</span> Target Audiences</a>
+    <a href="#s3"><span class="num">3</span> What We Have Today</a>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Product</div>
+    <a href="#s4"><span class="num">4</span> Product Tiers</a>
+    <a href="#s5"><span class="num">5</span> Skool Community</a>
+    <a href="#s6"><span class="num">6</span> Learner Experience</a>
+    <a href="#s7"><span class="num">7</span> Developer Experience</a>
+    <a href="#s8"><span class="num">8</span> Founder Experience</a>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Execution</div>
+    <a href="#s9"><span class="num">9</span> Template Marketplace</a>
+    <a href="#s10"><span class="num">10</span> Skill Registry</a>
+    <a href="#s11"><span class="num">11</span> Revenue Model</a>
+    <a href="#s12"><span class="num">12</span> Build Phases</a>
+    <a href="#s13"><span class="num">13</span> Competitive Moats</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="meta">
+      <span>v1.0</span>
+      <span>Updated 2026-03-20</span>
+      <span>Owner: Clance Hoskin</span>
+    </div>
+  </div>
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="doc-badge">Product Specification</div>
+    <h1>23WF Platform Productization</h1>
+    <div class="subtitle">Strategy for turning the 23WF autonomous agent platform into a multi-tier product serving developers, founders, and brand new learners &mdash; with templates, courses, and a skill ecosystem.</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ═══ SECTION 1: EXECUTIVE SUMMARY ═══ -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>Executive Summary</h2>
+      </div>
+      <p>23WF is a full-stack autonomous agent platform with a <strong>two-layer architecture</strong> (Next.js event handler + Docker agent containers) that already supports chat-driven job creation, cron scheduling, webhook triggers, multi-agent clusters, a plugin skill system, and a branded template engine.</p>
+      <p>The platform is uniquely positioned because it combines <strong>infrastructure</strong> (Docker orchestration, GitHub Actions, git-native audit trails) with <strong>developer experience</strong> (config-driven customization, skill plugins, cluster roles) in a single product. Most competitors only do one.</p>
+
+      <div class="info-box info"><strong>Core Thesis:</strong> A free Skool community becomes the top-of-funnel, giving learners hands-on access to the real platform (10 free runs/month). The community creates content, social proof, and a natural upgrade path into paid tiers. The same platform, packaged four ways, serves learners who want to understand AI agents, community members who want to build together, developers who want to ship with agents, and founders who want to white-label the infrastructure.</div>
+
+      <div class="sub-header">What This Spec Covers</div>
+      <ul>
+        <li><strong>Skool community strategy</strong> &mdash; free tier as marketing engine with paid community upsell</li>
+        <li><strong>Four product tiers</strong> mapped to the customer journey (Free &rarr; Community Pro &rarr; Platform Pro &rarr; Enterprise)</li>
+        <li><strong>AI course curriculum</strong> built on existing templates as progressive modules</li>
+        <li><strong>Template marketplace</strong> leveraging the 8 existing config/templates</li>
+        <li><strong>Skill registry</strong> enabling community contribution and network effects</li>
+        <li><strong>Revenue model</strong> combining community subscriptions with platform billing</li>
+        <li><strong>Four build phases</strong> from current state to full multi-tenant SaaS</li>
+      </ul>
+    </div>
+
+    <!-- ═══ SECTION 2: TARGET AUDIENCES ═══ -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>Target Audiences</h2>
+      </div>
+      <p>Four distinct personas along a single customer journey, each entering at a different point and upgrading as they grow.</p>
+
+      <div class="persona-grid">
+        <div class="persona-card">
+          <div class="persona-name">The Curious Learner</div>
+          <p class="persona-desc"><strong>Who:</strong> Students, career changers, non-technical people curious about AI.<br><strong>Goal:</strong> Understand what AI agents can do, build their first one, gain marketable skills.<br><strong>Pain:</strong> Overwhelmed by jargon, don't know where to start, afraid of breaking things.<br><strong>Entry:</strong> Free Skool community, YouTube content, social posts.</p>
+        </div>
+        <div class="persona-card">
+          <div class="persona-name">The Community Builder</div>
+          <p class="persona-desc"><strong>Who:</strong> Enthusiasts, freelancers, early adopters who want to learn by doing together.<br><strong>Goal:</strong> More runs, deeper access, peer collaboration, share what they're building.<br><strong>Pain:</strong> Hit the free tier limit, want community feedback and accountability.<br><strong>Entry:</strong> Skool free tier &rarr; paid community upgrade.</p>
+        </div>
+        <div class="persona-card">
+          <div class="persona-name">The Developer</div>
+          <p class="persona-desc"><strong>Who:</strong> Software engineers, freelancers, technical co-founders.<br><strong>Goal:</strong> Build custom agent workflows, integrate AI into existing systems, ship faster.<br><strong>Pain:</strong> Rolling their own agent infra, unreliable orchestration, no audit trail.<br><strong>Entry:</strong> GitHub, npm package, API docs, Skool community reputation.</p>
+        </div>
+      </div>
+      <div class="persona-grid" style="grid-template-columns: 1fr; max-width: 340px;">
+        <div class="persona-card">
+          <div class="persona-name">The Founder</div>
+          <p class="persona-desc"><strong>Who:</strong> Agency owners, SaaS founders, operations leaders.<br><strong>Goal:</strong> Ship AI-powered products or automate operations without hiring an ML team.<br><strong>Pain:</strong> Can't build agent infra in-house, need compliance, need white-labeling.<br><strong>Entry:</strong> Sales calls, partner referrals, case studies, community success stories.</p>
+        </div>
+      </div>
+
+      <div class="info-box success"><strong>Key Insight:</strong> The Skool community is the engine. Free members become paying community members, community members become Pro developers, developers become Enterprise founders. Every tier feeds the next. The community creates content, social proof, and accountability that no amount of marketing can replicate.</div>
+    </div>
+
+    <!-- ═══ SECTION 3: WHAT WE HAVE TODAY ═══ -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>What We Have Today</h2>
+      </div>
+      <p>A comprehensive inventory of existing assets that map directly to product features.</p>
+
+      <div class="sub-header">Platform Infrastructure</div>
+      <table>
+        <thead>
+          <tr><th>Asset</th><th>Status</th><th>Product Mapping</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Next.js Event Handler</td><td>Production</td><td>Control plane for all tiers</td></tr>
+          <tr><td>Docker Agent Containers</td><td>Production</td><td>Job execution engine</td></tr>
+          <tr><td>GitHub Actions Orchestration</td><td>Production</td><td>CI/CD + auto-merge pipeline</td></tr>
+          <tr><td>Chat UI (React 19, streaming)</td><td>Production</td><td>Primary user interface</td></tr>
+          <tr><td>SQLite + Drizzle ORM</td><td>Production</td><td>User/session/job data</td></tr>
+          <tr><td>NextAuth v5 (JWT)</td><td>Production</td><td>Auth for all tiers</td></tr>
+          <tr><td>API Key System (<code>23wf_</code> prefix)</td><td>Production</td><td>External integrations</td></tr>
+          <tr><td>Telegram + Slack channels</td><td>Production</td><td>Notification + interaction layer</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Skills (12 Active)</div>
+      <table>
+        <thead>
+          <tr><th>Skill</th><th>Tier Availability</th><th>Course Module?</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>brave-search</strong> &mdash; Web search + content extraction</td><td>All tiers</td><td>Module 3: "Give Your Agent Eyes"</td></tr>
+          <tr><td><strong>browser-tools</strong> &mdash; Chrome DevTools automation</td><td>Pro + Enterprise</td><td>Advanced module</td></tr>
+          <tr><td><strong>compliance</strong> &mdash; SOC2 & HIPAA auditing</td><td>Enterprise</td><td>No (enterprise feature)</td></tr>
+          <tr><td><strong>google-docs</strong> &mdash; Google Docs management</td><td>Pro + Enterprise</td><td>Module 6: "Agent Outputs"</td></tr>
+          <tr><td><strong>google-drive</strong> &mdash; Drive operations</td><td>Pro + Enterprise</td><td>Module 6: "Agent Outputs"</td></tr>
+          <tr><td><strong>llm-secrets</strong> &mdash; Credential management</td><td>All tiers</td><td>Module 2: "Configuration"</td></tr>
+          <tr><td><strong>modify-self</strong> &mdash; Self-modification</td><td>Pro + Enterprise</td><td>Advanced module</td></tr>
+          <tr><td><strong>notebooklm</strong> &mdash; Google NotebookLM integration</td><td>Pro + Enterprise</td><td>Module 7: "Research Pipelines"</td></tr>
+          <tr><td><strong>slack-blocks</strong> &mdash; Interactive Slack messaging</td><td>Pro + Enterprise</td><td>Module 5: "Agent Interactions"</td></tr>
+          <tr><td><strong>sop-generator</strong> &mdash; Branded HTML documents</td><td>All tiers</td><td>Module 4: "Agent Deliverables"</td></tr>
+          <tr><td><strong>youtube-transcript</strong> &mdash; Video transcript extraction</td><td>All tiers</td><td>Module 3: "Give Your Agent Eyes"</td></tr>
+          <tr><td><strong>slack-blocks</strong> &mdash; Block Kit messaging</td><td>Pro + Enterprise</td><td>Module 5: "Agent Interactions"</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Pre-Built Templates (8)</div>
+      <table>
+        <thead>
+          <tr><th>Template</th><th>Roles</th><th>Complexity</th><th>Course Position</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>research-team</strong></td><td>Researcher, Analyst, Writer</td><td>Beginner</td><td>First cluster lesson</td></tr>
+          <tr><td><strong>content-pipeline</strong></td><td>Researcher, Writer, Editor</td><td>Beginner</td><td>Second cluster lesson</td></tr>
+          <tr><td><strong>seo-auditor</strong></td><td>Crawler, Analyzer, Reporter</td><td>Intermediate</td><td>Vertical use case</td></tr>
+          <tr><td><strong>competitor-watch</strong></td><td>Monitor, Analyst</td><td>Intermediate</td><td>Cron + trigger lesson</td></tr>
+          <tr><td><strong>meeting-prep</strong></td><td>Researcher, Briefer</td><td>Beginner</td><td>Quick-win lesson</td></tr>
+          <tr><td><strong>code-review-team</strong></td><td>Reviewer, Tester, Approver</td><td>Advanced</td><td>Developer-track lesson</td></tr>
+          <tr><td><strong>customer-support</strong></td><td>Triage, Responder, Escalator</td><td>Advanced</td><td>Founder-track lesson</td></tr>
+          <tr><td><strong>data-processor</strong></td><td>Ingester, Transformer, Loader</td><td>Advanced</td><td>Developer-track lesson</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ SECTION 4: PRODUCT TIERS ═══ -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <h2>Product Tiers</h2>
+      </div>
+      <p>Four tiers along a single customer journey. The free Skool community is the entry point &mdash; everything flows up from there.</p>
+
+      <div class="tier-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="tier-card">
+          <div class="tier-name">Free Community</div>
+          <div class="tier-title">Explore</div>
+          <div class="tier-price">$0</div>
+          <div class="tier-desc">Join the Skool community. Get hands-on with real AI agents.</div>
+          <ul>
+            <li>Skool community access</li>
+            <li>Course curriculum (all modules)</li>
+            <li>Hosted sandbox instance</li>
+            <li>10 agent runs/month</li>
+            <li>Template gallery (read-only)</li>
+            <li>Community discussions</li>
+            <li>Weekly livestream access</li>
+          </ul>
+        </div>
+        <div class="tier-card">
+          <div class="tier-name">Community Pro</div>
+          <div class="tier-title">Build Together</div>
+          <div class="tier-price">$97 <span>/mo</span></div>
+          <div class="tier-desc">More runs, deeper access, and a community that builds with you.</div>
+          <ul>
+            <li>Everything in Free</li>
+            <li>100 agent runs/month</li>
+            <li>Template fork &amp; remix</li>
+            <li>Skill activation (all 12)</li>
+            <li>Priority community support</li>
+            <li>Private "builders" channel</li>
+            <li>Monthly group coaching calls</li>
+            <li>Share templates with community</li>
+          </ul>
+        </div>
+        <div class="tier-card featured">
+          <div class="tier-name">Platform Pro</div>
+          <div class="tier-title">Ship &amp; Scale</div>
+          <div class="tier-price">$199 <span>/mo</span></div>
+          <div class="tier-desc">Your own instance. Full framework access for developers who ship.</div>
+          <ul>
+            <li>Own 23WF instance (hosted or self-hosted)</li>
+            <li>300 agent runs/month</li>
+            <li>Full skill authoring</li>
+            <li>Custom cluster creation</li>
+            <li>API access + webhooks</li>
+            <li>MCP server support</li>
+            <li>Custom LLM providers</li>
+            <li>Publish to skill registry</li>
+            <li>Priority support</li>
+          </ul>
+        </div>
+        <div class="tier-card">
+          <div class="tier-name">Enterprise</div>
+          <div class="tier-title">White-Label</div>
+          <div class="tier-price">$399+ <span>/mo</span></div>
+          <div class="tier-desc">Ship AI products to your clients without building the infrastructure.</div>
+          <ul>
+            <li>Everything in Platform Pro</li>
+            <li>White-label branding (7 presets + custom)</li>
+            <li>Team collaboration + RBAC</li>
+            <li>SOC2/HIPAA compliance skill</li>
+            <li>Unlimited runs (or credit packs)</li>
+            <li>Branded SOP generation</li>
+            <li>Dedicated support + onboarding</li>
+            <li>Multi-agent cluster orchestration</li>
+            <li>AWS ECS deployment support</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="info-box info"><strong>The Skool Funnel:</strong> Free members get 10 runs &mdash; enough to complete Module 1 and get hooked. When they hit the limit, the upgrade to Community Pro ($97/mo) feels like a no-brainer: 10x the runs, full skill access, and a private builders channel. This is recurring revenue from day one, not a one-time course sale.</div>
+
+      <div class="sub-header">Overage &amp; Credit Packs</div>
+      <table>
+        <thead>
+          <tr><th>Tier</th><th>Included Runs</th><th>Overage Rate</th><th>Credit Pack Option</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Free Community</td><td>10/mo</td><td>N/A (must upgrade)</td><td>N/A</td></tr>
+          <tr><td>Community Pro</td><td>100/mo</td><td>$2.66/run</td><td>$50 for 25 runs</td></tr>
+          <tr><td>Platform Pro</td><td>300/mo</td><td>$2.66/run</td><td>$500 for 500 runs (with discounts)</td></tr>
+          <tr><td>Enterprise</td><td>Negotiated</td><td>Negotiated</td><td>Custom credit packs</td></tr>
+        </tbody>
+      </table>
+      <p>Enrichment costs (Brave Search, NotebookLM, browser automation, etc.) are bundled into the per-run credit cost.</p>
+    </div>
+
+    <!-- ═══ SECTION 5: SKOOL COMMUNITY ═══ -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <h2>Skool Community Strategy</h2>
+      </div>
+      <p>The Skool community is the <strong>growth engine</strong> for the entire product. It replaces a traditional marketing funnel with a community-led flywheel where free members create content, social proof, and word-of-mouth that compounds over time.</p>
+
+      <div class="sub-header">Why Skool (Not Discord, Circle, or a Custom Forum)</div>
+      <ul>
+        <li><strong>Built-in course hosting</strong> &mdash; modules, progress tracking, and drip content are native features. No separate LMS needed.</li>
+        <li><strong>Gamification</strong> &mdash; leaderboards, levels, and points drive engagement without custom development.</li>
+        <li><strong>Free + paid tiers native</strong> &mdash; Skool handles the paywall, billing, and access control. No Stripe integration needed for the community layer.</li>
+        <li><strong>Discovery</strong> &mdash; Skool has its own marketplace where communities rank by engagement. Active communities get organic traffic.</li>
+        <li><strong>Simplicity</strong> &mdash; one feed, one classroom, one calendar. No channel sprawl like Discord.</li>
+      </ul>
+
+      <div class="sub-header">Community Structure</div>
+      <table>
+        <thead>
+          <tr><th>Space</th><th>Access</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Community Feed</strong></td><td>All members</td><td>Wins, questions, template shares, agent screenshots, weekly challenges</td></tr>
+          <tr><td><strong>Classroom</strong></td><td>All members</td><td>8-module course curriculum (progressive unlock for free; all-access for paid)</td></tr>
+          <tr><td><strong>Builders Channel</strong></td><td>Community Pro ($97/mo)</td><td>Work-in-progress shares, skill development, template collabs, feedback loops</td></tr>
+          <tr><td><strong>Office Hours</strong></td><td>Community Pro ($97/mo)</td><td>Monthly live coaching calls, Q&A, template reviews, guest experts</td></tr>
+          <tr><td><strong>Weekly Livestream</strong></td><td>All members</td><td>Build something live, explain concepts, showcase community templates</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">The Free-to-Paid Conversion Flywheel</div>
+      <ol class="steps">
+        <li><strong>Discovery</strong> &mdash; YouTube content, social posts, and Skool marketplace drive free signups. Each video ends with "Join the free community and get 10 agent runs to try this yourself."</li>
+        <li><strong>Activation</strong> &mdash; Free members complete Module 1 using their 10 runs. They see their first agent-generated PR on GitHub. This is the "aha" moment.</li>
+        <li><strong>Engagement</strong> &mdash; They post their first build in the community feed. Other members react, comment, share their own builds. Social proof compounds.</li>
+        <li><strong>Limit Hit</strong> &mdash; After 10 runs, they want more. The upgrade to Community Pro ($97/mo) gives them 10x runs + the private builders channel. Low friction, high perceived value.</li>
+        <li><strong>Depth</strong> &mdash; Community Pro members complete advanced modules, build custom templates, collaborate in the builders channel. They become advocates who attract more free members.</li>
+        <li><strong>Graduation</strong> &mdash; Power users who need their own instance, API access, or skill authoring upgrade to Platform Pro ($199/mo). The community already taught them the platform &mdash; they're productive immediately.</li>
+      </ol>
+
+      <div class="sub-header">Content Calendar (Weekly Rhythm)</div>
+      <table>
+        <thead>
+          <tr><th>Day</th><th>Activity</th><th>Access</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Monday</td><td>Weekly Challenge Post</td><td>All</td><td>"Build an agent that does X" &mdash; drives engagement + template creation</td></tr>
+          <tr><td>Wednesday</td><td>Livestream Build</td><td>All</td><td>Build something live, explain the why, answer chat questions</td></tr>
+          <tr><td>Thursday</td><td>Builders Channel Review</td><td>Paid</td><td>Review community-submitted templates, give feedback, suggest improvements</td></tr>
+          <tr><td>Friday</td><td>Community Wins Roundup</td><td>All</td><td>Highlight best builds of the week, celebrate members, social proof</td></tr>
+          <tr><td>Monthly</td><td>Group Coaching Call</td><td>Paid</td><td>Deep-dive on a topic, Q&A, roadmap preview, guest experts</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Community Metrics to Track</div>
+      <ul>
+        <li><strong>Free &rarr; Paid conversion rate</strong> &mdash; target 8-12% within 30 days of joining</li>
+        <li><strong>Community Pro &rarr; Platform Pro upgrade rate</strong> &mdash; target 15-20% within 6 months</li>
+        <li><strong>Weekly active members</strong> &mdash; posts, comments, course progress</li>
+        <li><strong>Template shares per week</strong> &mdash; measures value creation by community</li>
+        <li><strong>Time to first run</strong> &mdash; how fast free members use their first agent run (target: &lt;24 hours)</li>
+        <li><strong>Module completion rate</strong> &mdash; which modules cause drop-off, which drive upgrades</li>
+      </ul>
+
+      <div class="info-box success"><strong>The Math:</strong> 1,000 free members at 10% conversion = 100 Community Pro members = $9,700/mo recurring. If 15% of those upgrade to Platform Pro within 6 months, that's another 15 &times; $199 = $2,985/mo. Total: ~$12,700/mo from a 1,000-person free community. And the community keeps growing because members are the marketing.</div>
+    </div>
+
+    <!-- ═══ SECTION 6: LEARNER EXPERIENCE ═══ -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <h2>Learner Experience &mdash; The AI Agent Course</h2>
+      </div>
+      <p>The course lives inside the Skool classroom, but every module links to the real 23WF platform. Learners don't watch &mdash; they <strong>do</strong>. Each module gives them a task, they use their agent runs to complete it, and they post their results in the community feed. The course IS the community engagement driver.</p>
+
+      <div class="info-box info"><strong>Free vs Paid Course Access:</strong> Free members can access all 8 modules but are gated by their 10 runs/month. They can read ahead, but they'll hit the run limit around Module 3. Community Pro members ($97/mo) get 100 runs &mdash; enough to complete the full course and experiment with remixes.</div>
+
+      <div class="sub-header">Course Structure: "Build Your AI Workforce"</div>
+
+      <div class="phase-block">
+        <div class="phase-label">Module 1</div>
+        <div class="phase-title">Your First Agent</div>
+        <div class="phase-meta">Difficulty: Beginner &bull; Time: 30 min &bull; Template: None (raw chat)</div>
+        <p>Open the chat UI, type a task, watch the agent create a branch, run in Docker, and open a PR. Understand the two-layer architecture by watching it work. No configuration, no setup &mdash; just the chat.</p>
+        <ul>
+          <li>Concepts: Jobs, branches, PRs, agent lifecycle</li>
+          <li>Outcome: Learner sees their first agent-generated PR on GitHub</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Module 2</div>
+        <div class="phase-title">Configuration &amp; Personality</div>
+        <div class="phase-meta">Difficulty: Beginner &bull; Time: 45 min &bull; File: config/SOUL.md</div>
+        <p>Edit <code>SOUL.md</code> to change the agent's personality. Understand how config files control behavior without touching code. Introduce secrets and credential management.</p>
+        <ul>
+          <li>Concepts: Config-driven customization, LLM prompts, secrets</li>
+          <li>Outcome: Agent responds differently based on personality edits</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Module 3</div>
+        <div class="phase-title">Give Your Agent Eyes</div>
+        <div class="phase-meta">Difficulty: Beginner &bull; Time: 1 hr &bull; Skills: brave-search, youtube-transcript</div>
+        <p>Activate the brave-search and youtube-transcript skills. Create a job that researches a topic using web search and summarizes a YouTube video. Learn how skills extend agent capability.</p>
+        <ul>
+          <li>Concepts: Skills as plugins, activation via symlinks, API keys</li>
+          <li>Outcome: Agent delivers a research report with web + video sources</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Module 4</div>
+        <div class="phase-title">Agent Deliverables</div>
+        <div class="phase-meta">Difficulty: Intermediate &bull; Time: 1 hr &bull; Skill: sop-generator</div>
+        <p>Use the SOP generator skill to create branded HTML documents. Understand the template system, brand presets, and how agents produce professional output. Remix a template with different branding.</p>
+        <ul>
+          <li>Concepts: Template engine, brand system, structured output</li>
+          <li>Outcome: Learner has a branded, print-ready document generated by their agent</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Module 5</div>
+        <div class="phase-title">Scheduled Intelligence</div>
+        <div class="phase-meta">Difficulty: Intermediate &bull; Time: 1 hr &bull; File: config/CRONS.json</div>
+        <p>Create a cron job that runs daily. Understand the three action types (agent, command, webhook). Build a competitor monitoring cron using the <code>competitor-watch</code> template.</p>
+        <ul>
+          <li>Concepts: Cron scheduling, action types, template tokens</li>
+          <li>Outcome: Agent runs autonomously on a schedule with no manual trigger</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Module 6</div>
+        <div class="phase-title">React to Events</div>
+        <div class="phase-meta">Difficulty: Intermediate &bull; Time: 1.5 hr &bull; File: config/TRIGGERS.json</div>
+        <p>Set up a webhook trigger. Understand template tokens (<code>{{body.field}}</code>). Build a trigger that reacts to external events and dispatches agent jobs. Connect to Slack for notifications.</p>
+        <ul>
+          <li>Concepts: Webhooks, triggers, template tokens, event-driven automation</li>
+          <li>Outcome: External event triggers an autonomous agent response</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Module 7</div>
+        <div class="phase-title">Multi-Agent Teams</div>
+        <div class="phase-meta">Difficulty: Advanced &bull; Time: 2 hr &bull; Template: research-team</div>
+        <p>Deploy the <code>research-team</code> cluster template. Understand roles, dependencies, shared folders, and concurrency control. Modify the template to add a fourth role. Graduate exercise: build a cluster from scratch.</p>
+        <ul>
+          <li>Concepts: Clusters, roles, dependencies, orchestration</li>
+          <li>Outcome: Multi-agent team produces a coordinated research deliverable</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Module 8</div>
+        <div class="phase-title">Build Your Own Skill</div>
+        <div class="phase-meta">Difficulty: Advanced &bull; Time: 2 hr &bull; File: SKILL_BUILDING_GUIDE.md</div>
+        <p>Follow the SKILL_BUILDING_GUIDE to create a custom skill from scratch. Understand SKILL.md frontmatter, scripts, credential setup, and activation. Publish to the skill registry.</p>
+        <ul>
+          <li>Concepts: Skill architecture, YAML frontmatter, scripting, registry</li>
+          <li>Outcome: Learner has a working custom skill activated in their instance &mdash; ready to upgrade to Pro</li>
+        </ul>
+      </div>
+
+      <div class="sub-header">Course Access by Tier</div>
+      <table>
+        <thead>
+          <tr><th>Tier</th><th>Course Access</th><th>Runs for Coursework</th><th>Community Support</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Free Community</strong></td><td>All 8 modules (read + do)</td><td>10/mo (completes ~Modules 1-2)</td><td>Community feed, weekly livestream</td></tr>
+          <tr><td><strong>Community Pro ($97/mo)</strong></td><td>All 8 modules + bonus content</td><td>100/mo (completes full course + experiments)</td><td>Builders channel, monthly coaching, template reviews</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Premium Course Add-Ons (Optional Revenue)</div>
+      <table>
+        <thead>
+          <tr><th>Add-On</th><th>Price</th><th>Includes</th><th>Target</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>8-Week Cohort</strong></td><td>$497 one-time</td><td>Live weekly sessions + accountability group + 3 months Community Pro included</td><td>Career changers who want structure</td></tr>
+          <tr><td><strong>Team License</strong></td><td>$1,997 one-time</td><td>Up to 10 seats + 3 months Platform Pro for team lead + private team channel</td><td>Companies upskilling teams</td></tr>
+          <tr><td><strong>1:1 Agent Build Session</strong></td><td>$297 one-time</td><td>90-min call to build a custom agent/template together + recording</td><td>Founders who want a jump-start</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box success"><strong>Graduation Incentive:</strong> Community Pro members who upgrade to Platform Pro within their first 90 days get their first month free. They're already skilled from the course &mdash; removing friction at the upgrade moment maximizes conversion.</div>
+    </div>
+
+    <!-- ═══ SECTION 7: DEVELOPER EXPERIENCE ═══ -->
+    <div class="section" id="s7">
+      <div class="section-header">
+        <div class="section-number">7</div>
+        <h2>Developer Experience</h2>
+      </div>
+      <p>Developers care about three things: <strong>how fast they can start</strong>, <strong>how much control they have</strong>, and <strong>how debuggable the system is</strong>. 23WF already excels at all three.</p>
+
+      <div class="sub-header">5-Minute Quick Start</div>
+      <ol class="steps">
+        <li><code>npx 23wf init</code> &mdash; scaffolds the project, creates config files, sets up GitHub Actions</li>
+        <li>Set environment variables (LLM provider key, GitHub PAT)</li>
+        <li>Open the chat UI, create your first agent job</li>
+        <li>Watch the PR appear on GitHub with full audit trail</li>
+        <li>Activate skills by symlinking into <code>skills/active/</code></li>
+      </ol>
+
+      <div class="sub-header">Developer-Specific Features</div>
+      <ul>
+        <li><strong>Git-native audit trail</strong> &mdash; every agent action is a commit on a <code>job/*</code> branch. Full reproducibility.</li>
+        <li><strong>Custom LLM routing</strong> &mdash; per-cron and per-trigger model overrides in JSON config. Use Claude for reasoning, GPT for speed, Gemini for long context.</li>
+        <li><strong>API-first</strong> &mdash; <code>POST /api/create-job</code> with <code>x-api-key</code> header. Integrate agents into any system.</li>
+        <li><strong>MCP server support</strong> &mdash; connect to any Model Context Protocol server for extended tool access.</li>
+        <li><strong>Self-hosted option</strong> &mdash; <code>docker-compose up</code> runs the full stack. No vendor lock-in.</li>
+        <li><strong>Skill SDK</strong> &mdash; create skills with just a <code>SKILL.md</code> + scripts. No framework code, no build step.</li>
+      </ul>
+
+      <div class="sub-header">Developer Documentation Structure</div>
+      <p>The existing 12-document architecture guide (<code>docs/01-architecture.md</code> through <code>docs/12-environment-variables.md</code>) with <code>INDEX.md</code> routing becomes the developer docs for the Pro tier. Add:</p>
+      <ul>
+        <li><strong>API Reference</strong> &mdash; auto-generated from route handlers in <code>Clusters/api/</code></li>
+        <li><strong>Skill Cookbook</strong> &mdash; 10 example skills covering common patterns (API wrapper, CLI tool, data pipeline, notification, scraper)</li>
+        <li><strong>Cluster Patterns</strong> &mdash; reference architectures for fan-out, pipeline, review-gate, and monitor-alert cluster topologies</li>
+      </ul>
+    </div>
+
+    <!-- ═══ SECTION 8: FOUNDER EXPERIENCE ═══ -->
+    <div class="section" id="s8">
+      <div class="section-header">
+        <div class="section-number">8</div>
+        <h2>Founder Experience</h2>
+      </div>
+      <p>Founders don't want to build agent infrastructure &mdash; they want to ship AI-powered products. The Enterprise tier positions 23WF as <strong>infrastructure-as-a-service with a white-label UI</strong>.</p>
+
+      <div class="sub-header">White-Label System</div>
+      <p>The existing brand system (7 presets + custom via <code>data-brand</code> attribute) already supports white-labeling. Extend it to cover:</p>
+      <ul>
+        <li><strong>Chat UI</strong> &mdash; custom logos, colors, and copy via <code>theme.css</code> (already user-owned, not managed)</li>
+        <li><strong>SOP/Report output</strong> &mdash; branded deliverables with client logos (two-logo system already built for ICP reports)</li>
+        <li><strong>Email notifications</strong> &mdash; branded templates for job completion alerts</li>
+        <li><strong>Custom domain</strong> &mdash; <code>APP_URL</code> already configurable per-instance</li>
+      </ul>
+
+      <div class="sub-header">Founder Use Cases</div>
+      <table>
+        <thead>
+          <tr><th>Use Case</th><th>Template</th><th>Skills Used</th><th>Value Prop</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>AI Content Agency</td><td>content-pipeline</td><td>brave-search, notebooklm, sop-generator</td><td>Produce client deliverables at 10x speed</td></tr>
+          <tr><td>Compliance Consulting</td><td>custom</td><td>compliance, google-docs</td><td>Automated SOC2/HIPAA gap analysis for clients</td></tr>
+          <tr><td>Research-as-a-Service</td><td>research-team</td><td>brave-search, notebooklm, youtube-transcript</td><td>Branded research reports on any topic</td></tr>
+          <tr><td>Customer Support SaaS</td><td>customer-support</td><td>slack-blocks, brave-search</td><td>AI-powered triage + response pipeline</td></tr>
+          <tr><td>SEO Agency</td><td>seo-auditor</td><td>brave-search, browser-tools</td><td>Automated site audits with branded reports</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Team Collaboration</div>
+      <p>The <code>/teams</code> and <code>/team/[teamId]</code> routes are already scaffolded. Build out:</p>
+      <ul>
+        <li><strong>Role-based access</strong> &mdash; Admin, Editor, Viewer permissions per team</li>
+        <li><strong>Approval workflows</strong> &mdash; configurable gates where cluster workers pause for human review before continuing</li>
+        <li><strong>Shared skill libraries</strong> &mdash; team-wide skill activation without per-user setup</li>
+        <li><strong>Usage dashboards</strong> &mdash; per-team run counts, cost attribution, job success rates</li>
+      </ul>
+
+      <div class="info-box info"><strong>Agent IAM:</strong> Per the features.md notes, consider implementing Identity & Access Management for agents themselves &mdash; which agents can access which skills, secrets, and external services. This is a strong Enterprise differentiator.</div>
+    </div>
+
+    <!-- ═══ SECTION 9: TEMPLATE MARKETPLACE ═══ -->
+    <div class="section" id="s9">
+      <div class="section-header">
+        <div class="section-number">9</div>
+        <h2>Template Marketplace</h2>
+      </div>
+      <p>The <strong>highest-leverage build</strong> because templates serve all three audiences simultaneously: learners browse and follow guided mode, developers fork and customize, founders deploy as vertical solutions.</p>
+
+      <div class="sub-header">Current State</div>
+      <p>8 templates exist in <code>config/templates/</code> as JSON files with <code>inputs</code> (form fields), <code>cluster</code> definitions (system prompts, roles, dependencies), and shared folder configs. The <code>/templates</code> route is scaffolded in the app.</p>
+
+      <div class="sub-header">Target Experience</div>
+      <ol class="steps">
+        <li><strong>Browse</strong> &mdash; Visual gallery of templates with category filters (Research, Content, Development, Operations, Sales), difficulty badges, and preview cards showing roles and workflow diagrams</li>
+        <li><strong>Preview</strong> &mdash; Click into a template to see the full workflow: what inputs are required, what roles will be created, how data flows between them, and what the expected output looks like</li>
+        <li><strong>Deploy</strong> &mdash; One-click deployment that fills in the input form, creates the cluster, and kicks off the first run. Launchpad users get guided annotations; Pro users get the raw config.</li>
+        <li><strong>Fork &amp; Remix</strong> &mdash; Duplicate a template, modify roles/prompts/dependencies, save as a personal template. This is the "learn by doing" mechanism.</li>
+        <li><strong>Publish</strong> &mdash; Pro and Enterprise users can submit templates to the community registry. Review process + quality badges.</li>
+      </ol>
+
+      <div class="sub-header">Template Schema Extension</div>
+      <p>Add metadata fields to the existing template JSON format:</p>
+      <pre>{
+  "name": "research-team",
+  "display_name": "Research Team",
+  "description": "Give a topic, get a research report",
+  "category": "research",
+  "difficulty": "beginner",
+  "estimated_runs": 3,
+  "estimated_time": "15-30 min",
+  "skills_required": ["brave-search"],
+  "skills_optional": ["notebooklm", "youtube-transcript"],
+  "preview_image": "/templates/research-team/preview.png",
+  "author": "23 Systems",
+  "course_module": 7,
+  "inputs": [ ... ],
+  "cluster": { ... }
+}</pre>
+    </div>
+
+    <!-- ═══ SECTION 10: SKILL REGISTRY ═══ -->
+    <div class="section" id="s10">
+      <div class="section-header">
+        <div class="section-number">10</div>
+        <h2>Skill Registry</h2>
+      </div>
+      <p>Skills are the <strong>network effect driver</strong>. Every skill someone builds makes the platform more valuable for everyone. The architecture already supports this &mdash; skills are just <code>SKILL.md</code> + scripts with symlink activation.</p>
+
+      <div class="sub-header">Registry Tiers</div>
+      <table>
+        <thead>
+          <tr><th>Tier</th><th>Who Creates</th><th>Quality</th><th>Access</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Core</strong></td><td>23 Systems</td><td>Maintained, tested, documented</td><td>All plans</td></tr>
+          <tr><td><strong>Verified</strong></td><td>Community (reviewed)</td><td>Code-reviewed, meets standards</td><td>Pro + Enterprise</td></tr>
+          <tr><td><strong>Community</strong></td><td>Anyone</td><td>As-is, user responsibility</td><td>Pro + Enterprise</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Skill Submission Flow</div>
+      <ol class="steps">
+        <li>Developer creates skill locally following <code>SKILL_BUILDING_GUIDE.md</code></li>
+        <li>Tests skill in their instance (both build and runtime validation)</li>
+        <li>Submits via CLI: <code>npx 23wf publish-skill ./skills/my-skill</code></li>
+        <li>Automated validation checks: SKILL.md frontmatter, required fields, script permissions</li>
+        <li>For Verified tier: 23 Systems code review + security audit</li>
+        <li>Published to registry with install command: <code>npx 23wf install-skill my-skill</code></li>
+      </ol>
+
+      <div class="sub-header">Revenue Potential</div>
+      <ul>
+        <li><strong>Free skills</strong> drive platform adoption (core + community)</li>
+        <li><strong>Premium skills</strong> sold by third-party developers (70/30 revenue split)</li>
+        <li><strong>Enterprise skills</strong> built custom for large clients (professional services)</li>
+      </ul>
+    </div>
+
+    <!-- ═══ SECTION 11: REVENUE MODEL ═══ -->
+    <div class="section" id="s11">
+      <div class="section-header">
+        <div class="section-number">11</div>
+        <h2>Revenue Model</h2>
+      </div>
+
+      <div class="sub-header">Recurring Subscription Revenue</div>
+      <table>
+        <thead>
+          <tr><th>Tier</th><th>Price</th><th>Included Runs</th><th>Overage</th><th>Target Segment</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Free Community</td><td>$0</td><td>10</td><td>N/A (upgrade)</td><td>Top-of-funnel, learners</td></tr>
+          <tr><td>Community Pro</td><td>$97/mo</td><td>100</td><td>$2.66/run</td><td>Engaged learners, freelancers</td></tr>
+          <tr><td>Platform Pro</td><td>$199/mo</td><td>300</td><td>$2.66/run</td><td>Developers, technical founders</td></tr>
+          <tr><td>Enterprise</td><td>$399+/mo</td><td>Negotiated</td><td>Credit packs</td><td>Agencies, funded startups</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">One-Time &amp; Add-On Revenue</div>
+      <table>
+        <thead>
+          <tr><th>Product</th><th>Price</th><th>Includes</th><th>Conversion Target</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>8-Week Cohort</td><td>$497</td><td>Live sessions + 3mo Community Pro</td><td>70% remain as Community Pro</td></tr>
+          <tr><td>Team License</td><td>$1,997</td><td>10 seats + 3mo Platform Pro (lead)</td><td>Enterprise pipeline</td></tr>
+          <tr><td>1:1 Agent Build Session</td><td>$297</td><td>90-min build call + recording</td><td>Platform Pro upgrade</td></tr>
+          <tr><td>Credit Packs</td><td>$50-$500</td><td>25-500 additional runs</td><td>Overage smoothing</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-header">Marketplace Revenue (Phase 4)</div>
+      <ul>
+        <li><strong>Premium skills</strong> &mdash; 30% platform cut on third-party skill sales</li>
+        <li><strong>Premium templates</strong> &mdash; 30% platform cut on community template sales</li>
+        <li><strong>Professional services</strong> &mdash; custom skill/template development for Enterprise clients</li>
+      </ul>
+
+      <div class="sub-header">Revenue Projections (Year 1 &mdash; Community-Led Model)</div>
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>Conservative</th><th>Moderate</th><th>Aggressive</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Free community members (end of Y1)</td><td>500</td><td>2,000</td><td>5,000</td></tr>
+          <tr><td>Free &rarr; Community Pro conversion</td><td>8%</td><td>10%</td><td>12%</td></tr>
+          <tr><td>Community Pro members (steady state)</td><td>40</td><td>200</td><td>600</td></tr>
+          <tr><td>Community Pro &rarr; Platform Pro upgrade</td><td>10%</td><td>15%</td><td>20%</td></tr>
+          <tr><td>Platform Pro members (steady state)</td><td>4</td><td>30</td><td>120</td></tr>
+          <tr><td>Enterprise clients</td><td>1</td><td>3</td><td>8</td></tr>
+        </tbody>
+      </table>
+      <table>
+        <thead>
+          <tr><th>Revenue Stream</th><th>Conservative</th><th>Moderate</th><th>Aggressive</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Community Pro MRR</td><td>$3,880</td><td>$19,400</td><td>$58,200</td></tr>
+          <tr><td>Platform Pro MRR</td><td>$796</td><td>$5,970</td><td>$23,880</td></tr>
+          <tr><td>Enterprise MRR</td><td>$399</td><td>$1,197</td><td>$3,192</td></tr>
+          <tr><td><strong>Total MRR (steady state)</strong></td><td><strong>$5,075</strong></td><td><strong>$26,567</strong></td><td><strong>$85,272</strong></td></tr>
+          <tr><td>Cohorts + Add-Ons (annual)</td><td>$5,000</td><td>$25,000</td><td>$75,000</td></tr>
+          <tr><td><strong>Year 1 ARR</strong></td><td><strong>$65,900</strong></td><td><strong>$343,800</strong></td><td><strong>$1,098,264</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box info"><strong>Unit Economics:</strong> Each agent run costs ~$0.50-1.50 in LLM API + compute. Free tier (10 runs) costs ~$5-15/user/month &mdash; cheap customer acquisition. Community Pro ($97/mo for 100 runs) has 35-50% gross margin on compute alone, plus the subscription covers non-compute costs. The free tier is a marketing expense that pays for itself if &gt;5% convert.</div>
+
+      <div class="info-box success"><strong>Why This Beats Course-First:</strong> A $297 course sale is one-time revenue. A $97/mo community subscription from the same person generates $1,164/year &mdash; 4x more revenue, with lower churn because the community provides ongoing value (new templates, new skills, peer support, coaching calls).</div>
+    </div>
+
+    <!-- ═══ SECTION 12: BUILD PHASES ═══ -->
+    <div class="section" id="s12">
+      <div class="section-header">
+        <div class="section-number">12</div>
+        <h2>Build Phases</h2>
+      </div>
+      <p>Four phases from current state to full multi-tenant SaaS. Each phase is independently shippable and revenue-generating.</p>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 1 &mdash; Community Launch</div>
+        <div class="phase-title">Skool Community + Sandbox + Course Modules 1-4</div>
+        <div class="phase-meta">Unlocks: Free tier + Community Pro ($97/mo) + First revenue</div>
+        <p>Ship the community and the sandbox first. Revenue starts flowing from Community Pro subscriptions before any platform billing is built.</p>
+        <ul>
+          <li>Set up Skool community (free + $97/mo paid tier)</li>
+          <li>Create course Modules 1-4 in Skool classroom</li>
+          <li>Build hosted sandbox with 10-run free limit and 100-run paid limit</li>
+          <li>Run counter in settings table (runs consumed / runs allowed)</li>
+          <li>Template gallery UI in existing <code>/templates</code> route (browse + deploy)</li>
+          <li>Weekly livestream rhythm (Wednesday builds, Friday wins roundup)</li>
+          <li>YouTube content pipeline &mdash; 2 videos/week driving free signups</li>
+          <li>Community launch campaign targeting first 200 free members</li>
+        </ul>
+        <div class="info-box success"><strong>Why First:</strong> Skool handles billing for the community tier, so you don't need Stripe integration yet. The sandbox is a simplified hosted instance with run limits. Templates already exist. First revenue within 30 days of launch.</div>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 2 &mdash; Platform Monetization</div>
+        <div class="phase-title">Platform Pro Tier + Billing + Skill Registry + Course Modules 5-8</div>
+        <div class="phase-meta">Unlocks: Platform Pro ($199/mo) + Community Pro &rarr; Platform Pro upgrades</div>
+        <ul>
+          <li>Stripe integration for Platform Pro and Enterprise billing</li>
+          <li>Run counter enforcement on job creation &mdash; block or charge overage</li>
+          <li>Self-hosted quick start &mdash; <code>npx 23wf init</code> to own instance in 5 minutes</li>
+          <li>Skill registry backend &mdash; publish, search, install via CLI</li>
+          <li><code>npx 23wf publish-skill</code> and <code>npx 23wf install-skill</code> commands</li>
+          <li>Auto-generated API reference from route handlers</li>
+          <li>Course modules 5-8 + "Fork & Remix" flow for templates</li>
+          <li>Community Pro graduation incentive (first month Platform Pro free)</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 3 &mdash; Enterprise &amp; Collaboration</div>
+        <div class="phase-title">Teams + White-Label + Approval Workflows</div>
+        <div class="phase-meta">Unlocks: Enterprise tier ($399+/mo) + Founder use cases</div>
+        <ul>
+          <li>Team management UI (build out existing <code>/teams</code> routes)</li>
+          <li>Role-based access control (Admin, Editor, Viewer)</li>
+          <li>Approval workflows &mdash; pause cluster workers for human review</li>
+          <li>White-label configuration UI (logo, colors, domain)</li>
+          <li>Usage dashboards per team</li>
+          <li>Agent IAM &mdash; which agents can access which skills and secrets</li>
+          <li>AWS ECS deployment automation (per features.md)</li>
+          <li>8-Week Cohort offering &mdash; live sessions with community accountability</li>
+        </ul>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-label">Phase 4 &mdash; Network Effects</div>
+        <div class="phase-title">Multi-Tenant + Marketplace + Integrations</div>
+        <div class="phase-meta">Unlocks: Community-created value + Third-party revenue + Scale</div>
+        <ul>
+          <li>Multi-tenant architecture &mdash; shared infrastructure, isolated data</li>
+          <li>Premium skill/template marketplace with 70/30 revenue sharing</li>
+          <li>Community members earn by publishing skills and templates</li>
+          <li>Third-party integrations &mdash; HubSpot, Salesforce, Slack (per features.md)</li>
+          <li>Enrichment services bundled into credit system</li>
+          <li>Partner program for agencies and consultants</li>
+          <li>Skool community becomes self-sustaining &mdash; members teach members, create templates, build skills</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 13: COMPETITIVE MOATS ═══ -->
+    <div class="section" id="s13">
+      <div class="section-header">
+        <div class="section-number">13</div>
+        <h2>Competitive Moats</h2>
+      </div>
+      <p>Five structural advantages that are difficult to replicate.</p>
+
+      <table>
+        <thead>
+          <tr><th>Moat</th><th>What It Means</th><th>Why It's Hard to Copy</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Git-Native Audit Trail</strong></td>
+            <td>Every agent action is a git commit on a <code>job/*</code> branch. Full history, diffable, revertible. PRs as the unit of agent output.</td>
+            <td>Requires the two-layer architecture (event handler + Docker agent) to be built from scratch. Retrofitting audit trails onto existing agent platforms is architecturally painful.</td>
+          </tr>
+          <tr>
+            <td><strong>Skill Composability</strong></td>
+            <td>Skills are just <code>SKILL.md</code> + scripts. No framework code, no build step, no SDK version to track. Lowest possible barrier to extend.</td>
+            <td>Most platforms require plugin SDKs with version coupling. The markdown-first approach means skills survive framework changes and can be authored by non-engineers.</td>
+          </tr>
+          <tr>
+            <td><strong>Config-Over-Code</strong></td>
+            <td>Personality, scheduling, triggers, LLM routing, and cluster orchestration are all JSON/Markdown config. Zero code for 80% of use cases.</td>
+            <td>Requires discipline in the core package to keep logic out of user-facing code. Competitors who start with code-first approaches can't easily add config-driven UX later.</td>
+          </tr>
+          <tr>
+            <td><strong>Template-as-Curriculum</strong></td>
+            <td>The same templates that power production workflows also serve as structured learning modules. The course IS the product.</td>
+            <td>Competitors would need both a production platform AND a course platform. 23WF has both because templates are the shared primitive.</td>
+          </tr>
+          <tr>
+            <td><strong>Community Flywheel</strong></td>
+            <td>Free Skool community creates content, social proof, templates, and skills that make the platform more valuable. Members teach members. The community IS the marketing.</td>
+            <td>Community moats compound over time. A competitor launching today would need to build both the platform AND grow a community from zero. By the time they catch up on features, the 23WF community has years of shared templates, skills, and institutional knowledge.</td>
+          </tr>
+          <tr>
+            <td><strong>Self-Hosted + Managed Duality</strong></td>
+            <td>Same codebase runs as <code>docker-compose up</code> or as a hosted SaaS. Developers who won't touch a SaaS will still use an open-core tool on their infra.</td>
+            <td>Requires the npm package + scaffold architecture. Most SaaS platforms can't easily offer self-hosted mode without forking their codebase.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box info"><strong>The Flywheel:</strong> Free Skool members try the platform (10 runs) &rarr; upgrade to Community Pro ($97/mo) for more runs + community &rarr; community members create templates and share builds &rarr; their content attracts more free members &rarr; power users upgrade to Platform Pro ($199/mo) and build skills &rarr; skills attract more developers &rarr; founders see the ecosystem and pay Enterprise ($399+/mo) for white-labeled access. Every layer feeds the next, and the community creates value that no competitor can replicate.</div>
+
+      <div class="sub-header">Competitive Landscape</div>
+      <table>
+        <thead>
+          <tr><th>Competitor</th><th>Strength</th><th>23WF Advantage</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>LangChain / LangGraph</td><td>Agent framework ecosystem</td><td>23WF uses LangGraph internally but adds orchestration, UI, git audit, and deployment &mdash; the parts developers actually struggle with</td></tr>
+          <tr><td>CrewAI</td><td>Multi-agent orchestration</td><td>23WF clusters match CrewAI's agent coordination but add Docker isolation, GitHub-native workflows, and a web UI</td></tr>
+          <tr><td>AutoGen</td><td>Microsoft backing, enterprise trust</td><td>23WF is self-hostable, config-driven, and has a built-in course pipeline &mdash; lower barrier for small teams</td></tr>
+          <tr><td>Zapier / Make</td><td>No-code automation, massive integrations</td><td>23WF agents can reason and write code, not just route data. Different capability tier entirely.</td></tr>
+          <tr><td>Cursor / Devin</td><td>AI coding assistants</td><td>23WF is for autonomous agent workflows, not code completion. Complementary, not competitive.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
