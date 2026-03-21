@@ -54,5 +54,29 @@
       { "type": "agent", "job": "Review the GitHub event and summarize what happened:\n{{body}}", "llm_provider": "openai", "llm_model": "gpt-4o" }
     ],
     "enabled": false
+  },
+  {
+    "_pattern": "Filter-Fan",
+    "name": "[Filter-Fan] Inbound lead router",
+    "watch_path": "/webhook/inbound-lead",
+    "actions": [
+      {
+        "type": "agent",
+        "job": "Classify this inbound lead by service interest: {{body}}.\n\nClassify into one of: consulting, development, training, support, other.\nIf classification confidence is below 70%, output 'unclassified' and include the raw data for human review.\n\nOutput MUST be valid JSON:\n{\"classification\": string, \"confidence\": number, \"action\": string, \"data\": object}"
+      }
+    ],
+    "enabled": false
+  },
+  {
+    "_pattern": "Transformer",
+    "name": "[Transformer] Brief-to-spec converter",
+    "watch_path": "/webhook/client-brief",
+    "actions": [
+      {
+        "type": "agent",
+        "job": "Convert this client brief into a structured project spec.\n\nInput: {{body.brief}}\n\nOutput MUST be valid JSON:\n{\"title\": string, \"requirements\": string[], \"timeline\": string, \"budget\": string, \"risks\": string[], \"next_steps\": string[]}\n\nDo NOT output freeform text. Validate all fields are present."
+      }
+    ],
+    "enabled": false
   }
 ]

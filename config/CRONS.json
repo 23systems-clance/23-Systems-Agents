@@ -52,5 +52,37 @@
     "llm_provider": "openai",
     "llm_model": "gpt-4o",
     "enabled": false
+  },
+  {
+    "_pattern": "Trigger-Route",
+    "name": "[Trigger-Route] Daily backup check",
+    "schedule": "0 9 * * *",
+    "type": "command",
+    "command": "node trigger-route-backup-check.js",
+    "enabled": false
+  },
+  {
+    "_pattern": "Collector",
+    "name": "[Collector] Weekly cross-source report",
+    "schedule": "0 9 * * 1",
+    "type": "agent",
+    "job": "Collect data from these sources and generate a consolidated weekly report:\n1. Git activity: run 'git log --oneline --since=7.days.ago' and summarize commits.\n2. Job history: check logs/ for completed jobs this week.\n3. Cron health: verify all enabled crons ran successfully.\n\nBefore generating the report: validate each source returned data. If any source returns zero records, flag it as an anomaly. Include a data quality section at the top. Save report to logs/.",
+    "enabled": false
+  },
+  {
+    "_pattern": "Loop",
+    "name": "[Loop] Stale PR follow-up",
+    "schedule": "0 9 * * *",
+    "type": "command",
+    "command": "node loop-stale-prs.js --max-iterations 5 --stale-days 3",
+    "enabled": false
+  },
+  {
+    "_pattern": "Watcher",
+    "name": "[Watcher] Error rate monitor",
+    "schedule": "0 */4 * * *",
+    "type": "command",
+    "command": "node watcher-error-rate.js --threshold 10 --lookback 4h",
+    "enabled": false
   }
 ]
